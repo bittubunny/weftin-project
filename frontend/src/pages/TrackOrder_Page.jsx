@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, User, Bell, Headphones, LogOut, ArrowLeft, Download, Check, ShieldCheck, RefreshCw, XCircle } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function TrackOrder_Page() {
   const { id } = useParams();
   const location = useLocation();
