@@ -1,18 +1,68 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, User, Bell, Headphones, LogOut, Mail, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, User, Bell, Headphones, LogOut, Mail, CheckCircle2, ChevronDown, ChevronUp, ShoppingCart, Menu, X } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250";
 
 export default function Support_Page() {
+  const navigate = useNavigate();
   const [subject, setSubject] = useState('Size alteration support request');
   const [concerns, setConcerns] = useState('');
   const [openFaq, setOpenFaq] = useState(0);
   const [toastMessage, setToastMessage] = useState('');
 
+  const [savedUser, setSavedUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("weftin_user");
+      if (!storedUser) {
+        navigate("/login");
+        return;
+      }
+      const user = JSON.parse(storedUser);
+      setSavedUser(user);
+      if (user?.email) {
+        loadUnreadCount(user.email);
+      }
+    } catch (error) {
+      console.error("Unable to load user:", error);
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  const loadUnreadCount = async (email) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      setUnreadCount(Number(data?.count || 0));
+    } catch (err) {
+      console.error("Unread count error:", err);
+    }
+  };
+
+  const userEmail = savedUser?.email || "";
+  const userName = savedUser?.name || savedUser?.full_name || savedUser?.username || "WEFTIN Member";
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
   };
 
   const handleFileTicket = (e) => {
@@ -23,6 +73,26 @@ export default function Support_Page() {
     }
     showToast('Ticket filed successfully! Master lookup initiated.');
     setConcerns('');
+  };
+
+  const NotificationBadge = ({ sidebar = false }) => {
+    if (unreadCount <= 0) return null;
+    return (
+      <span className={sidebar ? "bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold shrink-0" : "absolute -top-1 -right-1 bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold"}>
+        {unreadCount > 99 ? "99+" : unreadCount}
+      </span>
+    );
+  };
+
+  const UserAvatar = ({ size = "w-8 h-8" }) => {
+    if (savedUser?.avatar) {
+      return <img src={savedUser.avatar} alt={userName} className={`${size} rounded-full object-cover border border-amber-500`} />;
+    }
+    return (
+      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-200`}>
+        {userInitial}
+      </div>
+    );
   };
 
   const faqs = [
@@ -47,11 +117,69 @@ export default function Support_Page() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex">
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
+        <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           {toastMessage}
         </div>
       )}
+
+      {/* MOBILE MENU OVERLAY */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/40 z-40" onClick={closeMobileMenu} />
+      )}
+
+      {/* MOBILE SLIDE-IN NAVIGATION */}
+      <aside className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="h-full flex flex-col">
+          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
+              <div>
+                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
+              </div>
+            </div>
+            <button onClick={closeMobileMenu} className="p-2 rounded-lg hover:bg-gray-100"><X className="w-5 h-5 text-gray-600" /></button>
+          </div>
+
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <LayoutDashboard className="w-4 h-4 shrink-0" /> Dashboard
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <Package className="w-4 h-4 shrink-0" /> My Orders
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <Scissors className="w-4 h-4 shrink-0" /> Custom Designs
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <Ruler className="w-4 h-4 shrink-0" /> Measurements
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <Heart className="w-4 h-4 shrink-0" /> Wishlist
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <MapPin className="w-4 h-4 shrink-0" /> Addresses
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+              <User className="w-4 h-4 shrink-0" /> Profile
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 shrink-0" /> Notifications</span>
+              <NotificationBadge sidebar />
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700">
+              <Headphones className="w-4 h-4 shrink-0" /> Support
+            </Link>
+          </nav>
+
+          <div className="mt-auto p-4 border-t border-gray-100">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg">
+              <LogOut className="w-4 h-4" /> Log out
+            </button>
+          </div>
+        </div>
+      </aside>
 
       {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
@@ -61,6 +189,14 @@ export default function Support_Page() {
             <div>
               <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
               <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
+            </div>
+          </div>
+
+          <div className="m-4 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-center gap-3">
+            <UserAvatar size="w-10 h-10" />
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-gray-900 truncate">{userName}</h4>
+              <span className="text-[9px] uppercase font-bold tracking-widest text-amber-800">ATELIER MEMBER</span>
             </div>
           </div>
 
@@ -88,7 +224,7 @@ export default function Support_Page() {
             </Link>
             <Link to="/notifications" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between">
               <span className="flex items-center gap-3"><Bell className="w-4 h-4" /> Notifications</span>
-              <span className="bg-rose-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+              <NotificationBadge sidebar />
             </Link>
             <Link to="/support" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700">
               <Headphones className="w-4 h-4" /> Support
@@ -97,23 +233,32 @@ export default function Support_Page() {
         </div>
 
         <div className="p-4 border-t border-gray-100">
-          <Link to="/" className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg text-left">
             <LogOut className="w-4 h-4" /> Log out
-          </Link>
+          </button>
         </div>
       </aside>
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
-          <div className="text-xs text-gray-400">
-            Portfolio <span className="mx-2">&gt;</span> <span className="text-gray-900 font-semibold uppercase tracking-wider">SUPPORT</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-100" aria-label="Open menu">
+              <Menu className="w-5 h-5 text-gray-700" />
+            </button>
+            <div className="text-xs text-gray-400">
+              Portfolio <span className="mx-2">&gt;</span> <span className="text-gray-900 font-semibold uppercase tracking-wider">SUPPORT</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <Bell className="w-5 h-5 text-gray-600 cursor-pointer" />
+            <Link to="/cart" className="relative text-gray-600 hover:text-black"><ShoppingCart className="w-5 h-5" /></Link>
+            <Link to="/notifications" className="relative text-gray-600 hover:text-black">
+              <Bell className="w-5 h-5" />
+              <NotificationBadge />
+            </Link>
             <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Meera Kapoor" className="w-8 h-8 rounded-full object-cover border" />
-              <span className="text-xs font-semibold text-gray-800">Meera Kapoor</span>
+              <UserAvatar />
+              <span className="text-xs font-semibold text-gray-800">{userName}</span>
             </div>
           </div>
         </header>
