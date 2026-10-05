@@ -168,13 +168,20 @@ export default function CustomDesigns_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
 
       const response = await fetch(
         `${API_BASE}/api/custom-designs/${encodeURIComponent(
           userEmail
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) {
@@ -214,13 +221,18 @@ export default function CustomDesigns_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE}/api/custom-designs/${requestId}?user_email=${encodeURIComponent(
           userEmail
         )}`,
         {
-          method: "DELETE"
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -456,6 +468,10 @@ export default function CustomDesigns_Page() {
 
           <Link
             to="/"
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+            }}
             className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
           >
             <LogOut className="w-4 h-4" />
@@ -636,7 +652,11 @@ export default function CustomDesigns_Page() {
 
           <Link
             to="/"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+              closeMobileMenu();
+            }}
             className="flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
           >
             <LogOut className="w-4 h-4" />
@@ -815,15 +835,11 @@ export default function CustomDesigns_Page() {
               </button>
 
               <button
-                onClick={() =>
-                  showToast(
-                    "Opening sketch drafting workspace..."
-                  )
-                }
+                onClick={() => navigate("/shop")}
                 className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm"
               >
                 <Plus className="w-4 h-4 text-amber-400" />
-                Draft Custom Outfit Sketch
+                Explore Shop & Customize
               </button>
 
             </div>
