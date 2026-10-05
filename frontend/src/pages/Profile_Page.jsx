@@ -58,8 +58,13 @@ export default function Profile_Page() {
     }
 
     const userEmail = savedUser.email;
+    const token = localStorage.getItem("weftin_token");
 
-    fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(userEmail)}`)
+    fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(userEmail)}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Profile request failed: ${res.status}`);
@@ -104,11 +109,14 @@ export default function Profile_Page() {
   }, [navigate]);
 
   const handleSaveProfile = async () => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           name: profileData.name,
@@ -145,6 +153,8 @@ export default function Profile_Page() {
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
     navigate("/login");
   };
 
@@ -283,7 +293,7 @@ export default function Profile_Page() {
         <div className="p-3 lg:p-4 border-t border-gray-100">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors"
+            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors text-left"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Log out</span>
@@ -459,7 +469,7 @@ export default function Profile_Page() {
                 closeMobileMenu();
                 handleLogout();
               }}
-              className="flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span>Log out</span>
