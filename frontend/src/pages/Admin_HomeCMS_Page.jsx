@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Layers, XCircle } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function Admin_HomeCMS_Page() {
 
   const [toastMessage, setToastMessage] = useState("");
@@ -28,7 +30,7 @@ export default function Admin_HomeCMS_Page() {
       setLoading(true);
 
       const res = await fetch(
-        "http://127.0.0.1:8000/api/admin/home-products"
+        `${API_URL}/api/admin/home-products`
       );
 
       if (!res.ok) {
@@ -78,7 +80,7 @@ export default function Admin_HomeCMS_Page() {
     try {
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/home-products/${productId}/placement`,
+        `${API_URL}/api/admin/home-products/${productId}/placement`,
         {
           method: "PUT",
 
