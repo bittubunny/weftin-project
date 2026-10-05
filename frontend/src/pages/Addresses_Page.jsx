@@ -123,9 +123,16 @@ export default function Addresses_Page() {
   // --------------------------------------------------
 
   const fetchProfile = async (email) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
-        `${API_URL}/api/user/${encodeURIComponent(email)}`
+        `${API_URL}/api/user/${encodeURIComponent(email)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) {
@@ -234,11 +241,18 @@ export default function Addresses_Page() {
   // --------------------------------------------------
 
   const fetchAddresses = async (email) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
 
       const response = await fetch(
-        `${API_URL}/api/addresses/${encodeURIComponent(email)}`
+        `${API_URL}/api/addresses/${encodeURIComponent(email)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) {
@@ -330,17 +344,19 @@ export default function Addresses_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       let response;
 
       if (editingAddress) {
-        // EDIT
         response = await fetch(
           `${API_URL}/api/addresses/${editingAddress.id}`,
           {
             method: "PUT",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             body: JSON.stringify({
               title: form.title,
@@ -353,11 +369,11 @@ export default function Addresses_Page() {
           }
         );
       } else {
-        // CREATE
         response = await fetch(`${API_URL}/api/addresses`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify({
             user_email: userEmail,
@@ -416,11 +432,16 @@ export default function Addresses_Page() {
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_URL}/api/addresses/${id}`,
         {
-          method: "DELETE"
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -446,11 +467,16 @@ export default function Addresses_Page() {
   // --------------------------------------------------
 
   const setDefaultAddress = async (id) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_URL}/api/addresses/${id}/default`,
         {
-          method: "PATCH"
+          method: "PATCH",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -497,6 +523,7 @@ export default function Addresses_Page() {
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
     closeMobileMenu();
     window.location.href = "/";
   };
@@ -798,7 +825,7 @@ export default function Addresses_Page() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
+            className="w-full flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg text-left"
           >
             <LogOut className="w-4 h-4" />
             Log out
