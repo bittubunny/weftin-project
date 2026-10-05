@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingBag, Heart, User } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function Register_Page() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -17,7 +19,7 @@ export default function Register_Page() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/register', {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
