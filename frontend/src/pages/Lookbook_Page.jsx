@@ -77,6 +77,17 @@ export default function Lookbook_Page() {
     }
 
     loadCartCount();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "weftin_cart") {
+        loadCartCount();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   // =========================================================
@@ -112,9 +123,16 @@ export default function Lookbook_Page() {
   // =========================================================
 
   const loadUserData = async (email) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/user/${encodeURIComponent(email)}`
+        `${API_BASE_URL}/api/user/${encodeURIComponent(email)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) return;
@@ -134,11 +152,18 @@ export default function Lookbook_Page() {
   // =========================================================
 
   const loadUnreadNotifications = async (email) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) return;
@@ -326,9 +351,11 @@ export default function Lookbook_Page() {
           {/* LOGO */}
 
           <div className="text-center">
-            <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-gray-900">
-              AURA
-            </h1>
+            <Link to="/">
+              <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-gray-900">
+                WEFTIN
+              </h1>
+            </Link>
 
             <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-gray-500">
               Atelier
@@ -344,7 +371,7 @@ export default function Lookbook_Page() {
                 setWishlistCount((c) => c + 1);
                 showToast("Added to Wishlist");
               }}
-              className="relative text-gray-800 hover:text-black"
+              className="relative text-gray-800 hover:text-black cursor-pointer"
               title="Wishlist"
             >
               <Heart className="w-5 h-5" />
@@ -467,7 +494,7 @@ export default function Lookbook_Page() {
               onClick={() =>
                 setMobileMenuOpen(true)
               }
-              className="text-gray-800"
+              className="text-gray-800 cursor-pointer"
               title="Open Menu"
             >
               <Menu className="w-6 h-6" />
@@ -505,7 +532,7 @@ export default function Lookbook_Page() {
           </a>
 
           <a
-            href="#"
+            href="/custom-designs"
             className="hover:text-black transition-colors"
           >
             Custom Design
@@ -558,7 +585,7 @@ export default function Lookbook_Page() {
 
           <div>
             <h2 className="font-serif text-lg tracking-[0.2em] font-bold">
-              AURA
+              WEFTIN
             </h2>
 
             <span className="text-[8px] uppercase tracking-[0.25em] text-gray-500">
@@ -637,7 +664,7 @@ export default function Lookbook_Page() {
           </a>
 
           <a
-            href="#"
+            href="/custom-designs"
             onClick={() =>
               setMobileMenuOpen(false)
             }
@@ -826,7 +853,7 @@ export default function Lookbook_Page() {
                             : `Exploring ${trend.title}`
                         )
                       }
-                      className="mt-6 text-xs uppercase tracking-widest font-semibold text-amber-700 hover:text-black flex items-center gap-1"
+                      className="mt-6 text-xs uppercase tracking-widest font-semibold text-amber-700 hover:text-black flex items-center gap-1 cursor-pointer"
                     >
                       {trend.button_text || "Explore Trend"} →
                     </button>
@@ -911,7 +938,7 @@ export default function Lookbook_Page() {
                               "Opening styling guide..."
                             )
                           }
-                          className="bg-black text-white px-6 py-3 text-xs uppercase tracking-widest rounded"
+                          className="bg-black text-white px-6 py-3 text-xs uppercase tracking-widest rounded cursor-pointer"
                         >
                           {guide.button_text}
                         </button>
@@ -1058,7 +1085,7 @@ export default function Lookbook_Page() {
                           onClick={() =>
                             addLookToCart(look)
                           }
-                          className="mt-6 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-xs uppercase tracking-[0.2em] rounded font-semibold"
+                          className="mt-6 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-xs uppercase tracking-[0.2em] rounded font-semibold cursor-pointer transition-colors"
                         >
                           {look.button_text}
                         </button>
@@ -1086,7 +1113,7 @@ export default function Lookbook_Page() {
         <div className="max-w-7xl mx-auto text-center text-xs text-gray-500">
 
           <p>
-            © 2026 Aura Atelier. Lookbook Page Connected with Router.
+            © 2026 WEFTIN Atelier. Lookbook Page Connected with Router.
           </p>
 
         </div>
