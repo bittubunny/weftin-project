@@ -94,6 +94,17 @@ export default function Limitededition_Page() {
 
     }
 
+    const handleStorageChange = (e) => {
+      if (e.key === "weftin_cart") {
+        loadCartCount();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+
   }, []);
 
   // =========================================================
@@ -164,13 +175,19 @@ export default function Limitededition_Page() {
   // =========================================================
 
   const loadUserData = async (email) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
       const response = await fetch(
         `${API_BASE_URL}/api/user/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) return;
@@ -200,13 +217,19 @@ export default function Limitededition_Page() {
   const loadUnreadNotifications = async (
     email
   ) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) return;
@@ -520,10 +543,11 @@ export default function Limitededition_Page() {
           {/* LOGO */}
 
           <div className="text-center">
-
-            <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-white">
-              AURA
-            </h1>
+            <Link to="/">
+              <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-white">
+                WEFTIN
+              </h1>
+            </Link>
 
             <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-amber-400">
               Atelier Vault
@@ -547,7 +571,7 @@ export default function Limitededition_Page() {
                   "Added to Wishlist"
                 );
               }}
-              className="relative text-gray-300 hover:text-white"
+              className="relative text-gray-300 hover:text-white cursor-pointer"
               title="Wishlist"
             >
 
@@ -748,7 +772,7 @@ export default function Limitededition_Page() {
           </a>
 
           <a
-            href="#"
+            href="/custom-designs"
             className="hover:text-amber-400"
           >
             Custom Design
@@ -804,7 +828,7 @@ export default function Limitededition_Page() {
           <div>
 
             <h2 className="font-serif text-lg tracking-[0.2em] font-bold">
-              AURA
+              WEFTIN
             </h2>
 
             <span className="text-[8px] uppercase tracking-[0.25em] text-amber-400">
@@ -889,7 +913,7 @@ export default function Limitededition_Page() {
           </a>
 
           <a
-            href="#"
+            href="/custom-designs"
             onClick={() =>
               setMobileMenuOpen(false)
             }
@@ -1115,7 +1139,7 @@ export default function Limitededition_Page() {
                       featuredItem
                     )
                   }
-                  className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white px-8 py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg"
+                  className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white px-8 py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer transition-colors"
                 >
                   {featuredItem.button_text}
                 </button>
@@ -1216,7 +1240,7 @@ export default function Limitededition_Page() {
                         onClick={() =>
                           addToCart(item)
                         }
-                        className="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 text-white text-xs uppercase tracking-widest rounded border border-white/20"
+                        className="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 text-white text-xs uppercase tracking-widest rounded border border-white/20 cursor-pointer transition-colors"
                       >
                         {item.button_text}
                       </button>
@@ -1292,7 +1316,7 @@ export default function Limitededition_Page() {
         <div className="max-w-7xl mx-auto text-center text-xs text-gray-500">
 
           <p>
-            © 2026 Aura Atelier. Limited Edition Vault Connected Successfully.
+            © 2026 WEFTIN Atelier. Limited Edition Vault Connected Successfully.
           </p>
 
         </div>
