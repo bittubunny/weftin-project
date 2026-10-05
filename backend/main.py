@@ -474,6 +474,10 @@ class UserLogin(BaseModel):
 # REGISTER
 # ============================================================
 
+# ============================================================
+# REGISTER
+# ============================================================
+
 @app.post("/api/register")
 def register_user(user: UserRegister):
 
@@ -502,7 +506,11 @@ def register_user(user: UserRegister):
                 detail="Email already registered."
             )
 
-        hashed_password = get_password_hash(user.password)
+        # --------------------------------------------------------
+        # FIX: Truncate password to 72 bytes/characters for bcrypt
+        # --------------------------------------------------------
+        safe_password = user.password[:72]
+        hashed_password = get_password_hash(safe_password)
 
         cur.execute(
             """
@@ -520,7 +528,7 @@ def register_user(user: UserRegister):
                 hashed_password
             )
         )
-
+        # ... (rest of your registration logic remains identical)
         new_user = cur.fetchone()
 
         create_notification(
