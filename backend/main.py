@@ -21,13 +21,17 @@ app = FastAPI(title="WEFTIN Atelier NeonDB API")
 # CORS
 # ============================================================
 
+# ============================================================
+# CORS
+# ============================================================
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://weftin-project-.*\.vercel\.app",
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
+    allow_origin_regex=r"https://(weftin-project.*\.vercel\.app|.*-bharaths-projects.*\.vercel\.app)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
