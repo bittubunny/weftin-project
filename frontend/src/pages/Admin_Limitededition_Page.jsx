@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -46,13 +48,19 @@ export default function Admin_Limitededition_Page() {
   // =========================================================
 
   const loadData = async () => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
       setLoading(true);
 
       const response = await fetch(
-        `${API_BASE_URL}/api/limited-edition`
+        `${API_BASE_URL}/api/limited-edition`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       const data =
@@ -175,6 +183,7 @@ export default function Admin_Limitededition_Page() {
   const saveSection = async (
     section
   ) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
@@ -187,7 +196,8 @@ export default function Admin_Limitededition_Page() {
 
           headers: {
             "Content-Type":
-              "application/json"
+              "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
 
           body: JSON.stringify(
@@ -231,6 +241,7 @@ export default function Admin_Limitededition_Page() {
   const saveItem = async (
     item
   ) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
@@ -243,7 +254,8 @@ export default function Admin_Limitededition_Page() {
 
           headers: {
             "Content-Type":
-              "application/json"
+              "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
 
           body: JSON.stringify(
@@ -287,6 +299,7 @@ export default function Admin_Limitededition_Page() {
   const addItem = async (
     sectionKey
   ) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
@@ -299,7 +312,8 @@ export default function Admin_Limitededition_Page() {
 
           headers: {
             "Content-Type":
-              "application/json"
+              "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
 
           body: JSON.stringify({
@@ -385,6 +399,8 @@ export default function Admin_Limitededition_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
 
       setSaving(true);
@@ -392,7 +408,10 @@ export default function Admin_Limitededition_Page() {
       const response = await fetch(
         `${API_BASE_URL}/api/limited-edition/item/${id}`,
         {
-          method: "DELETE"
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -431,6 +450,7 @@ export default function Admin_Limitededition_Page() {
   // =========================================================
 
   const saveSettings = async () => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
@@ -443,7 +463,8 @@ export default function Admin_Limitededition_Page() {
 
           headers: {
             "Content-Type":
-              "application/json"
+              "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
 
           body: JSON.stringify(
@@ -483,7 +504,7 @@ export default function Admin_Limitededition_Page() {
   if (loading) {
 
     return (
-      <div className="p-10 text-center">
+      <div className="p-10 text-center text-xs uppercase tracking-widest text-gray-500">
         Loading Limited Edition...
       </div>
     );
@@ -504,20 +525,28 @@ export default function Admin_Limitededition_Page() {
 
       )}
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
 
         {/* HEADER */}
 
-        <div className="mb-8">
+        <div className="space-y-3">
+          <Link
+            to="/shop"
+            className="text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1 hover:text-black"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Shop / Admin Hub
+          </Link>
 
-          <h1 className="text-2xl sm:text-3xl font-serif font-semibold">
-            Limited Edition Management
-          </h1>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-semibold">
+              Limited Edition Management
+            </h1>
 
-          <p className="text-sm text-gray-500 mt-1">
-            Manage the complete Limited Edition Vault page.
-          </p>
-
+            <p className="text-sm text-gray-500 mt-1">
+              Manage the complete Limited Edition Vault page.
+            </p>
+          </div>
         </div>
 
         {/* COUNTDOWN */}
@@ -541,7 +570,7 @@ export default function Admin_Limitededition_Page() {
             <button
               disabled={saving}
               onClick={saveSettings}
-              className="bg-amber-600 hover:bg-amber-500 px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest"
+              className="bg-amber-600 hover:bg-amber-500 px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest cursor-pointer"
             >
               Save Countdown
             </button>
@@ -630,7 +659,7 @@ export default function Admin_Limitededition_Page() {
                         section
                       )
                     }
-                    className="bg-black text-white px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest"
+                    className="bg-black text-white px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest cursor-pointer"
                   >
                     Save Section
                   </button>
@@ -756,7 +785,7 @@ export default function Admin_Limitededition_Page() {
 
                   </div>
 
-                  <label className="flex items-center gap-3 text-sm">
+                  <label className="flex items-center gap-3 text-sm cursor-pointer">
 
                     <input
                       type="checkbox"
@@ -807,7 +836,7 @@ export default function Admin_Limitededition_Page() {
                             section.section_key
                           )
                         }
-                        className="px-4 py-2 bg-amber-700 text-white rounded-lg text-xs uppercase tracking-wider"
+                        className="px-4 py-2 bg-amber-700 text-white rounded-lg text-xs uppercase tracking-wider cursor-pointer"
                       >
                         + Add Item
                       </button>
@@ -836,7 +865,7 @@ export default function Admin_Limitededition_Page() {
                                     item.id
                                   )
                                 }
-                                className="text-red-600 text-xs"
+                                className="text-red-600 text-xs cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -1007,7 +1036,7 @@ export default function Admin_Limitededition_Page() {
 
                               </div>
 
-                              <label className="flex items-center gap-3 text-sm">
+                              <label className="flex items-center gap-3 text-sm cursor-pointer">
 
                                 <input
                                   type="checkbox"
@@ -1061,7 +1090,7 @@ export default function Admin_Limitededition_Page() {
                                     item
                                   )
                                 }
-                                className="bg-black text-white px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider"
+                                className="bg-black text-white px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider cursor-pointer"
                               >
                                 Save Item
                               </button>
