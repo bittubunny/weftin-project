@@ -160,11 +160,18 @@ export default function Measurements_Page() {
   ========================= */
 
   const fetchProfiles = async (email) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
 
       const response = await fetch(
-        `${API_URL}/api/measurements/${encodeURIComponent(email)}`
+        `${API_URL}/api/measurements/${encodeURIComponent(email)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) {
@@ -263,6 +270,8 @@ export default function Measurements_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const payload = {
         ...form,
@@ -277,7 +286,8 @@ export default function Measurements_Page() {
           {
             method: "PUT",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             body: JSON.stringify(payload)
           }
@@ -286,7 +296,8 @@ export default function Measurements_Page() {
         response = await fetch(`${API_URL}/api/measurements`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify(payload)
         });
@@ -328,11 +339,16 @@ export default function Measurements_Page() {
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_URL}/api/measurements/${profileId}`,
         {
-          method: "DELETE"
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -358,11 +374,16 @@ export default function Measurements_Page() {
   ========================= */
 
   const setDefaultProfile = async (profileId) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_URL}/api/measurements/${profileId}/default`,
         {
-          method: "PATCH"
+          method: "PATCH",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -565,6 +586,10 @@ export default function Measurements_Page() {
         <div className="p-4 border-t border-gray-100">
           <Link
             to="/"
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+            }}
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors text-xs"
           >
             <LogOut className="w-4 h-4" />
@@ -688,7 +713,11 @@ export default function Measurements_Page() {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
           <Link
             to="/"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+              closeMobileMenu();
+            }}
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors text-xs"
           >
             <LogOut className="w-4 h-4" />
