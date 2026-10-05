@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, Heart, User } from "lucide-react";
+import { Search, ShoppingBag, Heart, User, Loader2 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -10,6 +10,7 @@ export default function Register_Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -18,21 +19,35 @@ export default function Register_Page() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    showToast("Creating your secure atelier membership...");
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
+      
       const data = await response.json();
-      if (response.ok) {
-        showToast("Account created successfully! Please sign in.");
-        setTimeout(() => navigate('/login'), 1500);
+
+      if (response.ok && data?.user) {
+        localStorage.setItem('weftin_user', JSON.stringify(data.user));
+        if (data.access_token) {
+          localStorage.setItem('weftin_token', data.access_token);
+        }
+        showToast("Account created successfully! Redirecting...");
+        setTimeout(() => navigate('/'), 1000);
       } else {
         showToast(data.detail || "Registration failed.");
       }
     } catch (err) {
-      showToast("Backend connection error.");
+      console.error("Register connection error:", err);
+      showToast("Backend connection error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,7 +77,7 @@ export default function Register_Page() {
           </div>
 
           <div className="text-center flex flex-col items-center">
-            <div className="border border-black px-2 py-1 font-serif font-bold text-sm tracking-widest">WEFTIN</div>
+            <Link to="/" className="border border-black px-2 py-1 font-serif font-bold text-sm tracking-widest">WEFTIN</Link>
           </div>
 
           <div className="flex items-center gap-6">
@@ -126,8 +141,21 @@ export default function Register_Page() {
               />
             </div>
 
-            <button type="submit" className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg">
-              Create Atelier Membership
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className={`w-full py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg flex items-center justify-center gap-2 transition ${
+                isSubmitting ? "bg-gray-500 cursor-not-allowed" : "bg-[#1C1816] hover:bg-black text-white"
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Atelier Membership"
+              )}
             </button>
           </form>
 
