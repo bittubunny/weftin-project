@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, {
+  useCallback,
+  useEffect,
+  useState
+} from "react";
+
+import {
+  Link,
+  useNavigate
+} from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -104,11 +112,18 @@ export default function Notifications_Page() {
     }
 
     const loadUserProfile = async () => {
+      const token = localStorage.getItem("weftin_token");
+
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/user/${encodeURIComponent(
             userEmail
-          )}`
+          )}`,
+          {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+          }
         );
 
         if (!response.ok) {
@@ -192,6 +207,8 @@ export default function Notifications_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
       setErrorMessage("");
@@ -199,7 +216,12 @@ export default function Notifications_Page() {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/${encodeURIComponent(
           userEmail
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       const data = await response.json();
@@ -351,6 +373,8 @@ export default function Notifications_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/${
@@ -359,7 +383,10 @@ export default function Notifications_Page() {
           userEmail
         )}`,
         {
-          method: "PUT"
+          method: "PUT",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -403,13 +430,18 @@ export default function Notifications_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/read-all/${encodeURIComponent(
           userEmail
         )}`,
         {
-          method: "PUT"
+          method: "PUT",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -461,13 +493,18 @@ export default function Notifications_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/${encodeURIComponent(
           userEmail
         )}`,
         {
-          method: "DELETE"
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -503,6 +540,7 @@ export default function Notifications_Page() {
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
     setMobileMenuOpen(false);
     navigate("/login");
   };
@@ -632,7 +670,7 @@ export default function Notifications_Page() {
 
           <button
             onClick={closeMobileMenu}
-            className="text-gray-500 hover:text-black transition-colors"
+            className="p-2 text-gray-500 hover:text-black transition-colors"
             aria-label="Close navigation"
           >
             <X className="w-5 h-5" />
@@ -712,13 +750,17 @@ export default function Notifications_Page() {
           <Link
             to="/notifications"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700 justify-between"
           >
-            <Bell className="w-4 h-4 shrink-0" />
+            <span className="flex items-center gap-3 min-w-0">
+              <Bell className="w-4 h-4 shrink-0" />
 
-            <span className="truncate">
-              Notifications
+              <span className="truncate">
+                Notifications
+              </span>
             </span>
+
+            <NotificationBadge mobile />
           </Link>
 
           <Link
@@ -850,6 +892,7 @@ export default function Notifications_Page() {
                 </span>
               </span>
 
+              <NotificationBadge />
             </Link>
 
             <Link
@@ -869,7 +912,7 @@ export default function Notifications_Page() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors"
+            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors text-left"
           >
             <LogOut className="w-4 h-4 shrink-0" />
 
@@ -886,13 +929,9 @@ export default function Notifications_Page() {
 
       <main className="flex-1 flex flex-col min-w-0">
 
-        {/* ==================================================
-            MOBILE HEADER
-        ================================================== */}
+        {/* MOBILE HEADER */}
 
         <div className="md:hidden bg-white border-b border-gray-200">
-
-          {/* TOP MOBILE BAR */}
 
           <div className="px-4 py-4 flex items-center justify-between">
 
@@ -1195,8 +1234,8 @@ export default function Notifications_Page() {
           ) : (
 
             /* ==================================================
-               NOTIFICATION LIST
-            ================================================== */
+                NOTIFICATION LIST
+            ================================================== */}
 
             <div className="space-y-4">
 
