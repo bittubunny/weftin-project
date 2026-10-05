@@ -20,6 +20,7 @@ export default function Product_Overview() {
   const [descOpen, setDescOpen] = useState(true);
   const [materialOpen, setMaterialOpen] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
@@ -38,6 +39,14 @@ export default function Product_Overview() {
         console.error("Error loading product overview:", err);
         setLoading(false);
       });
+
+    // Update initial cart count
+    try {
+      const existingCart = JSON.parse(localStorage.getItem('weftin_cart')) || [];
+      setCartCount(existingCart.reduce((acc, i) => acc + (Number(i.qty) || 0), 0));
+    } catch (e) {
+      setCartCount(0);
+    }
   }, [id]);
 
   if (loading || !product) {
@@ -56,79 +65,87 @@ export default function Product_Overview() {
     { id: 1, name: 'Midnight Indigo Silk Saree', price: '₹12,250', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=500' },
     { id: 2, name: 'Crimson Velvet Bridal Lehenga', price: '₹24,800', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=500' },
   ];
+
   const handleAddToBag = () => {
-    // Get existing cart from localStorage or start empty
-    const existingCart = JSON.parse(localStorage.getItem('weftin_cart')) || [];
-    
-    // Check if this item is already in cart
-    const existingIndex = existingCart.findIndex(item => item.id === product.id && item.size === selectedSize && item.shade === selectedColor);
-    
-    if (existingIndex > -1) {
-      existingCart[existingIndex].qty += quantity;
-    } else {
-      existingCart.push({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        price: product.price, // keeps string format e.g. "₹8,999"
-        size: selectedSize,
-        shade: selectedColor,
-        qty: quantity,
-        image: product.image,
-        tag: product.tag || 'ATELIER'
-      });
-    }
-
-    localStorage.setItem('weftin_cart', JSON.stringify(existingCart));
-    setCartCount(existingCart.reduce((acc, i) => acc + i.qty, 0));
-    showToast(`Added ${product.name} to Luxury Bag!`);
-  };
-  const handleBespokeCustomDesign = async () => {
-  const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
-
-  if (!savedUser?.email) {
-    showToast("Please sign in before creating a custom design.");
-    navigate("/profile");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/custom-designs`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          user_email: savedUser.email,
-          product_id: product.id,
-          product_name: product.name,
-          product_category: product.category,
-          product_price: product.price,
-          product_image: product.image
-        })
+    try {
+      const existingCart = JSON.parse(localStorage.getItem('weftin_cart')) || [];
+      const numericId = Number(product.id);
+      
+      const existingIndex = existingCart.findIndex(item => Number(item.id || item.product_id) === numericId && item.size === selectedSize && item.shade === selectedColor);
+      
+      if (existingIndex > -1) {
+        existingCart[existingIndex].qty += quantity;
+      } else {
+        existingCart.push({
+          id: numericId,
+          product_id: numericId,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          size: selectedSize,
+          shade: selectedColor,
+          qty: quantity,
+          image: product.image,
+          tag: product.tag || 'ATELIER'
+        });
       }
-    );
 
-    const data = await response.json();
+      localStorage.setItem('weftin_cart', JSON.stringify(existingCart));
+      setCartCount(existingCart.reduce((acc, i) => acc + (Number(i.qty) || 0), 0));
+      showToast(`Added ${quantity}x ${product.name} to Luxury Bag!`);
+    } catch (error) {
+      console.error("Add to bag error:", error);
+      showToast("Unable to add item to luxury bag.");
+    }
+  };
 
-    if (!response.ok) {
-      throw new Error(data.detail || "Failed to create custom design");
+  const handleBespokeCustomDesign = async () => {
+    const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
+    const token = localStorage.getItem("weftin_token");
+
+    if (!savedUser?.email) {
+      showToast("Please sign in before creating a custom design.");
+      setTimeout(() => navigate("/login"), 1000);
+      return;
     }
 
-    showToast("Bespoke custom design request created!");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/custom-designs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            user_email: savedUser.email,
+            product_id: Number(product.id),
+            product_name: product.name,
+            product_category: product.category,
+            product_price: product.price,
+            product_image: product.image
+          })
+        }
+      );
 
-    setTimeout(() => {
-      navigate("/custom-designs");
-    }, 500);
+      const data = await response.json();
 
-  } catch (error) {
-    console.error("Custom design error:", error);
-    showToast("Unable to create custom design request.");
-  }
-};
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to create custom design");
+      }
 
+      showToast("Bespoke custom design request created!");
+
+      setTimeout(() => {
+        navigate("/custom-designs");
+      }, 500);
+
+    } catch (error) {
+      console.error("Custom design error:", error);
+      showToast("Unable to create custom design request.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
@@ -155,12 +172,14 @@ export default function Product_Overview() {
           </div>
 
           <div className="text-center">
-            <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+            </Link>
           </div>
 
           <div className="flex items-center gap-6">
             <span className="text-xs font-medium text-gray-700 cursor-pointer">INR &or;</span>
-            <Link to="/profile" className="text-gray-800 hover:text-black">
+            <Link to="/wishlist" className="text-gray-800 hover:text-black">
               <Heart className="w-5 h-5" />
             </Link>
             <Link to="/profile" className="text-gray-800 hover:text-black">
@@ -178,7 +197,7 @@ export default function Product_Overview() {
           <Link to="/" className="hover:text-black transition-colors">Home</Link>
           <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
           <a href="#" className="hover:text-black transition-colors">Collections</a>
-          <a href="#" className="hover:text-black transition-colors">Custom Design</a>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
           <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
           <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
         </nav>
@@ -294,50 +313,24 @@ export default function Product_Overview() {
               </div>
             </div>
 
-        {/* Action Buttons */}
-  <div className="space-y-3 mb-8">
-    <button 
-      onClick={() => {
-        const existingCart = JSON.parse(localStorage.getItem('weftin_cart')) || [];
-        
-        const existingIndex = existingCart.findIndex(
-          item => item.id === product.id && item.size === selectedSize && item.shade === selectedColor
-        );
-        
-        if (existingIndex > -1) {
-          existingCart[existingIndex].qty += quantity;
-        } else {
-          existingCart.push({
-            id: product.id,
-            name: product.name,
-            category: product.category,
-            price: product.price,
-            size: selectedSize,
-            shade: selectedColor,
-            qty: quantity,
-            image: product.image,
-            tag: product.tag || 'ATELIER'
-          });
-        }
-
-        localStorage.setItem('weftin_cart', JSON.stringify(existingCart));
-        setCartCount(existingCart.reduce((acc, i) => acc + i.qty, 0));
-        showToast(`Added ${quantity}x ${product.name} to Luxury Bag!`);
-      }} 
-      className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg"
-    >
-      Add To Luxury Bag
-    </button>
-    <button onClick={() => showToast('Redirecting to express checkout...')} className="w-full border-2 border-black text-black py-3.5 rounded text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black hover:text-white transition-colors">
-      Buy It Now
-    </button>
-<button 
-  onClick={handleBespokeCustomDesign}
-  className="w-full bg-amber-50 border border-amber-300 text-amber-900 py-3 rounded text-xs uppercase tracking-[0.15em] font-semibold hover:bg-amber-100 transition-colors"
->
-  Bespoke Custom Design
-</button>
-  </div>
+            {/* Action Buttons */}
+            <div className="space-y-3 mb-8">
+              <button 
+                onClick={handleAddToBag} 
+                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg"
+              >
+                Add To Luxury Bag
+              </button>
+              <button onClick={() => showToast('Redirecting to express checkout...')} className="w-full border-2 border-black text-black py-3.5 rounded text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black hover:text-white transition-colors">
+                Buy It Now
+              </button>
+              <button 
+                onClick={handleBespokeCustomDesign}
+                className="w-full bg-amber-50 border border-amber-300 text-amber-900 py-3 rounded text-xs uppercase tracking-[0.15em] font-semibold hover:bg-amber-100 transition-colors"
+              >
+                Bespoke Custom Design
+              </button>
+            </div>
 
             {/* Accordions */}
             <div className="border-t border-gray-200 divide-y divide-gray-200 text-xs">
