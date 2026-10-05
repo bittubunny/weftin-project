@@ -130,6 +130,8 @@ export default function Orders_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
       setErrorMessage("");
@@ -137,7 +139,12 @@ export default function Orders_Page() {
       const response = await fetch(
         `${API_BASE_URL}/api/orders/${encodeURIComponent(
           userEmail
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       const data = await response.json();
@@ -510,10 +517,6 @@ export default function Orders_Page() {
         return;
       }
 
-      // ----------------------------------------------
-      // READ EXISTING CART
-      // ----------------------------------------------
-
       let cart = [];
 
       try {
@@ -539,10 +542,6 @@ export default function Orders_Page() {
         cart = [];
       }
 
-      // ----------------------------------------------
-      // ORDER DETAILS
-      // ----------------------------------------------
-
       const size =
         order.size || "";
 
@@ -554,10 +553,6 @@ export default function Orders_Page() {
 
       const numericProductId =
         Number(productId);
-
-      // ----------------------------------------------
-      // CHECK IF SAME ITEM ALREADY EXISTS
-      // ----------------------------------------------
 
       const existingIndex =
         cart.findIndex((item) => {
@@ -584,10 +579,6 @@ export default function Orders_Page() {
           );
         });
 
-      // ----------------------------------------------
-      // ALREADY IN CART
-      // ----------------------------------------------
-
       if (existingIndex !== -1) {
         const updatedCart =
           [...cart];
@@ -613,13 +604,7 @@ export default function Orders_Page() {
             updatedCart
           )
         );
-      }
-
-      // ----------------------------------------------
-      // NOT IN CART → ADD ITEM
-      // ----------------------------------------------
-
-      else {
+      } else {
         const cartItem = {
           id: numericProductId,
 
@@ -672,10 +657,6 @@ export default function Orders_Page() {
           )
         );
       }
-
-      // ----------------------------------------------
-      // SUCCESS
-      // ----------------------------------------------
 
       showToast(
         `${order.product_name || "Item"} added to your bag.`
@@ -944,6 +925,10 @@ export default function Orders_Page() {
 
           <Link
             to="/"
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+            }}
             className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
           >
             <LogOut className="w-4 h-4" />
@@ -1040,7 +1025,7 @@ export default function Orders_Page() {
           <Link
             to="/dashboard"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
@@ -1058,7 +1043,7 @@ export default function Orders_Page() {
           <Link
             to="/custom-designs"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <Scissors className="w-4 h-4" />
             Custom Designs
@@ -1067,7 +1052,7 @@ export default function Orders_Page() {
           <Link
             to="/measurements"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <Ruler className="w-4 h-4" />
             Measurements
@@ -1076,7 +1061,7 @@ export default function Orders_Page() {
           <Link
             to="/wishlist"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <Heart className="w-4 h-4" />
             Wishlist
@@ -1085,7 +1070,7 @@ export default function Orders_Page() {
           <Link
             to="/addresses"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <MapPin className="w-4 h-4" />
             Addresses
@@ -1094,7 +1079,7 @@ export default function Orders_Page() {
           <Link
             to="/profile"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <User className="w-4 h-4" />
             Profile
@@ -1103,22 +1088,20 @@ export default function Orders_Page() {
           <Link
             to="/notifications"
             onClick={closeMobileMenu}
-            className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
-
             <span className="flex items-center gap-3">
               <Bell className="w-4 h-4" />
               Notifications
             </span>
 
             <NotificationBadge sidebar />
-
           </Link>
 
           <Link
             to="/support"
             onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
           >
             <Headphones className="w-4 h-4" />
             Support
@@ -1132,7 +1115,11 @@ export default function Orders_Page() {
 
           <Link
             to="/"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+              closeMobileMenu();
+            }}
             className="flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
           >
             <LogOut className="w-4 h-4" />
@@ -1232,7 +1219,7 @@ export default function Orders_Page() {
                   WEFTIN
                 </h1>
 
-                <span className="text-[8px] uppercase tracking-[0.18em] text-gray-400 block">
+                <span className="text-[7px] uppercase tracking-[0.18em] text-gray-400 block">
                   ATELIER TAILORS
                 </span>
               </div>
@@ -1278,6 +1265,7 @@ export default function Orders_Page() {
               {/* MENU */}
 
               <button
+                type="button"
                 onClick={() =>
                   setMobileMenuOpen(true)
                 }
@@ -1430,7 +1418,7 @@ export default function Orders_Page() {
           ) : !errorMessage ? (
 
             /* ==================================================
-               ORDERS GRID
+                ORDERS GRID
             ================================================== */
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
