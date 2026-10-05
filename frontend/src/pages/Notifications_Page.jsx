@@ -1233,9 +1233,7 @@ export default function Notifications_Page() {
 
           ) : (
 
-            /* ==================================================
-                NOTIFICATION LIST
-            ================================================== */}
+        
 
             <div className="space-y-4">
 
