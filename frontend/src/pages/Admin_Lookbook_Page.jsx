@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -15,9 +17,6 @@ export default function Admin_Lookbook_Page() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [selectedSection, setSelectedSection] =
-    useState(null);
-
   const [toast, setToast] = useState("");
 
   const showToast = (message) => {
@@ -33,11 +32,18 @@ export default function Admin_Lookbook_Page() {
   // =========================================================
 
   const loadLookbook = async () => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
 
       const response = await fetch(
-        `${API_BASE_URL}/api/lookbook`
+        `${API_BASE_URL}/api/lookbook`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       const data = await response.json();
@@ -67,6 +73,8 @@ export default function Admin_Lookbook_Page() {
   // =========================================================
 
   const updateSection = async (section) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setSaving(true);
 
@@ -76,6 +84,7 @@ export default function Admin_Lookbook_Page() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify(section),
         }
@@ -106,6 +115,8 @@ export default function Admin_Lookbook_Page() {
   // =========================================================
 
   const updateItem = async (item) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setSaving(true);
 
@@ -115,6 +126,7 @@ export default function Admin_Lookbook_Page() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify(item),
         }
@@ -145,6 +157,8 @@ export default function Admin_Lookbook_Page() {
   // =========================================================
 
   const addItem = async (sectionKey) => {
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setSaving(true);
 
@@ -154,6 +168,7 @@ export default function Admin_Lookbook_Page() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
           body: JSON.stringify({
             section_key: sectionKey,
@@ -200,6 +215,8 @@ export default function Admin_Lookbook_Page() {
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setSaving(true);
 
@@ -207,6 +224,9 @@ export default function Admin_Lookbook_Page() {
         `${API_BASE_URL}/api/lookbook/item/${id}`,
         {
           method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
         }
       );
 
@@ -290,7 +310,7 @@ export default function Admin_Lookbook_Page() {
 
   if (loading) {
     return (
-      <div className="p-10 text-center">
+      <div className="p-10 text-center text-xs uppercase tracking-widest text-gray-500">
         Loading Lookbook...
       </div>
     );
@@ -309,7 +329,15 @@ export default function Admin_Lookbook_Page() {
 
       {/* HEADER */}
 
-      <div className="max-w-7xl mx-auto mb-8">
+      <div className="max-w-7xl mx-auto mb-8 space-y-4">
+
+        <Link
+          to="/shop"
+          className="text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1 hover:text-black"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Shop / Admin Hub
+        </Link>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
