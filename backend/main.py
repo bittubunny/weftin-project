@@ -1,14 +1,41 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 load_dotenv()  # Load environment variables from .env file
+
+# ============================================================
+# SECURITY CONFIGURATION
+# ============================================================
+
+SECRET_KEY = os.getenv("SECRET_KEY", "weftin_super_secret_atelier_jwt_key_2026")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_DAYS = 7
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 # ============================================================
 # APP
@@ -16,10 +43,6 @@ load_dotenv()  # Load environment variables from .env file
 
 app = FastAPI(title="WEFTIN Atelier NeonDB API")
 
-
-# ============================================================
-# CORS
-# ============================================================
 
 # ============================================================
 # CORS
@@ -438,12 +461,12 @@ def subscribe_newsletter(data: NewsletterSignup):
 
 class UserRegister(BaseModel):
     name: str
-    email: str
+    email: EmailStr
     password: str
 
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -479,6 +502,8 @@ def register_user(user: UserRegister):
                 detail="Email already registered."
             )
 
+        hashed_password = get_password_hash(user.password)
+
         cur.execute(
             """
             INSERT INTO users (
@@ -492,7 +517,7 @@ def register_user(user: UserRegister):
             (
                 user.name,
                 user.email,
-                user.password
+                hashed_password
             )
         )
 
@@ -510,9 +535,13 @@ def register_user(user: UserRegister):
 
         conn.commit()
 
+        token = create_access_token({"sub": new_user["email"]})
+
         return {
             "status": "success",
             "message": "Account created successfully!",
+            "access_token": token,
+            "token_type": "bearer",
             "user": new_user
         }
 
@@ -563,18 +592,23 @@ def login_user(creds: UserLogin):
             """
             SELECT *
             FROM users
-            WHERE email = %s
-            AND password = %s;
+            WHERE email = %s;
             """,
-            (
-                creds.email,
-                creds.password
-            )
+            (creds.email,)
         )
 
         user = cur.fetchone()
 
-        if not user:
+        # Support both bcrypt hashes and legacy plaintext passwords safely
+        is_valid = False
+        if user:
+            stored_pwd = user["password"]
+            if stored_pwd.startswith("$2b$") or stored_pwd.startswith("$2a$"):
+                is_valid = verify_password(creds.password, stored_pwd)
+            else:
+                is_valid = (creds.password == stored_pwd)
+
+        if not user or not is_valid:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid email or password."
@@ -592,13 +626,18 @@ def login_user(creds: UserLogin):
 
         conn.commit()
 
+        token = create_access_token({"sub": user["email"]})
+
         return {
             "status": "success",
             "message": "Login successful!",
+            "access_token": token,
+            "token_type": "bearer",
             "user": {
                 "id": user["id"],
                 "name": user["name"],
-                "email": user["email"]
+                "email": user["email"],
+                "avatar": user.get("avatar")
             }
         }
 
@@ -2954,23 +2993,6 @@ def delete_custom_design(
 # NOTIFICATIONS
 # ============================================================
 
-# IMPORTANT:
-# These routes intentionally use:
-#
-# GET  /api/notifications/{user_email}
-# GET  /api/notifications/unread-count/{user_email}
-#
-# instead of:
-#
-# /api/notifications/{user_email}/unread-count
-#
-# because the latter can conflict with FastAPI's dynamic route.
-
-
-# ============================================================
-# GET ALL NOTIFICATIONS
-# ============================================================
-
 @app.get("/api/notifications/{user_email}")
 def get_notifications(
     user_email: str
@@ -3015,10 +3037,6 @@ def get_notifications(
         if conn:
             conn.close()
 
-
-# ============================================================
-# GET UNREAD NOTIFICATION COUNT
-# ============================================================
 
 @app.get("/api/notifications/unread-count/{user_email}")
 def get_unread_notification_count(
@@ -3068,9 +3086,6 @@ def get_unread_notification_count(
         if conn:
             conn.close()
 
-# ============================================================
-# MARK ONE NOTIFICATION AS READ
-# ============================================================
 
 @app.put("/api/notifications/{notification_id}/read")
 def mark_notification_read(
@@ -3138,10 +3153,6 @@ def mark_notification_read(
             conn.close()
 
 
-# ============================================================
-# MARK ALL NOTIFICATIONS AS READ
-# ============================================================
-
 @app.put("/api/notifications/read-all/{user_email}")
 def mark_all_notifications_read(
     user_email: str
@@ -3189,10 +3200,6 @@ def mark_all_notifications_read(
         if conn:
             conn.close()
 
-
-# ============================================================
-# CLEAR ALL NOTIFICATIONS
-# ============================================================
 
 @app.delete("/api/notifications/{user_email}")
 def clear_all_notifications(
@@ -3252,6 +3259,7 @@ def root():
         "message": "WEFTIN Atelier API is running."
     }
 
+
 class OrderCreate(BaseModel):
     user_email: str
 
@@ -3277,6 +3285,7 @@ class OrderCreate(BaseModel):
     courier: Optional[str] = None
 
     estimated_delivery: Optional[str] = None
+
 
 # ============================================================
 # ORDERS
@@ -3381,10 +3390,6 @@ def create_order(order: OrderCreate):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # ----------------------------------------------------
-        # Insert order first so PostgreSQL gives us the ID
-        # ----------------------------------------------------
-
         cur.execute(
             """
             INSERT INTO orders (
@@ -3436,11 +3441,6 @@ def create_order(order: OrderCreate):
         result = cur.fetchone()
         order_id = result["id"]
 
-        # ----------------------------------------------------
-        # Generate a readable order number
-        # Example: WF-2026-000123
-        # ----------------------------------------------------
-
         order_number = f"WF-{datetime.now().year}-{order_id:06d}"
 
         cur.execute(
@@ -3455,10 +3455,6 @@ def create_order(order: OrderCreate):
         )
 
         created_order = cur.fetchone()
-
-        # ----------------------------------------------------
-        # Create notification
-        # ----------------------------------------------------
 
         create_notification(
             cur,
@@ -3487,7 +3483,7 @@ def create_order(order: OrderCreate):
 
         raise HTTPException(
             status_code=500,
-            detail="Failed to fetch order"
+            detail="Failed to create order"
         )
 
     finally:
@@ -3510,10 +3506,6 @@ def update_order_status(
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # ----------------------------------------------------
-        # Make sure the order belongs to this user
-        # ----------------------------------------------------
-
         cur.execute(
             """
             SELECT *
@@ -3533,10 +3525,6 @@ def update_order_status(
                 detail="Order not found"
             )
 
-        # ----------------------------------------------------
-        # Update status
-        # ----------------------------------------------------
-
         cur.execute(
             """
             UPDATE orders
@@ -3554,10 +3542,6 @@ def update_order_status(
         )
 
         updated_order = cur.fetchone()
-
-        # ----------------------------------------------------
-        # Notification message based on status
-        # ----------------------------------------------------
 
         notification_type = "ORDER"
         title = "Order Status Updated"
@@ -3657,10 +3641,6 @@ def delete_order(
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # ----------------------------------------------------
-        # Make sure order belongs to the logged-in user
-        # ----------------------------------------------------
-
         cur.execute(
             """
             SELECT *
@@ -3680,10 +3660,6 @@ def delete_order(
                 detail="Order not found"
             )
 
-        # ----------------------------------------------------
-        # Delete order
-        # ----------------------------------------------------
-
         cur.execute(
             """
             DELETE FROM orders
@@ -3692,10 +3668,6 @@ def delete_order(
             """,
             (order_number, user_email)
         )
-
-        # ----------------------------------------------------
-        # Notification
-        # ----------------------------------------------------
 
         create_notification(
             cur,
@@ -3750,7 +3722,6 @@ def get_lookbook():
 
         with conn.cursor() as cur:
 
-            # Get sections
             cur.execute("""
                 SELECT *
                 FROM lookbook_sections
@@ -3760,7 +3731,6 @@ def get_lookbook():
 
             sections = cur.fetchall()
 
-            # Get items
             cur.execute("""
                 SELECT *
                 FROM lookbook_items
@@ -3770,7 +3740,6 @@ def get_lookbook():
 
             items = cur.fetchall()
 
-        # Convert database structure into easy frontend structure
         result = []
 
         for section in sections:
