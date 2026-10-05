@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -8,12 +8,20 @@ import {
   Bell,
   Menu,
   X,
+  LayoutDashboard,
+  Package,
+  Scissors,
+  Ruler,
+  MapPin,
+  Headphones,
+  LogOut,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Shop_Page() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -23,6 +31,11 @@ export default function Shop_Page() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userAvatar, setUserAvatar] = useState("");
+  const [searchText, setSearchText] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   // Sidebar filter states
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -73,6 +86,24 @@ export default function Shop_Page() {
     "bg-pink-400",
     "bg-white border",
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  // =========================================================
+  // READ SEARCH PARAMS FROM URL
+  // =========================================================
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchQuery = params.get("search");
+    if (searchQuery) {
+      setSearchText(searchQuery);
+    }
+  }, [location.search]);
 
   // =========================================================
   // LOAD USER + CART + NOTIFICATIONS
@@ -178,6 +209,7 @@ export default function Shop_Page() {
   // =========================================================
   useEffect(() => {
     setLoading(true);
+    setCurrentPage(1);
 
     fetch(
       `${API_BASE_URL}/api/products?category=${encodeURIComponent(
@@ -238,11 +270,14 @@ export default function Shop_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           user_email: savedUser.email,
@@ -278,7 +313,7 @@ export default function Shop_Page() {
         JSON.parse(localStorage.getItem("weftin_cart")) || [];
 
       const existingIndex = existingCart.findIndex(
-        (item) => item.id === p.id
+        (item) => Number(item.id || item.product_id) === Number(p.id)
       );
 
       if (existingIndex > -1) {
@@ -286,8 +321,8 @@ export default function Shop_Page() {
           (Number(existingCart[existingIndex].qty) || 0) + 1;
       } else {
         existingCart.push({
-          id: p.id,
-          product_id: p.id,
+          id: Number(p.id),
+          product_id: Number(p.id),
           name: p.name,
           category: p.category,
           price: p.price,
@@ -324,6 +359,16 @@ export default function Shop_Page() {
   // =========================================================
   const filteredProducts = useMemo(() => {
     let result = [...products];
+
+    // SEARCH QUERY
+    if (searchText.trim()) {
+      const query = searchText.toLowerCase().trim();
+      result = result.filter(
+        (p) =>
+          String(p.name || "").toLowerCase().includes(query) ||
+          String(p.category || "").toLowerCase().includes(query)
+      );
+    }
 
     // CATEGORY
     if (appliedFilters.category !== "All") {
@@ -458,7 +503,16 @@ export default function Shop_Page() {
     }
 
     return result;
-  }, [products, appliedFilters, sortBy]);
+  }, [products, appliedFilters, sortBy, searchText]);
+
+  // =========================================================
+  // PAGINATION SLICE
+  // =========================================================
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage]);
 
   // =========================================================
   // USER DISPLAY
@@ -512,6 +566,8 @@ export default function Shop_Page() {
 
             <input
               type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search anything..."
               className="bg-transparent text-xs text-gray-800 focus:outline-none w-full"
             />
@@ -888,6 +944,17 @@ export default function Shop_Page() {
 
             </div>
           </nav>
+
+          {/* LOGOUT */}
+          <div className="p-4 border-t border-gray-100 bg-white">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -1101,6 +1168,7 @@ export default function Shop_Page() {
                 setPriceRange("");
                 setInStockOnly(false);
                 setCustomStitching(false);
+                setSearchText("");
 
                 setAppliedFilters({
                   category: "All",
@@ -1149,8 +1217,8 @@ export default function Shop_Page() {
 
             <span className="text-xs text-gray-500">
               Showing{" "}
-              <strong>{filteredProducts.length}</strong>{" "}
-              items from NeonDB for "
+              <strong>{paginatedProducts.length}</strong> of{" "}
+              <strong>{filteredProducts.length}</strong> items from NeonDB for "
               <strong>{appliedFilters.category}</strong>"
             </span>
 
@@ -1192,7 +1260,7 @@ export default function Shop_Page() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 
-              {filteredProducts.map((p) => (
+              {paginatedProducts.map((p) => (
                 <div
                   key={p.id}
                   className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
@@ -1271,31 +1339,30 @@ export default function Shop_Page() {
             </div>
           )}
 
-          {/* Pagination */}
-          <div className="flex justify-center items-center gap-2 pt-8">
-
-            <button
-              onClick={() => showToast("Page 1")}
-              className="w-9 h-9 rounded-lg border border-gray-200 bg-white text-xs flex items-center justify-center font-semibold hover:border-black"
-            >
-              1
-            </button>
-
-            <button
-              onClick={() => showToast("Page 2")}
-              className="w-9 h-9 rounded-lg border border-gray-200 bg-white text-xs flex items-center justify-center font-semibold hover:border-black"
-            >
-              2
-            </button>
-
-            <button
-              onClick={() => showToast("Next Page")}
-              className="w-9 h-9 rounded-lg border border-gray-200 bg-white text-xs flex items-center justify-center font-semibold hover:border-black"
-            >
-              ›
-            </button>
-
-          </div>
+          {/* DYNAMIC PAGINATION BUTTONS */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 pt-8">
+              {Array.from({ length: totalPages }, (_, index) => {
+                const pageNum = index + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`w-9 h-9 rounded-lg border text-xs flex items-center justify-center font-semibold transition-all ${
+                      currentPage === pageNum
+                        ? "bg-black text-white border-black"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-black"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
