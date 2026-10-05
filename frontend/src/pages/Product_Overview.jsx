@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Search, ShoppingBag, Heart, User, Star, ChevronDown, ChevronUp } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function Product_Overview() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function Product_Overview() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/api/products`)
+    fetch(`${API_BASE_URL}/api/products`)
       .then(res => res.json())
       .then(data => {
         const found = data.find(item => item.id.toString() === id) || data[0];
@@ -92,7 +94,7 @@ export default function Product_Overview() {
 
   try {
     const response = await fetch(
-      "http://127.0.0.1:8000/api/custom-designs",
+      `${API_BASE_URL}/api/custom-designs`,
       {
         method: "POST",
         headers: {
