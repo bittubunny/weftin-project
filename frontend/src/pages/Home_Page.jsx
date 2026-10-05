@@ -78,6 +78,19 @@ export default function Home_Page() {
 
   /*
   ============================================================
+  LOGOUT HANDLER
+  ============================================================
+  */
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  /*
+  ============================================================
   CART
   ============================================================
   */
@@ -478,12 +491,6 @@ export default function Home_Page() {
     "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=500",
     "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=500"
   ];
-
-  /*
-  ============================================================
-  MOBILE NAVIGATION LINKS
-  ============================================================
-  */
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
@@ -1049,14 +1056,13 @@ export default function Home_Page() {
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
 
-          <Link
-            to="/"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Log out
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -1463,7 +1469,6 @@ export default function Home_Page() {
                 <div className="p-4 flex flex-col flex-grow justify-between">
 
                   <div>
-
                     <h3 className="font-serif text-sm font-medium mb-1">
                       {item.name}
                     </h3>
@@ -1551,7 +1556,6 @@ export default function Home_Page() {
                 <div className="p-4 flex flex-col flex-grow">
 
                   <div>
-
                     <h4 className="font-serif text-sm font-medium mb-1">
                       {item.name}
                     </h4>
