@@ -26,6 +26,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://weftin-project.onrender.com",
+        "https://weftin-project-gj67p1s7m-bharath-chelimallas-projects.vercel.app",
+        "https://weftin-project-bharaths-projects-42353a00.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -348,7 +351,7 @@ def add_to_cart(item: CartItem):
 
     try:
 
-        # If frontend has not yet started sending user_email,
+        # If frontend has not yet sent user_email,
         # keep the old cart behavior working.
         if not item.user_email:
             return {
@@ -3015,10 +3018,6 @@ def get_notifications(
 # GET UNREAD NOTIFICATION COUNT
 # ============================================================
 
-# ============================================================
-# GET UNREAD NOTIFICATION COUNT
-# ============================================================
-
 @app.get("/api/notifications/unread-count/{user_email}")
 def get_unread_notification_count(
     user_email: str
@@ -3486,7 +3485,7 @@ def create_order(order: OrderCreate):
 
         raise HTTPException(
             status_code=500,
-            detail="Failed to create order"
+            detail="Failed to fetch order"
         )
 
     finally:
@@ -4517,7 +4516,7 @@ def update_limited_settings(data: dict):
         conn.commit()
 
         return {
-            "success": True,
+            "success": "true",
             "settings": settings
         }
 
