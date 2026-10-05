@@ -27,7 +27,7 @@ import {
   Menu
 } from "lucide-react";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250";
@@ -709,19 +709,17 @@ export default function Notifications_Page() {
 
           {/* ACTIVE NOTIFICATIONS */}
 
-        {/* ACTIVE NOTIFICATIONS */}
+          <Link
+            to="/notifications"
+            onClick={closeMobileMenu}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
+          >
+            <Bell className="w-4 h-4 shrink-0" />
 
-<Link
-  to="/notifications"
-  onClick={closeMobileMenu}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
->
-  <Bell className="w-4 h-4 shrink-0" />
-
-  <span className="truncate">
-    Notifications
-  </span>
-</Link>
+            <span className="truncate">
+              Notifications
+            </span>
+          </Link>
 
           <Link
             to="/support"
