@@ -27,7 +27,7 @@ import {
   Menu
 } from "lucide-react";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Wishlist_Page() {
   const navigate = useNavigate();
@@ -650,7 +650,7 @@ export default function Wishlist_Page() {
                 {userName}
               </p>
 
-              <p className="text-[10px] text-gray-500 truncate">
+              <p className="text-[10px] text-gray-400 truncate">
                 {currentUser?.email || "WEFTIN Member"}
               </p>
 
