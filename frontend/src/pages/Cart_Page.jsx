@@ -27,19 +27,33 @@ export default function Cart_Page() {
   };
 
   // ============================================================
-  // LOAD CART
+  // LOAD CART & SYNC ACROSS TABS
   // ============================================================
 
   useEffect(() => {
-    try {
-      const savedCart =
-        JSON.parse(localStorage.getItem("weftin_cart")) || [];
+    const loadCart = () => {
+      try {
+        const savedCart =
+          JSON.parse(localStorage.getItem("weftin_cart")) || [];
+        setCartItems(savedCart);
+      } catch (error) {
+        console.error("Failed to load cart:", error);
+        setCartItems([]);
+      }
+    };
 
-      setCartItems(savedCart);
-    } catch (error) {
-      console.error("Failed to load cart:", error);
-      setCartItems([]);
-    }
+    loadCart();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "weftin_cart") {
+        loadCart();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   // ============================================================
@@ -60,7 +74,7 @@ export default function Cart_Page() {
 
   const handleQuantityChange = (id, delta) => {
     const updated = cartItems.map((item) => {
-      if (item.id === id) {
+      if (Number(item.id || item.product_id) === Number(id)) {
         const newQty = Math.max(1, Number(item.qty || 1) + delta);
 
         return {
@@ -81,7 +95,7 @@ export default function Cart_Page() {
 
   const removeItem = (id) => {
     const updated = cartItems.filter(
-      (item) => item.id !== id
+      (item) => Number(item.id || item.product_id) !== Number(id)
     );
 
     updateCartStorage(updated);
@@ -153,10 +167,6 @@ export default function Cart_Page() {
       return;
     }
 
-    // ----------------------------------------------------------
-    // Get logged-in user
-    // ----------------------------------------------------------
-
     let savedUser = null;
 
     try {
@@ -183,22 +193,15 @@ export default function Cart_Page() {
       return;
     }
 
-    // ----------------------------------------------------------
-    // Prevent duplicate checkout clicks
-    // ----------------------------------------------------------
-
     if (isCheckingOut) {
       return;
     }
 
     setIsCheckingOut(true);
+    const token = localStorage.getItem("weftin_token");
 
     try {
       showToast("Creating your WEFTIN order...");
-
-      // --------------------------------------------------------
-      // Create an order for every cart item
-      // --------------------------------------------------------
 
       const orderRequests = cartItems.map(
         async (item) => {
@@ -264,8 +267,8 @@ export default function Cart_Page() {
               method: "POST",
 
               headers: {
-                "Content-Type":
-                  "application/json",
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
               },
 
               body: JSON.stringify(orderData),
@@ -294,21 +297,8 @@ export default function Cart_Page() {
         }
       );
 
-      // --------------------------------------------------------
-      // Wait until ALL cart items become orders
-      // --------------------------------------------------------
-
       const createdOrders =
         await Promise.all(orderRequests);
-
-      console.log(
-        "Created orders:",
-        createdOrders
-      );
-
-      // --------------------------------------------------------
-      // Clear cart only after successful order creation
-      // --------------------------------------------------------
 
       localStorage.removeItem("weftin_cart");
 
@@ -316,19 +306,11 @@ export default function Cart_Page() {
 
       setDiscount(0);
 
-      // --------------------------------------------------------
-      // Show success
-      // --------------------------------------------------------
-
       showToast(
         `${createdOrders.length} order${
           createdOrders.length > 1 ? "s" : ""
         } placed successfully!`
       );
-
-      // --------------------------------------------------------
-      // Send user to Orders page
-      // --------------------------------------------------------
 
       setTimeout(() => {
         navigate("/orders");
@@ -400,9 +382,11 @@ export default function Cart_Page() {
           </div>
 
           <div className="text-center">
-            <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">
-              WEFTIN
-            </h1>
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">
+                WEFTIN
+              </h1>
+            </Link>
           </div>
 
           <div className="flex items-center gap-6">
@@ -412,7 +396,7 @@ export default function Cart_Page() {
             </span>
 
             <Link
-              to="/profile"
+              to="/wishlist"
               className="text-gray-800 hover:text-black"
             >
               <Heart className="w-5 h-5" />
@@ -469,12 +453,12 @@ export default function Cart_Page() {
             Collections
           </a>
 
-          <a
-            href="#"
+          <Link
+            to="/custom-designs"
             className="hover:text-black transition-colors"
           >
             Custom Design
-          </a>
+          </Link>
 
           <Link
             to="/lookbook"
@@ -607,7 +591,7 @@ export default function Cart_Page() {
 
                       <div className="border-t border-dashed border-gray-200 my-4"></div>
 
-                      <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="grid grid-cols-2 gap-2 text-xs">
 
                         <div>
 
@@ -661,7 +645,7 @@ export default function Cart_Page() {
 
                         <button
                           onClick={() =>
-                            removeItem(item.id)
+                            removeItem(item.id || item.product_id)
                           }
                           className="text-[11px] uppercase tracking-wider text-rose-700 hover:text-rose-900 flex items-center gap-1"
                         >
@@ -680,7 +664,7 @@ export default function Cart_Page() {
                         <button
                           onClick={() =>
                             handleQuantityChange(
-                              item.id,
+                              item.id || item.product_id,
                               -1
                             )
                           }
@@ -696,7 +680,7 @@ export default function Cart_Page() {
                         <button
                           onClick={() =>
                             handleQuantityChange(
-                              item.id,
+                              item.id || item.product_id,
                               1
                             )
                           }
