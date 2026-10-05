@@ -18,7 +18,7 @@ import {
   LogOut
 } from "lucide-react";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Home_Page() {
   const navigate = useNavigate();
