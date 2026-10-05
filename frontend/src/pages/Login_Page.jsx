@@ -16,7 +16,8 @@ export default function Login_Page() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
+      const API_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+      const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
