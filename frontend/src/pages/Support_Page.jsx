@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, User, Bell, Headphones, LogOut, Mail, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function Support_Page() {
   const [subject, setSubject] = useState('Size alteration support request');
   const [concerns, setConcerns] = useState('');
