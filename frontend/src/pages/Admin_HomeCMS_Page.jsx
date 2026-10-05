@@ -24,13 +24,19 @@ export default function Admin_HomeCMS_Page() {
   // ============================================================
 
   const fetchProducts = async () => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
       setLoading(true);
 
       const res = await fetch(
-        `${API_URL}/api/admin/home-products`
+        `${API_URL}/api/admin/home-products`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!res.ok) {
@@ -76,6 +82,7 @@ export default function Admin_HomeCMS_Page() {
     productId,
     newPlacement
   ) => {
+    const token = localStorage.getItem("weftin_token");
 
     try {
 
@@ -85,7 +92,8 @@ export default function Admin_HomeCMS_Page() {
           method: "PUT",
 
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
           },
 
           body: JSON.stringify({
@@ -177,13 +185,13 @@ export default function Admin_HomeCMS_Page() {
         <div>
 
           <Link
-            to="/"
+            to="/shop"
             className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-amber-800 font-semibold mb-2 hover:underline"
           >
 
             <ArrowLeft className="w-4 h-4" />
 
-            Back to Home Page
+            Back to Shop / Admin Hub
 
           </Link>
 
@@ -376,7 +384,7 @@ export default function Admin_HomeCMS_Page() {
                             product.id
                           )
                         }
-                        className="p-2.5 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors"
+                        className="p-2.5 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
                         title="Remove from Home page"
                       >
 
