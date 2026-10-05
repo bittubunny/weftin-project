@@ -37,11 +37,15 @@ export default function CustomWorkspace_Page() {
   // --------------------------------------------------
 
   const [savedUser, setSavedUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("weftin_user"));
       setSavedUser(user);
+      if (user?.email) {
+        loadUnreadCount(user.email);
+      }
     } catch (error) {
       console.error("Unable to read logged-in user:", error);
       setSavedUser(null);
@@ -54,6 +58,19 @@ export default function CustomWorkspace_Page() {
     savedUser?.full_name ||
     savedUser?.username ||
     "WEFTIN Member";
+
+  const loadUnreadCount = async (email) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      setUnreadCount(Number(data?.count || 0));
+    } catch (error) {
+      console.error("Unread count error:", error);
+    }
+  };
 
   // --------------------------------------------------
   // CUSTOM DESIGN REQUEST
@@ -94,12 +111,19 @@ export default function CustomWorkspace_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       setLoading(true);
       setErrorMessage("");
 
       const response = await fetch(
-        `${API_BASE_URL}/api/custom-designs/${encodeURIComponent(userEmail)}`
+        `${API_BASE_URL}/api/custom-designs/${encodeURIComponent(userEmail)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       const data = await response.json();
@@ -249,7 +273,6 @@ export default function CustomWorkspace_Page() {
 
     showToast("Reference photo uploaded successfully!");
 
-    // Allow selecting the same file again later.
     e.target.value = "";
   };
 
@@ -626,9 +649,11 @@ export default function CustomWorkspace_Page() {
                 Notifications
               </span>
 
-              <span className="bg-rose-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                2
-              </span>
+              {unreadCount > 0 && (
+                <span className="bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
 
             <Link
@@ -647,6 +672,10 @@ export default function CustomWorkspace_Page() {
         <div className="p-4 border-t border-gray-100">
           <Link
             to="/"
+            onClick={() => {
+              localStorage.removeItem("weftin_user");
+              localStorage.removeItem("weftin_token");
+            }}
             className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
           >
             <LogOut className="w-4 h-4" />
@@ -693,18 +722,18 @@ export default function CustomWorkspace_Page() {
 
           <div className="flex items-center gap-4">
 
-            <span
-              className="relative cursor-pointer"
-              onClick={() =>
-                showToast("No new notifications")
-              }
+            <Link
+              to="/notifications"
+              className="relative text-gray-600 hover:text-black transition-colors"
             >
-              <Bell className="w-5 h-5 text-gray-600" />
+              <Bell className="w-5 h-5" />
 
-              <span className="absolute -top-1 -right-1 bg-rose-700 text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
-                2
-              </span>
-            </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
 
             <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
 
