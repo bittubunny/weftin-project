@@ -19,7 +19,7 @@ import {
   ShoppingCart
 } from "lucide-react";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80";
