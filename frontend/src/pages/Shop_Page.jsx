@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Shop_Page() {
   const navigate = useNavigate();
@@ -1300,7 +1300,7 @@ export default function Shop_Page() {
       </div>
 
       {/* =====================================================
-          FOOTER — PRESERVED FROM YOUR SHOP PAGE
+          FOOTER
       ====================================================== */}
       <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
 
