@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check, X } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function AddProduct_Page() {
   const initialForm = {
     name: "",
@@ -116,7 +118,7 @@ export default function AddProduct_Page() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/products",
+        `${API_BASE_URL}/api/products`,
         {
           method: "POST",
           headers: {
