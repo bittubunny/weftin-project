@@ -16,6 +16,8 @@ import {
   X,
 } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+
 export default function Profile_Page() {
   const navigate = useNavigate();
 
@@ -34,8 +36,6 @@ export default function Profile_Page() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-
-  const API_BASE_URL = "http://127.0.0.1:8000";
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -436,7 +436,7 @@ export default function Profile_Page() {
             >
               <span className="flex items-center gap-3 min-w-0">
                 <Bell className="w-4 h-4 shrink-0" />
-                <span>Notifications</span>
+                <span className="truncate">Notifications</span>
               </span>
 
               <NotificationBadge sidebar />
