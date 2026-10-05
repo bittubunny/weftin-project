@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Check, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Check, X, Loader2 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function AddProduct_Page() {
+  const navigate = useNavigate();
+
   const initialForm = {
     name: "",
     category: "Sarees",
@@ -40,6 +42,18 @@ export default function AddProduct_Page() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
+
+  // ---------------------------------------------------------
+  // AUTHENTICATION GUARD
+  // ---------------------------------------------------------
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("weftin_user");
+    if (!storedUser) {
+      showToast("Please sign in to access admin inventory.");
+      setTimeout(() => navigate("/login"), 1200);
+    }
+  }, [navigate]);
 
   // ---------------------------------------------------------
   // HANDLE NORMAL INPUTS
@@ -115,6 +129,7 @@ export default function AddProduct_Page() {
     }
 
     setSaving(true);
+    const token = localStorage.getItem("weftin_token");
 
     try {
       const response = await fetch(
@@ -123,6 +138,7 @@ export default function AddProduct_Page() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           },
           body: JSON.stringify({
             name: form.name,
@@ -842,7 +858,7 @@ export default function AddProduct_Page() {
             className={`
               w-full text-white py-4 rounded
               text-xs uppercase tracking-[0.2em]
-              font-semibold transition-colors
+              font-semibold transition-colors flex items-center justify-center gap-2
               ${
                 saving
                   ? "bg-gray-500 cursor-not-allowed"
@@ -850,9 +866,14 @@ export default function AddProduct_Page() {
               }
             `}
           >
-            {saving
-              ? "Saving Product..."
-              : "Save Product to NeonDB"}
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving Product...
+              </>
+            ) : (
+              "Save Product to NeonDB"
+            )}
           </button>
 
         </form>
