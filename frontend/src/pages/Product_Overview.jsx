@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
+const SIZE_CHART_IMAGE_URL = "https://i.pinimg.com/1200x/05/3a/90/053a90fde578a79cd1db52c2f9edf971.jpg";
 
 export default function Product_Overview() {
   const { id } = useParams();
@@ -36,6 +37,7 @@ export default function Product_Overview() {
   const [quantity, setQuantity] = useState(1);
   const [cartCount, setCartCount] = useState(0);
   const [toastMessage, setToastMessage] = useState('');
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   
   const [currentUser, setCurrentUser] = useState(null);
   const [userAvatar, setUserAvatar] = useState("");
@@ -376,7 +378,7 @@ export default function Product_Overview() {
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
 
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
             <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -425,6 +427,35 @@ export default function Product_Overview() {
         </div>
       </aside>
 
+      {/* SIZE CHART MODAL */}
+      {isSizeChartOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsSizeChartOpen(false)}>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-xl w-full relative shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setIsSizeChartOpen(false)} 
+              className="absolute top-4 right-4 p-2 text-gray-500 hover:text-black cursor-pointer rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif text-xl font-bold mb-2 text-gray-950">Atelier Size Chart & Guide</h3>
+            <p className="text-xs text-gray-500 mb-6">Reference our standard measurements guide to find your perfect bespoke fit.</p>
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2">
+              <img 
+                src={SIZE_CHART_IMAGE_URL} 
+                alt="Weftin Size Chart" 
+                className="w-full h-auto object-contain max-h-[65vh] rounded-lg" 
+              />
+            </div>
+            <button
+              onClick={() => setIsSizeChartOpen(false)}
+              className="mt-6 w-full py-3 bg-black text-white rounded text-xs uppercase tracking-[0.2em] font-semibold cursor-pointer hover:bg-gray-800 transition-colors"
+            >
+              Close Guide
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* BREADCRUMB */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-4 text-xs text-gray-500">
         <Link to="/" className="hover:underline">Home</Link> <span className="mx-2">/</span> 
@@ -444,7 +475,7 @@ export default function Product_Overview() {
                 <button 
                   key={idx} 
                   onClick={() => setSelectedImage(idx)}
-                  className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === idx ? 'border-amber-700 shadow-md scale-105' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
+                  className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${selectedImage === idx ? 'border-amber-700 shadow-md scale-105' : 'border-gray-200 opacity-70 hover:opacity-100'}`}
                 >
                   <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -487,14 +518,14 @@ export default function Product_Overview() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs uppercase tracking-wider text-gray-600 font-semibold">Select Tailoring Size</label>
-                <button onClick={() => showToast('Opening size chart...')} className="text-xs text-amber-700 underline font-medium">Size Chart & Guide</button>
+                <button onClick={() => setIsSizeChartOpen(true)} className="text-xs text-amber-700 underline font-medium cursor-pointer">Size Chart & Guide</button>
               </div>
               <div className="flex gap-3">
                 {['S', 'M', 'L', 'Standard Length'].map(sz => (
                   <button 
                     key={sz} 
                     onClick={() => setSelectedSize(sz)}
-                    className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-all ${selectedSize === sz ? 'bg-black text-white border-black' : 'border-gray-300 text-gray-700 hover:border-black'}`}
+                    className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-all cursor-pointer ${selectedSize === sz ? 'bg-black text-white border-black' : 'border-gray-300 text-gray-700 hover:border-black'}`}
                   >
                     {sz}
                   </button>
@@ -513,7 +544,7 @@ export default function Product_Overview() {
                   <button 
                     key={c.name}
                     onClick={() => setSelectedColor(c.name)}
-                    className={`w-8 h-8 rounded-full ${c.bg} transition-transform ${selectedColor === c.name ? 'ring-4 ring-black scale-110' : 'opacity-70 hover:opacity-100'}`}
+                    className={`w-8 h-8 rounded-full ${c.bg} transition-transform cursor-pointer ${selectedColor === c.name ? 'ring-4 ring-black scale-110' : 'opacity-70 hover:opacity-100'}`}
                   />
                 ))}
               </div>
@@ -522,16 +553,16 @@ export default function Product_Overview() {
             <div className="mb-8">
               <label className="block text-xs uppercase tracking-wider text-gray-600 font-semibold mb-2">Quantity</label>
               <div className="flex items-center w-32 border border-gray-300 rounded bg-gray-50">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 text-gray-600 hover:text-black font-bold">-</button>
+                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 text-gray-600 hover:text-black font-bold cursor-pointer">-</button>
                 <span className="flex-1 text-center text-sm font-semibold">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 text-gray-600 hover:text-black font-bold">+</button>
+                <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 text-gray-600 hover:text-black font-bold cursor-pointer">+</button>
               </div>
             </div>
 
             <div className="space-y-3 mb-8">
               <button 
                 onClick={handleAddToBag} 
-                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer"
+                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer transition-colors"
               >
                 Add To Luxury Bag
               </button>
