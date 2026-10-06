@@ -14,6 +14,9 @@ import {
   Headphones,
   Menu,
   X,
+  ChevronRight,
+  Settings,
+  Search
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -24,6 +27,8 @@ export default function Profile_Page() {
   const [toastMessage, setToastMessage] = useState("");
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [cartCount, setCartCount] = useState(0);
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -47,6 +52,17 @@ export default function Profile_Page() {
     setMobileMenuOpen(false);
   };
 
+  // Update initial cart count
+  const updateCartCount = () => {
+    try {
+      const savedCart = JSON.parse(localStorage.getItem("weftin_cart")) || [];
+      const total = savedCart.reduce((acc, item) => acc + (Number(item.qty) || 0), 0);
+      setCartCount(total);
+    } catch (e) {
+      setCartCount(0);
+    }
+  };
+
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
 
@@ -57,6 +73,8 @@ export default function Profile_Page() {
 
     const userEmail = savedUser.email;
     const token = localStorage.getItem("weftin_token");
+
+    updateCartCount();
 
     fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(userEmail)}`, {
       headers: {
@@ -108,6 +126,8 @@ export default function Profile_Page() {
 
   const handleSaveProfile = async () => {
     const token = localStorage.getItem("weftin_token");
+    const savedUser = JSON.parse(localStorage.getItem("weftin_user")) || {};
+    const oldEmail = savedUser.email;
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/update`, {
@@ -117,6 +137,7 @@ export default function Profile_Page() {
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
+          old_email: oldEmail, // Pass original email if backend needs lookup reference
           name: profileData.name,
           email: profileData.email,
           phone: profileData.phone,
@@ -129,11 +150,8 @@ export default function Profile_Page() {
       if (response.ok) {
         showToast("Profile details updated successfully in database!");
 
-        // FIX: Update local storage correctly with the new avatar and name
-        const savedUser =
-          JSON.parse(localStorage.getItem("weftin_user")) || {};
-
         savedUser.name = profileData.name;
+        savedUser.email = profileData.email;
         savedUser.avatar = profileData.avatar;
 
         localStorage.setItem(
@@ -156,575 +174,332 @@ export default function Profile_Page() {
     navigate("/login");
   };
 
-  const NotificationBadge = ({ sidebar = false }) => {
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
+  const NotificationBadge = () => {
     if (unreadNotificationCount <= 0) {
       return null;
     }
 
     return (
-      <span
-        className={
-          sidebar
-            ? "bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold shrink-0"
-            : "absolute -top-1 -right-2 bg-rose-600 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold"
-        }
-      >
-        {unreadNotificationCount > 99
-          ? "99+"
-          : unreadNotificationCount}
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
       </span>
     );
   };
 
+  const userName = profileData.name || "WEFTIN Member";
+  const userInitial = userName.charAt(0).toUpperCase() || "W";
+
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
       {/* TOAST */}
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-3 border border-amber-500/30 max-w-md sm:max-w-none mx-auto sm:mx-0">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+        <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* =========================================================
-          DESKTOP SIDEBAR
-      ========================================================= */}
-      <aside className="hidden md:flex md:w-56 lg:w-64 bg-white border-r border-gray-200 flex-col justify-between sticky top-0 h-screen shrink-0">
-        <div>
-          <div className="p-5 lg:p-6 border-b border-gray-100 flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
-                W
-              </div>
+      {/* TOP ANNOUNCEMENT BAR */}
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+        LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
+      </div>
 
-              <div className="min-w-0">
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
+      {/* UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE) */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search anything..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
+            />
+          </form>
 
-                <span className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-gray-400 block truncate">
-                  ATELIER TAILORS
-                </span>
-              </div>
+          <div className="text-center">
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
             </Link>
           </div>
 
-          <nav className="p-3 lg:p-4 space-y-1 text-xs font-medium text-gray-600">
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Dashboard</span>
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            
+            <Link to="/wishlist" className="text-gray-800 hover:text-black">
+              <Heart className="w-5 h-5" />
+            </Link>
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
+              <Bell className="w-5 h-5" />
+              <NotificationBadge />
             </Link>
 
-            <Link
-              to="/orders"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Package className="w-4 h-4 shrink-0" />
-              <span>My Orders</span>
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+              {profileData.avatar ? (
+                <img src={profileData.avatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                  {userInitial}
+                </div>
+              )}
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
-            <Link
-              to="/custom-designs"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
             >
-              <Scissors className="w-4 h-4 shrink-0" />
-              <span>Custom Designs</span>
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
+            </button>
+
+            <Link to="/cart" className="relative text-gray-800 hover:text-black">
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
+            </Link>
+          </div>
+        </div>
+
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">Home</Link>
+          <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
+          <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
+        </nav>
+      </header>
+
+      {/* =====================================================
+          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR)
+      ====================================================== */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
+      )}
+
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+            {profileData.avatar ? (
+              <img src={profileData.avatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{profileData.email || "Member Account"}</p>
+            </div>
+          </div>
+
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
 
-            <Link
-              to="/measurements"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Ruler className="w-4 h-4 shrink-0" />
-              <span>Measurements</span>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadNotificationCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadNotificationCount}</span>}
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
 
-            <Link
-              to="/wishlist"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Heart className="w-4 h-4 shrink-0" />
-              <span>Wishlist</span>
-            </Link>
-
-            <Link
-              to="/addresses"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <MapPin className="w-4 h-4 shrink-0" />
-              <span>Addresses</span>
-            </Link>
-
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <User className="w-4 h-4 shrink-0" />
-              <span>Profile</span>
-            </Link>
-
-            <Link
-              to="/notifications"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between transition-colors"
-            >
-              <span className="flex items-center gap-3 min-w-0">
-                <Bell className="w-4 h-4 shrink-0" />
-                <span className="truncate">Notifications</span>
-              </span>
-
-              <NotificationBadge sidebar />
-            </Link>
-
-            <Link
-              to="/support"
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Headphones className="w-4 h-4 shrink-0" />
-              <span>Support</span>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
             </Link>
           </nav>
         </div>
 
-        <div className="p-3 lg:p-4 border-t border-gray-100">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors text-left cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            <span>Log out</span>
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
           </button>
         </div>
       </aside>
 
       {/* =========================================================
-          MOBILE OVERLAY
-      ========================================================= */}
-      {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
-          onClick={closeMobileMenu}
-        />
-      )}
-
-      {/* =========================================================
-          MOBILE SLIDE-IN NAVIGATION
-      ========================================================= */}
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-        <div className="h-full flex flex-col">
-
-          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <Link
-              to="/"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3"
-            >
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
-                W
-              </div>
-
-              <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
-
-                <span className="text-[8px] uppercase tracking-[0.2em] text-gray-400 block">
-                  ATELIER TAILORS
-                </span>
-              </div>
-            </Link>
-
-            <button
-              onClick={closeMobileMenu}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer"
-              aria-label="Close navigation"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-            <img
-              src={profileData.avatar}
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover border border-amber-500 shrink-0"
-            />
-
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-900 truncate">
-                {profileData.name || "Member"}
-              </p>
-
-              <p className="text-[10px] text-gray-500 truncate">
-                {profileData.email || "WEFTIN Member"}
-              </p>
-            </div>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto p-4 space-y-1 text-xs font-medium text-gray-600">
-
-            <Link
-              to="/dashboard"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Dashboard</span>
-            </Link>
-
-            <Link
-              to="/orders"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Package className="w-4 h-4 shrink-0" />
-              <span>My Orders</span>
-            </Link>
-
-            <Link
-              to="/custom-designs"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Scissors className="w-4 h-4 shrink-0" />
-              <span>Custom Designs</span>
-            </Link>
-
-            <Link
-              to="/measurements"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Ruler className="w-4 h-4 shrink-0" />
-              <span>Measurements</span>
-            </Link>
-
-            <Link
-              to="/wishlist"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Heart className="w-4 h-4 shrink-0" />
-              <span>Wishlist</span>
-            </Link>
-
-            <Link
-              to="/addresses"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <MapPin className="w-4 h-4 shrink-0" />
-              <span>Addresses</span>
-            </Link>
-
-            <Link
-              to="/profile"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <User className="w-4 h-4 shrink-0" />
-              <span>Profile</span>
-            </Link>
-
-            <Link
-              to="/notifications"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between transition-colors"
-            >
-              <span className="flex items-center gap-3 min-w-0">
-                <Bell className="w-4 h-4 shrink-0" />
-                <span className="truncate">Notifications</span>
-              </span>
-
-              <NotificationBadge sidebar />
-            </Link>
-
-            <Link
-              to="/support"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              <Headphones className="w-4 h-4 shrink-0" />
-              <span>Support</span>
-            </Link>
-          </nav>
-
-          <div className="p-4 border-t border-gray-100">
-            <button
-              onClick={() => {
-                closeMobileMenu();
-                handleLogout();
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-            >
-              <LogOut className="w-4 h-4 shrink-0" />
-              <span>Log out</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* =========================================================
           MAIN CONTENT
-      ========================================================= */}
-      <main className="flex-1 flex flex-col min-h-screen min-w-0">
+      ======================================================== */}
+      <main className="flex-1 flex flex-col min-h-screen min-w-0 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 lg:space-y-10">
 
-        {/* MOBILE HEADER */}
-        <div className="md:hidden bg-white border-b border-gray-200">
-          <div className="px-4 py-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-serif font-light text-gray-900 flex items-start sm:items-center gap-2">
+            <User className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700 mt-1 sm:mt-0 shrink-0" />
+            <span>
+              My Luxury Credentials Portfolio
+            </span>
+          </h2>
 
-            <Link
-              to="/"
-              className="flex items-center gap-3 min-w-0"
-            >
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
-                W
-              </div>
-
-              <div className="min-w-0">
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold truncate">
-                  WEFTIN
-                </h1>
-
-                <span className="text-[8px] uppercase tracking-[0.2em] text-gray-400 block truncate">
-                  ATELIER TAILORS
-                </span>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <Link
-                to="/cart"
-                className="relative text-gray-600"
-              >
-                <ShoppingBag className="w-5 h-5" />
-              </Link>
-
-              <Link
-                to="/notifications"
-                className="relative text-gray-600"
-              >
-                <Bell className="w-5 h-5" />
-                <NotificationBadge />
-              </Link>
-
-              <img
-                src={profileData.avatar}
-                alt="Avatar"
-                className="w-8 h-8 rounded-full object-cover border border-amber-500"
-              />
-
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="text-gray-600 hover:text-black transition-colors cursor-pointer"
-                aria-label="Open navigation"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-2 leading-relaxed max-w-3xl">
+            Directly connected to NeonDB database. Update your contact, email, and personal specifications below.
+          </p>
         </div>
 
-        {/* DESKTOP HEADER */}
-        <header className="hidden md:flex bg-white border-b border-gray-200 px-5 lg:px-8 py-4 justify-between items-center">
-          <div className="text-[10px] lg:text-xs uppercase tracking-widest text-gray-500">
-            Portfolio <span className="mx-2">/</span>
-            <span className="text-gray-900 font-semibold">
-              Profile
-            </span>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-          <div className="flex items-center gap-4 lg:gap-6">
-            <Link
-              to="/cart"
-              className="relative text-gray-600 hover:text-black transition-colors"
-            >
-              <ShoppingBag className="w-5 h-5" />
-            </Link>
+          {/* Profile Summary */}
+          <div className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
 
-            <Link
-              to="/notifications"
-              className="relative text-gray-600 hover:text-black transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              <NotificationBadge />
-            </Link>
-
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+            <div className="relative mb-4">
               <img
-                src={profileData.avatar}
+                src={
+                  profileData.avatar ||
+                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250"
+                }
                 alt="Avatar"
-                className="w-9 h-9 rounded-full object-cover border border-amber-500"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-amber-600 shadow-md"
               />
+            </div>
 
-              <span className="text-xs font-semibold text-gray-800 max-w-[150px] truncate">
-                {profileData.name || "Member"}
-              </span>
+            <h3 className="font-serif text-lg font-semibold text-gray-900 break-words max-w-full">
+              {profileData.name || "Atelier Member"}
+            </h3>
+
+            <span className="inline-block bg-amber-50 text-amber-800 border border-amber-200 text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full mt-2 mb-6">
+              WEFTIN Gold Member
+            </span>
+
+            <div className="w-full text-left space-y-3 text-xs text-gray-600 border-t border-gray-100 pt-4">
+              <p className="break-all">
+                <strong>Email:</strong>{" "}
+                {profileData.email || "Not provided"}
+              </p>
+
+              <p>
+                <strong>Phone:</strong>{" "}
+                {profileData.phone ? (
+                  profileData.phone
+                ) : (
+                  <span className="text-gray-400 italic">
+                    Not provided
+                  </span>
+                )}
+              </p>
             </div>
           </div>
-        </header>
 
-        {/* PROFILE CONTENT */}
-        <div className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full space-y-8 lg:space-y-10">
+          {/* Personal Information */}
+          <div className="lg:col-span-2 bg-white p-5 sm:p-6 lg:p-8 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
 
-          <div>
-            <h2 className="text-xl sm:text-2xl font-serif font-light text-gray-900 flex items-start sm:items-center gap-2">
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700 mt-1 sm:mt-0 shrink-0" />
-              <span>
-                My Luxury Credentials Portfolio
-              </span>
-            </h2>
-
-            <p className="text-[11px] sm:text-xs text-gray-500 mt-2 leading-relaxed max-w-3xl">
-              Directly connected to NeonDB database. Update your
-              contact and personal specifications below.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-
-            {/* Profile Summary */}
-            <div className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
-
-              <div className="relative mb-4">
-                <img
-                  src={
-                    profileData.avatar ||
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250"
-                  }
-                  alt="Avatar"
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-amber-600 shadow-md"
-                />
-              </div>
-
-              <h3 className="font-serif text-lg font-semibold text-gray-900 break-words max-w-full">
-                {profileData.name || "Atelier Member"}
+            <div>
+              <h3 className="text-[10px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold text-gray-900 mb-6 pb-2 border-b border-gray-100">
+                Personal Information (Database Synced)
               </h3>
 
-              <span className="inline-block bg-amber-50 text-amber-800 border border-amber-200 text-[9px] sm:text-[10px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full mt-2 mb-6">
-                WEFTIN Gold Member
-              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 mb-6">
 
-              <div className="w-full text-left space-y-3 text-xs text-gray-600 border-t border-gray-100 pt-4">
-                <p className="break-all">
-                  <strong>Email:</strong>{" "}
-                  {profileData.email || "Not provided"}
-                </p>
-
-                <p>
-                  <strong>Phone:</strong>{" "}
-                  {profileData.phone ? (
-                    profileData.phone
-                  ) : (
-                    <span className="text-gray-400 italic">
-                      Not provided
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Personal Information */}
-            <div className="lg:col-span-2 bg-white p-5 sm:p-6 lg:p-8 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
-
-              <div>
-                <h3 className="text-[10px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold text-gray-900 mb-6 pb-2 border-b border-gray-100">
-                  Personal Information (Database Synced)
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 mb-6">
-
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                      Full Legal Name
-                    </label>
-
-                    <input
-                      type="text"
-                      value={profileData.name}
-                      onChange={(e) =>
-                        setProfileData({
-                          ...profileData,
-                          name: e.target.value,
-                        })
-                      }
-                      disabled={!isEditing}
-                      className="w-full bg-gray-50 border border-gray-200 text-xs px-4 py-3 rounded text-gray-800 disabled:opacity-70 focus:outline-none focus:border-black transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                      Mailing Address Email (Database Record)
-                    </label>
-
-                    <input
-                      type="email"
-                      value={profileData.email}
-                      disabled
-                      className="w-full bg-gray-100 border border-gray-200 text-xs px-4 py-3 rounded text-gray-500 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 mb-6">
-
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                      Contact Phone Number
-                    </label>
-
-                    <input
-                      type="text"
-                      placeholder="+91 XXXXX XXXXX"
-                      value={profileData.phone}
-                      onChange={(e) =>
-                        setProfileData({
-                          ...profileData,
-                          phone: e.target.value,
-                        })
-                      }
-                      disabled={!isEditing}
-                      className="w-full bg-gray-50 border border-gray-200 text-xs px-4 py-3 rounded text-gray-800 disabled:opacity-70 focus:outline-none focus:border-black transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                      Membership Tier
-                    </label>
-
-                    <input
-                      type="text"
-                      value={profileData.tier}
-                      disabled
-                      className="w-full bg-gray-100 border border-gray-200 text-xs px-4 py-3 rounded text-gray-500 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-6">
+                <div>
                   <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    Custom Avatar Image URL
+                    Full Legal Name
                   </label>
 
                   <input
                     type="text"
-                    placeholder="https://images.unsplash.com/..."
-                    value={profileData.avatar}
+                    value={profileData.name}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
-                        avatar: e.target.value,
+                        name: e.target.value,
+                      })
+                    }
+                    disabled={!isEditing}
+                    className="w-full bg-gray-50 border border-gray-200 text-xs px-4 py-3 rounded text-gray-800 disabled:opacity-70 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                    Mailing Address Email (Editable Record)
+                  </label>
+
+                  <input
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        email: e.target.value,
                       })
                     }
                     disabled={!isEditing}
@@ -733,47 +508,93 @@ export default function Profile_Page() {
                 </div>
               </div>
 
-              {/* Buttons */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 mb-6">
 
-                {isEditing && (
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                )}
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                    Contact Phone Number
+                  </label>
 
-                <button
-                  onClick={() => {
-                    if (isEditing) {
-                      handleSaveProfile();
+                  <input
+                    type="text"
+                    placeholder="+91 XXXXX XXXXX"
+                    value={profileData.phone}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        phone: e.target.value,
+                      })
                     }
+                    disabled={!isEditing}
+                    className="w-full bg-gray-50 border border-gray-200 text-xs px-4 py-3 rounded text-gray-800 disabled:opacity-70 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
 
-                    setIsEditing(!isEditing);
-                  }}
-                  className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors shadow-sm cursor-pointer"
-                >
-                  {isEditing
-                    ? "Save Changes"
-                    : "Edit Profile"}
-                </button>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                    Membership Tier
+                  </label>
+
+                  <input
+                    type="text"
+                    value={profileData.tier}
+                    disabled
+                    className="w-full bg-gray-100 border border-gray-200 text-xs px-4 py-3 rounded text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                  Custom Avatar Image URL
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="https://images.unsplash.com/..."
+                  value={profileData.avatar}
+                  onChange={(e) =>
+                    setProfileData({
+                      ...profileData,
+                      avatar: e.target.value,
+                    })
+                  }
+                  disabled={!isEditing}
+                  className="w-full bg-gray-50 border border-gray-200 text-xs px-4 py-3 rounded text-gray-800 disabled:opacity-70 focus:outline-none focus:border-black transition-colors"
+                />
               </div>
             </div>
-          </div>
 
-          {/* Mobile Logout */}
-          <div className="md:hidden border-t border-gray-200 pt-6">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold bg-white border border-gray-200 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              Log out
-            </button>
+            {/* Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-100">
+
+              {isEditing && (
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="w-full sm:w-auto bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  if (isEditing) {
+                    handleSaveProfile();
+                  }
+
+                  setIsEditing(!isEditing);
+                }}
+                className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors shadow-sm cursor-pointer"
+              >
+                {isEditing
+                  ? "Save Changes"
+                  : "Edit Profile"}
+              </button>
+            </div>
           </div>
         </div>
+
       </main>
     </div>
   );
