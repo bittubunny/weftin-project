@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Search,
   Settings
 } from "lucide-react";
 
@@ -38,6 +39,7 @@ export default function CustomDesigns_Page() {
   // Best Sellers and Quick View state
   const [bestSellers, setBestSellers] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
   // --------------------------------------------------
   // CURRENT USER & PROFILE SYNC
@@ -62,7 +64,7 @@ export default function CustomDesigns_Page() {
     currentUser?.full_name ||
     currentUser?.username ||
     currentUser?.email ||
-    "My Account";
+    "WEFTIN Member";
 
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -70,7 +72,7 @@ export default function CustomDesigns_Page() {
   // USER AVATAR (Interactive profile redirect)
   // --------------------------------------------------
 
-  const UserAvatar = ({ size = "w-8 h-8" }) => {
+  const UserAvatar = ({ size = "w-7 h-7" }) => {
     const handleAvatarClick = (e) => {
       e.stopPropagation();
       navigate("/profile");
@@ -82,7 +84,7 @@ export default function CustomDesigns_Page() {
           src={currentUser.avatar}
           alt={userName}
           onClick={handleAvatarClick}
-          className={`${size} rounded-full object-cover border border-amber-500 cursor-pointer hover:opacity-90 transition-opacity`}
+          className={`${size} rounded-full object-cover border border-amber-600 shadow-xs cursor-pointer hover:opacity-90 transition-opacity`}
         />
       );
     }
@@ -90,7 +92,7 @@ export default function CustomDesigns_Page() {
     return (
       <div
         onClick={handleAvatarClick}
-        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-200 cursor-pointer hover:bg-amber-200 transition-colors`}
+        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 cursor-pointer hover:bg-amber-200 transition-colors text-xs`}
       >
         {userInitial}
       </div>
@@ -176,7 +178,7 @@ export default function CustomDesigns_Page() {
   }, []);
 
   // --------------------------------------------------
-  // BESPOKE CUSTOM DESIGN INITIATION (MATCHING PRODUCT OVERVIEW)
+  // BESPOKE CUSTOM DESIGN INITIATION
   // --------------------------------------------------
 
   const handleBespokeCustomDesign = async (product) => {
@@ -219,7 +221,7 @@ export default function CustomDesigns_Page() {
 
       setTimeout(() => {
         navigate("/custom-designs");
-        loadRequests(); // Refresh requests list
+        loadRequests();
       }, 500);
 
     } catch (error) {
@@ -232,20 +234,14 @@ export default function CustomDesigns_Page() {
   // NOTIFICATION BADGE
   // --------------------------------------------------
 
-  const NotificationBadge = ({ sidebar = false }) => {
+  const NotificationBadge = () => {
     if (unreadCount <= 0) {
       return null;
     }
 
     return (
-      <span
-        className={
-          sidebar
-            ? "bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold shrink-0"
-            : "absolute -top-2 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold"
-        }
-      >
-        {unreadCount > 99 ? "99+" : unreadCount}
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadCount > 9 ? "9+" : unreadCount}
       </span>
     );
   };
@@ -409,6 +405,16 @@ export default function CustomDesigns_Page() {
     navigate("/login");
   };
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
   // --------------------------------------------------
   // NOT LOGGED IN
   // --------------------------------------------------
@@ -439,7 +445,7 @@ export default function CustomDesigns_Page() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex">
+    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
       {/* TOAST */}
       {toastMessage && (
@@ -449,127 +455,124 @@ export default function CustomDesigns_Page() {
         </div>
       )}
 
-      {/* DESKTOP SIDEBAR (LEGACY CUSTOM DESIGN SIDEBAR) */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex fixed top-0 left-0 h-screen z-30">
-        <div>
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-                W
-              </div>
-              <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
-                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                  ATELIER TAILORS
-                </span>
-              </div>
-            </Link>
-          </div>
+      {/* TOP ANNOUNCEMENT BAR */}
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+        LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
+      </div>
 
-          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600">
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </Link>
+      {/* UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE) */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-            <Link
-              to="/orders"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Package className="w-4 h-4" />
-              My Orders
-            </Link>
+          {/* SEARCH */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200"
+          >
+            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search anything..."
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full"
+            />
+          </form>
 
-            <Link
-              to="/custom-designs"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <Scissors className="w-4 h-4" />
-              Custom Designs
-            </Link>
+          {/* LOGO */}
+          <Link to="/" className="text-center">
+            <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">
+              WEFTIN
+            </h1>
+          </Link>
 
-            <Link
-              to="/measurements"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Ruler className="w-4 h-4" />
-              Measurements
-            </Link>
+          {/* RIGHT ACTIONS */}
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">
+              INR &or;
+            </span>
 
             <Link
               to="/wishlist"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
+              className="text-gray-800 hover:text-black"
+              aria-label="Wishlist"
             >
-              <Heart className="w-4 h-4" />
-              Wishlist
+              <Heart className="w-5 h-5" />
             </Link>
 
-            <Link
-              to="/addresses"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <MapPin className="w-4 h-4" />
-              Addresses
-            </Link>
-
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <User className="w-4 h-4" />
-              Profile
-            </Link>
-
+            {/* NOTIFICATIONS */}
             <Link
               to="/notifications"
-              className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
+              className="relative text-gray-800 hover:text-black"
+              aria-label="Notifications"
             >
-              <span className="flex items-center gap-3">
-                <Bell className="w-4 h-4" />
-                Notifications
-              </span>
-              <NotificationBadge sidebar />
+              <Bell className="w-5 h-5" />
+              <NotificationBadge />
             </Link>
 
+            {/* USER PROFILE */}
             <Link
-              to="/support"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
+              to="/profile"
+              className="flex items-center gap-2 text-gray-800 hover:text-black"
             >
-              <Headphones className="w-4 h-4" />
-              Support
+              <UserAvatar />
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">
+                {userName}
+              </span>
             </Link>
-          </nav>
+
+            {/* SLIDING MENU TOGGLE BUTTON */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open Navigation Drawer"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
+            </button>
+
+            {/* CART */}
+            <Link
+              to="/cart"
+              className="relative text-gray-800 hover:text-black"
+              aria-label="Shopping bag"
+            >
+              <ShoppingBag className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100">
-          <Link
-            to="/"
-            onClick={() => {
-              localStorage.removeItem("weftin_user");
-              localStorage.removeItem("weftin_token");
-            }}
-            className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out
+        {/* SUB NAV LINKS */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">
+            Home
           </Link>
-        </div>
-      </aside>
+          <Link to="/shop" className="hover:text-black transition-colors">
+            Shop
+          </Link>
+          <Link to="/collections" className="hover:text-black transition-colors">
+            Collections
+          </Link>
+          <Link to="/custom-designs" className="text-black font-semibold border-b border-black pb-0.5">
+            Custom Design
+          </Link>
+          <Link to="/lookbook" className="hover:text-black transition-colors">
+            Lookbook
+          </Link>
+          <Link to="/limited" className="hover:text-black transition-colors">
+            Limited Edition
+          </Link>
+        </nav>
+      </header>
 
-      {/* MOBILE OVERLAY */}
+      {/* SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR) */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
           onClick={closeMobileMenu}
         />
       )}
 
-      {/* MOBILE SLIDE-IN NAVIGATION DRAWER (MATCHING HOME PAGE EXACTLY) */}
       <aside
         className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${
           mobileMenuOpen
@@ -610,7 +613,7 @@ export default function CustomDesigns_Page() {
           </div>
 
           {/* USER PROFILE SNIPPET */}
-          <div 
+          <div
             onClick={() => {
               closeMobileMenu();
               navigate("/profile");
@@ -640,7 +643,7 @@ export default function CustomDesigns_Page() {
             </div>
           </div>
 
-          {/* COMPLETE NAVIGATION LINKS MATCHING HOME PAGE */}
+          {/* COMPLETE NAVIGATION LINKS */}
           <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
             <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
               Main Pages
@@ -852,363 +855,270 @@ export default function CustomDesigns_Page() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+      {/* MAIN CONTENT BODY */}
+      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl mx-auto space-y-12">
 
-        {/* DESKTOP HEADER */}
-        <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center sticky top-0 z-20">
-          <div className="text-xs text-gray-400">
-            Portfolio
-            <span className="mx-2">&gt;</span>
-            <span className="text-gray-900 font-semibold uppercase tracking-wider">
-              Custom Designs
-            </span>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <Link
-              to="/cart"
-              className="relative text-gray-600 hover:text-black transition-colors"
-            >
-              <ShoppingBag className="w-5 h-5" />
-            </Link>
-
-            <Link
-              to="/notifications"
-              className="relative text-gray-600 hover:text-black transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              <NotificationBadge />
-            </Link>
-
-            <div 
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 border-l pl-4 border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <UserAvatar />
-              <span className="text-xs font-semibold text-gray-800">
-                {userName}
-              </span>
+        {/* PAGE HEADER */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-amber-700 mb-1">
+              <Scissors className="w-5 h-5" />
+              <h2 className="text-2xl font-serif text-gray-900">
+                Custom Embroidery Requests
+              </h2>
             </div>
-          </div>
-        </header>
 
-        {/* MOBILE HEADER */}
-        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-20">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <Link
-              to="/"
-              className="flex items-center gap-3"
+            <p className="text-xs text-gray-500">
+              Submit layouts, track hand-weaving blueprints, and direct
+              chat with premier master embroiderers.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              onClick={loadRequests}
+              className="border border-gray-300 hover:border-black text-gray-700 px-4 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 cursor-pointer"
             >
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-                W
-              </div>
-              <div>
-                <h1 className="font-serif text-base tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
-                <span className="text-[8px] uppercase tracking-[0.15em] text-gray-400 block">
-                  ATELIER TAILORS
-                </span>
-              </div>
-            </Link>
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
 
-            <div className="flex items-center gap-3 shrink-0">
-              <Link
-                to="/cart"
-                className="relative text-gray-700 hover:text-black"
-              >
-                <ShoppingBag className="w-5 h-5" />
-              </Link>
-
-              <Link
-                to="/notifications"
-                className="relative text-gray-700 hover:text-black"
-              >
-                <Bell className="w-5 h-5" />
-                <NotificationBadge />
-              </Link>
-
-              <UserAvatar size="w-7 h-7" />
-
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="p-1 text-gray-700 hover:text-black cursor-pointer"
-                aria-label="Open navigation drawer"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/shop")}
+              className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-amber-400" />
+              Explore Shop & Customize
+            </button>
           </div>
-        </header>
+        </div>
 
-        {/* PAGE BODY */}
-        <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl w-full space-y-12">
-
-          {/* PAGE HEADER */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* BEST SELLERS 4-ITEM INSPIRATION DISPLAY */}
+        <section className="bg-[#FAF2EC] rounded-2xl p-6 sm:p-8 border border-amber-900/10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
             <div>
-              <div className="flex items-center gap-2 text-amber-700 mb-1">
-                <Scissors className="w-5 h-5" />
-                <h2 className="text-2xl font-serif text-gray-900">
-                  Custom Embroidery Requests
-                </h2>
-              </div>
-
-              <p className="text-xs text-gray-500">
-                Submit layouts, track hand-weaving blueprints, and direct
-                chat with premier master embroiderers.
-              </p>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
+                ATELIER INSPIRATION
+              </span>
+              <h3 className="font-serif text-xl text-gray-900">
+                Top Best Sellers Ready for Customization
+              </h3>
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <button
-                onClick={loadRequests}
-                className="border border-gray-300 hover:border-black text-gray-700 px-4 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-
-              <button
-                onClick={() => navigate("/shop")}
-                className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-amber-400" />
-                Explore Shop & Customize
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/shop")}
+              className="text-xs uppercase tracking-wider font-bold text-amber-900 hover:underline mt-2 sm:mt-0 cursor-pointer"
+            >
+              View All Catalog &rarr;
+            </button>
           </div>
 
-          {/* BEST SELLERS 4-ITEM INSPIRATION DISPLAY */}
-          <section className="bg-[#FAF2EC] rounded-2xl p-6 sm:p-8 border border-amber-900/10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
-                  ATELIER INSPIRATION
-                </span>
-                <h3 className="font-serif text-xl text-gray-900">
-                  Top Best Sellers Ready for Customization
-                </h3>
-              </div>
-              <button
-                onClick={() => navigate("/shop")}
-                className="text-xs uppercase tracking-wider font-bold text-amber-900 hover:underline mt-2 sm:mt-0 cursor-pointer"
-              >
-                View All Catalog &rarr;
-              </button>
-            </div>
-
-            {bestSellers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {bestSellers.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 flex flex-col justify-between"
-                  >
-                    <div className="relative h-64 bg-gray-100 overflow-hidden">
-                      <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
-                        {item.tag || "BEST SELLER"}
-                      </span>
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-
-                    <div className="p-4 flex flex-col flex-grow justify-between">
-                      <div>
-                        <h4 className="font-serif text-sm font-medium mb-1 truncate">
-                          {item.name}
-                        </h4>
-                        <p className="text-xs font-bold text-gray-900 mb-3">
-                          {item.price}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-                        <button
-                          onClick={() => setQuickViewProduct(item)}
-                          className="py-2 border border-gray-300 text-gray-800 text-[10px] uppercase tracking-wider hover:bg-gray-50 cursor-pointer rounded"
-                        >
-                          Quick View
-                        </button>
-
-                        <button
-                          onClick={() => handleBespokeCustomDesign(item)}
-                          className="py-2 bg-black text-white text-[10px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
-                        >
-                          Custom Design
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-xs text-gray-500">
-                Loading best sellers...
-              </div>
-            )}
-          </section>
-
-          {/* REQUESTS LIST */}
-          {loading ? (
-            <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-              <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
-              <h3 className="font-serif text-xl text-gray-800">
-                Loading your custom designs...
-              </h3>
-              <p className="text-xs text-gray-500 mt-2">
-                Retrieving your atelier requests.
-              </p>
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-              <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="font-serif text-xl text-gray-800 mb-2">
-                No custom design requests found.
-              </h3>
-              <p className="text-xs text-gray-500 mb-6">
-                Select a masterpiece from the Shop and click
-                "Bespoke Custom Design" to initiate a tailoring blueprint.
-              </p>
-              <button
-                onClick={() => navigate("/shop")}
-                className="bg-black text-white px-8 py-3.5 text-xs uppercase tracking-widest rounded font-semibold inline-block hover:bg-gray-800 cursor-pointer"
-              >
-                Explore Shop Collections
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {requests.map((req) => (
+          {bestSellers.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {bestSellers.map((item) => (
                 <div
-                  key={req.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm"
+                  key={item.id}
+                  className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 flex flex-col justify-between"
                 >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-4 border-b border-gray-100 text-xs">
-                    <span className="font-mono font-bold text-gray-600">
-                      CD-{String(req.id).padStart(4, "0")}
+                  <div className="relative h-64 bg-gray-100 overflow-hidden">
+                    <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
+                      {item.tag || "BEST SELLER"}
                     </span>
-
-                    <span
-                      className={`self-start sm:self-auto px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${getStatusClass(
-                        req.status
-                      )}`}
-                    >
-                      {req.status || "Drafting Blueprint"}
-                    </span>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
                   </div>
 
-                  <div className="py-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                    <div className="flex gap-4 items-center min-w-0">
-                      <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
-                        {req.product_image ? (
-                          <img
-                            src={req.product_image}
-                            alt={req.product_name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                            No Image
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <span className="bg-amber-100 text-amber-900 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
-                          {req.line || "BESPOKE CUSTOM LINE"}
-                        </span>
-
-                        <h3 className="font-serif text-xl font-medium text-gray-900 mt-1 break-words">
-                          {req.product_name}
-                        </h3>
-
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Occasion / Category:
-                          <strong className="text-gray-800 ml-1">
-                            {req.product_category || "Bespoke Occasion"}
-                          </strong>
-                        </p>
-
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          Created on {formatDate(req.created_at)}
-                        </p>
-                      </div>
+                  <div className="p-4 flex flex-col flex-grow justify-between">
+                    <div>
+                      <h4 className="font-serif text-sm font-medium mb-1 truncate">
+                        {item.name}
+                      </h4>
+                      <p className="text-xs font-bold text-gray-900 mb-3">
+                        {item.price}
+                      </p>
                     </div>
 
-                    <div className="text-left md:text-right bg-amber-50/60 p-4 rounded-xl border border-amber-200/60 w-full md:w-auto">
-                      <span className="text-[10px] uppercase tracking-wider text-amber-800 block">
-                        Cost Blueprint
-                      </span>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => setQuickViewProduct(item)}
+                        className="py-2 border border-gray-300 text-gray-800 text-[10px] uppercase tracking-wider hover:bg-gray-50 cursor-pointer rounded"
+                      >
+                        Quick View
+                      </button>
 
-                      <strong className="text-2xl font-serif font-bold text-gray-900">
-                        {req.product_price || "Price on request"}
-                      </strong>
+                      <button
+                        onClick={() => handleBespokeCustomDesign(item)}
+                        className="py-2 bg-black text-white text-[10px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
+                      >
+                        Custom Design
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
-                    <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                    <p className="italic">
-                      {req.message ||
-                        "Your bespoke request has been received by our atelier."}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/custom-workspace/${req.id}`,
-                          {
-                            state: {
-                              request: req
-                            }
-                          }
-                        )
-                      }
-                      className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors cursor-pointer"
-                    >
-                      Open Workspace
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/custom-workspace/${req.id}`,
-                          {
-                            state: {
-                              request: req
-                            }
-                          }
-                        )
-                      }
-                      className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white cursor-pointer"
-                    >
-                      Discuss Sketch
-                    </button>
-
-                    <button
-                      onClick={() => deleteRequest(req.id)}
-                      className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Request
-                    </button>
                   </div>
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-gray-500">
+              Loading best sellers...
+            </div>
           )}
+        </section>
 
-        </main>
+        {/* REQUESTS LIST */}
+        {loading ? (
+          <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
+            <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
+            <h3 className="font-serif text-xl text-gray-800">
+              Loading your custom designs...
+            </h3>
+            <p className="text-xs text-gray-500 mt-2">
+              Retrieving your atelier requests.
+            </p>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
+            <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="font-serif text-xl text-gray-800 mb-2">
+              No custom design requests found.
+            </h3>
+            <p className="text-xs text-gray-500 mb-6">
+              Select a masterpiece from the Shop and click
+              "Bespoke Custom Design" to initiate a tailoring blueprint.
+            </p>
+            <button
+              onClick={() => navigate("/shop")}
+              className="bg-black text-white px-8 py-3.5 text-xs uppercase tracking-widest rounded font-semibold inline-block hover:bg-gray-800 cursor-pointer"
+            >
+              Explore Shop Collections
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {requests.map((req) => (
+              <div
+                key={req.id}
+                className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm"
+              >
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-4 border-b border-gray-100 text-xs">
+                  <span className="font-mono font-bold text-gray-600">
+                    CD-{String(req.id).padStart(4, "0")}
+                  </span>
 
-      </div>
+                  <span
+                    className={`self-start sm:self-auto px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${getStatusClass(
+                      req.status
+                    )}`}
+                  >
+                    {req.status || "Drafting Blueprint"}
+                  </span>
+                </div>
+
+                <div className="py-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                  <div className="flex gap-4 items-center min-w-0">
+                    <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
+                      {req.product_image ? (
+                        <img
+                          src={req.product_image}
+                          alt={req.product_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <span className="bg-amber-100 text-amber-900 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
+                        {req.line || "BESPOKE CUSTOM LINE"}
+                      </span>
+
+                      <h3 className="font-serif text-xl font-medium text-gray-900 mt-1 break-words">
+                        {req.product_name}
+                      </h3>
+
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Occasion / Category:
+                        <strong className="text-gray-800 ml-1">
+                          {req.product_category || "Bespoke Occasion"}
+                        </strong>
+                      </p>
+
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Created on {formatDate(req.created_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-left md:text-right bg-amber-50/60 p-4 rounded-xl border border-amber-200/60 w-full md:w-auto">
+                    <span className="text-[10px] uppercase tracking-wider text-amber-800 block">
+                      Cost Blueprint
+                    </span>
+
+                    <strong className="text-2xl font-serif font-bold text-gray-900">
+                      {req.product_price || "Price on request"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
+                  <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                  <p className="italic">
+                    {req.message ||
+                      "Your bespoke request has been received by our atelier."}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/custom-workspace/${req.id}`,
+                        {
+                          state: {
+                            request: req
+                          }
+                        }
+                      )
+                    }
+                    className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors cursor-pointer"
+                  >
+                    Open Workspace
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/custom-workspace/${req.id}`,
+                        {
+                          state: {
+                            request: req
+                          }
+                        }
+                      )
+                    }
+                    className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white cursor-pointer"
+                  >
+                    Discuss Sketch
+                  </button>
+
+                  <button
+                    onClick={() => deleteRequest(req.id)}
+                    className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Request
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+      </main>
 
       {/* QUICK VIEW MODAL FOR BEST SELLERS */}
       {quickViewProduct && (
