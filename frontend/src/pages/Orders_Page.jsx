@@ -30,7 +30,10 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
-  Menu
+  Menu,
+  ChevronRight,
+  Settings,
+  Search
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -39,15 +42,15 @@ export default function Orders_Page() {
   const navigate = useNavigate();
 
   // ==================================================
-  // USER
+  // USER STATE & INITIALIZATION
   // ==================================================
 
   const [savedUser, setSavedUser] = useState(null);
+  const [userAvatar, setUserAvatar] = useState("");
 
   useEffect(() => {
     try {
-      const storedUser =
-        localStorage.getItem("weftin_user");
+      const storedUser = localStorage.getItem("weftin_user");
 
       if (!storedUser) {
         setSavedUser(null);
@@ -55,8 +58,15 @@ export default function Orders_Page() {
       }
 
       const user = JSON.parse(storedUser);
-
       setSavedUser(user);
+
+      if (user?.avatar) {
+        setUserAvatar(user.avatar);
+      }
+
+      if (user?.email) {
+        fetchUserAvatar(user.email);
+      }
     } catch (error) {
       console.error(
         "Unable to read user:",
@@ -67,8 +77,20 @@ export default function Orders_Page() {
     }
   }, []);
 
-  const userEmail =
-    savedUser?.email || "";
+  const fetchUserAvatar = async (email) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(email)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data && data.avatar) {
+        setUserAvatar(data.avatar);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user avatar:", error);
+    }
+  };
+
+  const userEmail = savedUser?.email || "";
 
   const userName =
     savedUser?.name ||
@@ -76,34 +98,23 @@ export default function Orders_Page() {
     savedUser?.username ||
     "WEFTIN Member";
 
-  // ==================================================
-  // STATE
-  // ==================================================
-
-  const [orders, setOrders] =
-    useState([]);
-
-  const [activeTab, setActiveTab] =
-    useState("All");
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [errorMessage, setErrorMessage] =
-    useState("");
-
-  const [toastMessage, setToastMessage] =
-    useState("");
-
-  const [unreadCount, setUnreadCount] =
-    useState(0);
-
-  // MOBILE MENU
-  const [mobileMenuOpen, setMobileMenuOpen] =
-    useState(false);
+  const userInitial = userName.charAt(0).toUpperCase() || "W";
 
   // ==================================================
-  // TOAST
+  // COMPONENT STATE & HOOKS
+  // ==================================================
+
+  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  // ==================================================
+  // TOAST NOTIFICATION UTILITY
   // ==================================================
 
   const showToast = useCallback((message) => {
@@ -115,7 +126,7 @@ export default function Orders_Page() {
   }, []);
 
   // ==================================================
-  // LOAD ORDERS
+  // LOAD ORDERS FROM BACKEND
   // ==================================================
 
   const loadOrders = useCallback(async () => {
@@ -184,39 +195,38 @@ export default function Orders_Page() {
   // LOAD UNREAD NOTIFICATION COUNT
   // ==================================================
 
-  const loadUnreadCount =
-    useCallback(async () => {
-      if (!userEmail) {
-        setUnreadCount(0);
+  const loadUnreadCount = useCallback(async () => {
+    if (!userEmail) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
+          userEmail
+        )}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
         return;
       }
 
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
-            userEmail
-          )}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          return;
-        }
-
-        setUnreadCount(
-          Number(data?.count || 0)
-        );
-      } catch (error) {
-        console.error(
-          "Unread notification count error:",
-          error
-        );
-      }
-    }, [userEmail]);
+      setUnreadCount(
+        Number(data?.count || 0)
+      );
+    } catch (error) {
+      console.error(
+        "Unread notification count error:",
+        error
+      );
+    }
+  }, [userEmail]);
 
   // ==================================================
-  // INITIAL LOAD
+  // INITIAL LOAD EFFECT
   // ==================================================
 
   useEffect(() => {
@@ -234,7 +244,7 @@ export default function Orders_Page() {
   ]);
 
   // ==================================================
-  // REFRESH
+  // REFRESH HANDLER
   // ==================================================
 
   const handleRefresh = async () => {
@@ -249,7 +259,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // STATUS
+  // STATUS NORMALIZATION
   // ==================================================
 
   const normalizeStatus = (status) => {
@@ -261,7 +271,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // STATUS LABEL
+  // STATUS LABEL FORMATTER
   // ==================================================
 
   const getStatusLabel = (status) => {
@@ -287,7 +297,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // STATUS STYLE
+  // STATUS STYLE MAPPER
   // ==================================================
 
   const getStatusStyle = (status) => {
@@ -325,7 +335,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // STATUS ICON
+  // STATUS ICON RENDERER
   // ==================================================
 
   const getStatusIcon = (status) => {
@@ -362,7 +372,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // DATE FORMAT
+  // DATE FORMATTER
   // ==================================================
 
   const formatDate = (dateValue) => {
@@ -392,7 +402,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // PRICE FORMAT
+  // PRICE FORMATTER
   // ==================================================
 
   const formatPrice = (price) => {
@@ -420,7 +430,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // FILTER
+  // ORDER FILTER COMPUTATION
   // ==================================================
 
   const filteredOrders =
@@ -450,7 +460,7 @@ export default function Orders_Page() {
         );
 
   // ==================================================
-  // TRACK ORDER
+  // TRACK ORDER HANDLER
   // ==================================================
 
   const handleTrackOrder = (
@@ -474,7 +484,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // INVOICE
+  // INVOICE HANDLER
   // ==================================================
 
   const handleInvoice = (
@@ -491,7 +501,7 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // REORDER
+  // REORDER HANDLER
   // ==================================================
 
   const handleReorder = (
@@ -679,84 +689,54 @@ export default function Orders_Page() {
   };
 
   // ==================================================
-  // MOBILE NAVIGATION
+  // NAVIGATION HELPERS
   // ==================================================
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
   // ==================================================
-  // NOTIFICATION BADGE
+  // NOTIFICATION BADGE COMPONENT
   // ==================================================
 
-  const NotificationBadge = ({
-    sidebar = false
-  }) => {
+  const NotificationBadge = () => {
     if (unreadCount <= 0) {
       return null;
     }
 
     return (
-      <span
-        className={
-          sidebar
-            ? "bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold shrink-0"
-            : "absolute -top-2 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold"
-        }
-      >
-        {unreadCount > 99
-          ? "99+"
-          : unreadCount}
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadCount > 9 ? "9+" : unreadCount}
       </span>
     );
   };
 
   // ==================================================
-  // USER AVATAR
-  // ==================================================
-
-  const UserAvatar = ({
-    mobile = false
-  }) => {
-    if (savedUser?.avatar) {
-      return (
-        <img
-          src={savedUser.avatar}
-          alt={userName}
-          className={
-            mobile
-              ? "w-8 h-8 rounded-full object-cover border border-amber-500"
-              : "w-8 h-8 rounded-full object-cover border"
-          }
-        />
-      );
-    }
-
-    return (
-      <div
-        className={
-          mobile
-            ? "w-8 h-8 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300"
-            : "w-8 h-8 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border"
-        }
-      >
-        {userName
-          .charAt(0)
-          .toUpperCase()}
-      </div>
-    );
-  };
-
-  // ==================================================
-  // LOADING
+  // LOADING SCREEN
   // ==================================================
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-6">
         <div className="text-center">
-
           <div className="w-12 h-12 mx-auto mb-5 rounded-full border-2 border-gray-200 border-t-amber-700 animate-spin"></div>
 
           <p className="font-serif text-lg text-gray-900">
@@ -766,26 +746,24 @@ export default function Orders_Page() {
           <p className="text-xs text-gray-500 mt-2">
             Retrieving your atelier orders...
           </p>
-
         </div>
       </div>
     );
   }
 
   // ==================================================
-  // MAIN
+  // RENDER MAIN COMPONENT
   // ==================================================
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex">
+    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
       {/* ==================================================
-          TOAST
+          TOAST NOTIFICATION BANNER
       ================================================== */}
 
       {toastMessage && (
         <div className="fixed bottom-6 right-4 sm:right-6 z-[100] bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30 max-w-[calc(100vw-2rem)] sm:max-w-sm">
-
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
 
           <span className="flex-1">
@@ -800,913 +778,622 @@ export default function Orders_Page() {
           >
             <X className="w-3.5 h-3.5" />
           </button>
-
         </div>
       )}
 
       {/* ==================================================
-          DESKTOP SIDEBAR
+          TOP ANNOUNCEMENT BAR
       ================================================== */}
 
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
-
-        <div>
-
-          {/* BRAND */}
-
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
-
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
-
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
-
-          </div>
-
-          {/* NAVIGATION */}
-
-          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600">
-
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </Link>
-
-            {/* ACTIVE ORDERS */}
-
-            <Link
-              to="/orders"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <Package className="w-4 h-4" />
-              My Orders
-            </Link>
-
-            <Link
-              to="/custom-designs"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Scissors className="w-4 h-4" />
-              Custom Designs
-            </Link>
-
-            <Link
-              to="/measurements"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Ruler className="w-4 h-4" />
-              Measurements
-            </Link>
-
-            <Link
-              to="/wishlist"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Heart className="w-4 h-4" />
-              Wishlist
-            </Link>
-
-            <Link
-              to="/addresses"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <MapPin className="w-4 h-4" />
-              Addresses
-            </Link>
-
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <User className="w-4 h-4" />
-              Profile
-            </Link>
-
-            {/* NOTIFICATIONS */}
-
-            <Link
-              to="/notifications"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between"
-            >
-              <span className="flex items-center gap-3">
-                <Bell className="w-4 h-4" />
-                Notifications
-              </span>
-
-              <NotificationBadge sidebar />
-            </Link>
-
-            <Link
-              to="/support"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Headphones className="w-4 h-4" />
-              Support
-            </Link>
-
-          </nav>
-        </div>
-
-        {/* LOGOUT */}
-
-        <div className="p-4 border-t border-gray-100">
-
-          <Link
-            to="/"
-            onClick={() => {
-              localStorage.removeItem("weftin_user");
-              localStorage.removeItem("weftin_token");
-            }}
-            className="flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out
-          </Link>
-
-        </div>
-
-      </aside>
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+        LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
+      </div>
 
       {/* ==================================================
-          MOBILE MENU OVERLAY
+          UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE)
+      ================================================== */}
+
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search anything..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
+            />
+          </form>
+
+          <div className="text-center">
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            
+            <Link to="/wishlist" className="text-gray-800 hover:text-black">
+              <Heart className="w-5 h-5" />
+            </Link>
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
+              <Bell className="w-5 h-5" />
+              <NotificationBadge />
+            </Link>
+
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                  {userInitial}
+                </div>
+              )}
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
+            </Link>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
+            </button>
+
+            <Link to="/cart" className="relative text-gray-800 hover:text-black">
+              <ShoppingBag className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">Home</Link>
+          <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
+          <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
+        </nav>
+      </header>
+
+      {/* ==================================================
+          SLIDING NAVIGATION DRAWER
       ================================================== */}
 
       {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
-          onClick={closeMobileMenu}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
 
-      {/* ==================================================
-          MOBILE SLIDE-IN NAVIGATION
-      ================================================== */}
-
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-
-        {/* MOBILE MENU HEADER */}
-
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-
-          <Link
-            to="/dashboard"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3"
-          >
-
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
-
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
-
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
-
-          </Link>
-
-          <button
-            onClick={closeMobileMenu}
-            className="p-2 text-gray-500 hover:text-black"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-        </div>
-
-        {/* MOBILE USER */}
-
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-
-          <UserAvatar mobile />
-
-          <div className="min-w-0">
-
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {userName}
-            </p>
-
-            <p className="text-[10px] text-gray-400 truncate">
-              {userEmail}
-            </p>
-
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
+          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{userEmail || "Member Account"}</p>
+            </div>
+          </div>
+
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
         </div>
 
-        {/* MOBILE NAVIGATION */}
-
-        <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-
-          <Link
-            to="/dashboard"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </Link>
-
-          <Link
-            to="/orders"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-          >
-            <Package className="w-4 h-4" />
-            My Orders
-          </Link>
-
-          <Link
-            to="/custom-designs"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Scissors className="w-4 h-4" />
-            Custom Designs
-          </Link>
-
-          <Link
-            to="/measurements"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Ruler className="w-4 h-4" />
-            Measurements
-          </Link>
-
-          <Link
-            to="/wishlist"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Heart className="w-4 h-4" />
-            Wishlist
-          </Link>
-
-          <Link
-            to="/addresses"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <MapPin className="w-4 h-4" />
-            Addresses
-          </Link>
-
-          <Link
-            to="/profile"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <User className="w-4 h-4" />
-            Profile
-          </Link>
-
-          <Link
-            to="/notifications"
-            onClick={closeMobileMenu}
-            className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <span className="flex items-center gap-3">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </span>
-
-            <NotificationBadge sidebar />
-          </Link>
-
-          <Link
-            to="/support"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Headphones className="w-4 h-4" />
-            Support
-          </Link>
-
-        </nav>
-
-        {/* MOBILE LOGOUT */}
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-
-          <Link
-            to="/"
-            onClick={() => {
-              localStorage.removeItem("weftin_user");
-              localStorage.removeItem("weftin_token");
-              closeMobileMenu();
-            }}
-            className="flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out
-          </Link>
-
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
+          </button>
         </div>
-
       </aside>
 
       {/* ==================================================
-          MAIN
+          MAIN CONTENT AREA
       ================================================== */}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <main className="p-4 sm:p-6 lg:p-12 max-w-7xl mx-auto w-full">
 
-        {/* ==================================================
-            DESKTOP HEADER
-        ================================================== */}
+        {/* TITLE & TABS */}
 
-        <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
 
-          <div className="text-xs text-gray-400">
+          <div>
+            <h2 className="text-3xl font-serif text-gray-900">
+              My Orders & Invoices
+            </h2>
 
-            Portfolio
-
-            <span className="mx-2">
-              &gt;
-            </span>
-
-            <span className="text-gray-900 font-semibold uppercase tracking-wider">
-              MY ORDERS
-            </span>
-
+            <p className="text-xs text-gray-500 mt-1">
+              View real-time status of your current
+              and past WEFTIN orders.
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* ACTIONS */}
 
-            {/* CART */}
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
 
-            <Link
-              to="/cart"
-              className="relative text-gray-600 hover:text-black transition-colors"
+            <button
+              onClick={handleRefresh}
+              className="bg-white border border-gray-300 hover:border-black text-gray-800 px-3 py-2.5 rounded-lg cursor-pointer"
+              title="Refresh orders"
             >
-              <ShoppingBag className="w-5 h-5" />
-            </Link>
+              <RefreshCw className="w-4 h-4" />
+            </button>
 
-            {/* NOTIFICATIONS */}
+            {/* FILTER TABS */}
 
-            <Link
-              to="/notifications"
-              className="relative text-gray-600 hover:text-black transition-colors"
-            >
-              <Bell className="w-5 h-5" />
+            <div className="flex bg-white border border-gray-200 rounded-lg p-1 text-xs overflow-x-auto max-w-full">
 
-              <NotificationBadge />
-
-            </Link>
-
-            {/* USER */}
-
-            <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
-
-              <UserAvatar />
-
-              <span className="text-xs font-semibold text-gray-800">
-                {userName}
-              </span>
-
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* ==================================================
-            MOBILE HEADER
-        ================================================== */}
-
-        <header className="md:hidden bg-white border-b border-gray-200">
-
-          <div className="px-4 py-4 flex items-center justify-between">
-
-            {/* LOGO */}
-
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3"
-            >
-
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-                W
-              </div>
-
-              <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
-
-                <span className="text-[7px] uppercase tracking-[0.18em] text-gray-400 block">
-                  ATELIER TAILORS
-                </span>
-              </div>
-
-            </Link>
-
-            {/* MOBILE ACTIONS */}
-
-            <div className="flex items-center gap-4">
-
-              {/* CART */}
-
-              <Link
-                to="/cart"
-                className="relative text-gray-600"
-                aria-label="Cart"
-              >
-                <ShoppingBag className="w-5 h-5" />
-              </Link>
-
-              {/* NOTIFICATIONS */}
-
-              <Link
-                to="/notifications"
-                className="relative text-gray-600"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5" />
-
-                <NotificationBadge />
-
-              </Link>
-
-              {/* USER AVATAR */}
-
-              <Link
-                to="/profile"
-                aria-label="Profile"
-              >
-                <UserAvatar mobile />
-              </Link>
-
-              {/* MENU */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setMobileMenuOpen(true)
-                }
-                className="text-gray-700"
-                aria-label="Open menu"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* ==================================================
-            CONTENT
-        ================================================== */}
-
-        <main className="p-4 sm:p-6 lg:p-12 max-w-7xl w-full">
-
-          {/* TITLE */}
-
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-
-            <div>
-
-              <h2 className="text-3xl font-serif text-gray-900">
-                My Orders & Invoices
-              </h2>
-
-              <p className="text-xs text-gray-500 mt-1">
-                View real-time status of your current
-                and past WEFTIN orders.
-              </p>
-
-            </div>
-
-            {/* ACTIONS */}
-
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-
-              <button
-                onClick={handleRefresh}
-                className="bg-white border border-gray-300 hover:border-black text-gray-800 px-3 py-2.5 rounded-lg"
-                title="Refresh orders"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-
-              {/* FILTER TABS */}
-
-              <div className="flex bg-white border border-gray-200 rounded-lg p-1 text-xs overflow-x-auto max-w-full">
-
-                {[
-                  "All",
-                  "Active",
-                  "Delivered",
-                  "Cancelled"
-                ].map((tab) => (
-
-                  <button
-                    key={tab}
-                    onClick={() =>
-                      setActiveTab(tab)
-                    }
-                    className={`px-4 py-1.5 rounded-md font-semibold transition-all whitespace-nowrap ${
-                      activeTab === tab
-                        ? "bg-amber-100 text-amber-900"
-                        : "text-gray-600 hover:text-black"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-
-                ))}
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* ==================================================
-              ERROR
-          ================================================== */}
-
-          {errorMessage && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 p-5 rounded-xl mb-6 flex items-start gap-3">
-
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-
-              <div className="flex-1">
-
-                <p className="text-sm font-semibold">
-                  Unable to load orders
-                </p>
-
-                <p className="text-xs mt-1">
-                  {errorMessage}
-                </p>
+              {[
+                "All",
+                "Active",
+                "Delivered",
+                "Cancelled"
+              ].map((tab) => (
 
                 <button
-                  onClick={loadOrders}
-                  className="mt-3 text-xs font-semibold underline hover:no-underline"
+                  key={tab}
+                  onClick={() =>
+                    setActiveTab(tab)
+                  }
+                  className={`px-4 py-1.5 rounded-md font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                    activeTab === tab
+                      ? "bg-amber-100 text-amber-900"
+                      : "text-gray-600 hover:text-black"
+                  }`}
                 >
-                  Try again
+                  {tab}
                 </button>
 
-              </div>
+              ))}
 
             </div>
-          )}
 
-          {/* ==================================================
-              EMPTY STATE
-          ================================================== */}
+          </div>
 
-          {!errorMessage &&
-          filteredOrders.length === 0 ? (
+        </div>
 
-            <div className="bg-white p-8 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
+        {/* ==================================================
+            ERROR BANNER
+        ================================================== */}
 
-              <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+        {errorMessage && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-5 rounded-xl mb-6 flex items-start gap-3">
 
-              <h3 className="font-serif text-xl text-gray-800 mb-2">
-                {orders.length === 0
-                  ? "No orders yet."
-                  : `No ${activeTab.toLowerCase()} orders.`}
-              </h3>
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
 
-              <p className="text-xs text-gray-500 mb-6">
-                {orders.length === 0
-                  ? "Your WEFTIN purchases will appear here after you place an order."
-                  : "Try another order filter to view your purchases."}
+            <div className="flex-1">
+
+              <p className="text-sm font-semibold">
+                Unable to load orders
               </p>
 
-              {orders.length === 0 && (
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-2 bg-[#1C1816] text-white px-5 py-3 rounded-lg text-xs font-semibold uppercase tracking-wider hover:bg-black"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Explore Collection
-                </Link>
-              )}
+              <p className="text-xs mt-1">
+                {errorMessage}
+              </p>
+
+              <button
+                onClick={loadOrders}
+                className="mt-3 text-xs font-semibold underline hover:no-underline cursor-pointer"
+              >
+                Try again
+              </button>
 
             </div>
 
-          ) : !errorMessage ? (
+          </div>
+        )}
 
-            /* ==================================================
-                ORDERS GRID
-            ================================================== */
+        {/* ==================================================
+            EMPTY STATE
+        ================================================== */}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {!errorMessage &&
+        filteredOrders.length === 0 ? (
 
-              {filteredOrders.map(
-                (order) => {
+          <div className="bg-white p-8 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
 
-                  const orderNumber =
-                    order.order_number ||
-                    order.orderNumber ||
-                    `WF-${order.id}`;
+            <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
 
-                  const status =
-                    normalizeStatus(
-                      order.status
-                    );
+            <h3 className="font-serif text-xl text-gray-800 mb-2">
+              {orders.length === 0
+                ? "No orders yet."
+                : `No ${activeTab.toLowerCase()} orders.`}
+            </h3>
 
-                  const productName =
-                    order.product_name ||
-                    order.productName ||
-                    "WEFTIN Product";
+            <p className="text-xs text-gray-500 mb-6">
+              {orders.length === 0
+                ? "Your WEFTIN purchases will appear here after you place an order."
+                : "Try another order filter to view your purchases."}
+            </p>
 
-                  const category =
-                    order.product_category ||
-                    order.category ||
-                    "ATELIER";
+            {orders.length === 0 && (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 bg-[#1C1816] text-white px-5 py-3 rounded-lg text-xs font-semibold uppercase tracking-wider hover:bg-black cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Explore Collection
+              </Link>
+            )}
 
-                  const productImage =
-                    order.product_image ||
-                    order.productImage ||
-                    "";
+          </div>
 
-                  const quantity =
-                    Number(
-                      order.quantity
-                    ) || 1;
+        ) : !errorMessage ? (
 
-                  const totalPrice =
-                    order.total_price ??
-                    order.totalPrice ??
-                    order.price ??
-                    0;
+          /* ==================================================
+              ORDERS GRID
+          ================================================== */
 
-                  return (
-                    <div
-                      key={
-                        order.id ||
-                        orderNumber
-                      }
-                      className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
-                    >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                      <div>
+            {filteredOrders.map(
+              (order) => {
 
-                        {/* ORDER HEADER */}
+                const orderNumber =
+                  order.order_number ||
+                  order.orderNumber ||
+                  `WF-${order.id}`;
 
-                        <div className="flex justify-between items-center pb-4 border-b border-gray-100 text-xs gap-4">
+                const status =
+                  normalizeStatus(
+                    order.status
+                  );
 
-                          <span className="font-mono font-bold text-gray-600 truncate">
-                            {orderNumber}
-                          </span>
+                const productName =
+                  order.product_name ||
+                  order.productName ||
+                  "WEFTIN Product";
 
-                          <span
-                            className={`px-2.5 py-1 rounded text-[9px] uppercase font-bold tracking-wider flex items-center gap-1.5 whitespace-nowrap ${getStatusStyle(
-                              status
-                            )}`}
-                          >
-                            {getStatusIcon(
-                              status
-                            )}
+                const category =
+                  order.product_category ||
+                  order.category ||
+                  "ATELIER";
 
-                            {getStatusLabel(
-                              status
-                            )}
-                          </span>
+                const productImage =
+                  order.product_image ||
+                  order.productImage ||
+                  "";
+
+                const quantity =
+                  Number(
+                    order.quantity
+                  ) || 1;
+
+                const totalPrice =
+                  order.total_price ??
+                  order.totalPrice ??
+                  order.price ??
+                  0;
+
+                return (
+                  <div
+                    key={
+                      order.id ||
+                      orderNumber
+                    }
+                    className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
+                  >
+
+                    <div>
+
+                      {/* ORDER HEADER */}
+
+                      <div className="flex justify-between items-center pb-4 border-b border-gray-100 text-xs gap-4">
+
+                        <span className="font-mono font-bold text-gray-600 truncate">
+                          {orderNumber}
+                        </span>
+
+                        <span
+                          className={`px-2.5 py-1 rounded text-[9px] uppercase font-bold tracking-wider flex items-center gap-1.5 whitespace-nowrap ${getStatusStyle(
+                            status
+                          )}`}
+                        >
+                          {getStatusIcon(
+                            status
+                          )}
+
+                          {getStatusLabel(
+                            status
+                          )}
+                        </span>
+
+                      </div>
+
+                      {/* PRODUCT */}
+
+                      <div className="py-4 flex gap-4 items-center">
+
+                        <div className="w-20 h-24 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
+
+                          {productImage ? (
+                            <img
+                              src={
+                                productImage
+                              }
+                              alt={
+                                productName
+                              }
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-7 h-7 text-gray-300" />
+                            </div>
+                          )}
 
                         </div>
 
-                        {/* PRODUCT */}
+                        <div className="min-w-0">
 
-                        <div className="py-4 flex gap-4 items-center">
+                          <span className="bg-amber-100 text-amber-900 text-[8px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
+                            {category}
+                          </span>
 
-                          <div className="w-20 h-24 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
+                          <h3 className="font-serif text-base font-medium text-gray-900 mt-1">
+                            {productName}
+                          </h3>
 
-                            {productImage ? (
-                              <img
-                                src={
-                                  productImage
-                                }
-                                alt={
-                                  productName
-                                }
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Package className="w-7 h-7 text-gray-300" />
+                          <p className="text-[11px] text-gray-500 mt-0.5">
+                            Ordered:{" "}
+                            {formatDate(
+                              order.ordered_at ||
+                                order.created_at ||
+                                order.date
+                            )}
+                          </p>
+
+                          {quantity > 0 && (
+                            <p className="text-[11px] text-gray-500 mt-0.5">
+                              Quantity:{" "}
+                              {quantity}
+                            </p>
+                          )}
+
+                          {order.size && (
+                            <p className="text-[11px] text-gray-500 mt-0.5">
+                              Size:{" "}
+                              {order.size}
+                            </p>
+                          )}
+
+                          {order.color && (
+                            <p className="text-[11px] text-gray-500 mt-0.5">
+                              Color:{" "}
+                              {order.color}
+                            </p>
+                          )}
+
+                          <strong className="text-sm text-gray-900 mt-1 block">
+                            {formatPrice(
+                              totalPrice
+                            )}
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                      {/* SHIPPING INFO */}
+
+                      {(order.courier ||
+                        order.tracking_number ||
+                        order.estimated_delivery) && (
+
+                        <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+
+                          <div className="flex items-center gap-2 mb-2">
+
+                            <Truck className="w-3.5 h-3.5 text-gray-500" />
+
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500">
+                              Shipping
+                            </span>
+
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[10px]">
+
+                            {order.courier && (
+                              <div>
+                                <span className="text-gray-400 block">
+                                  Courier
+                                </span>
+
+                                <span className="font-semibold text-gray-700">
+                                  {order.courier}
+                                </span>
+                              </div>
+                            )}
+
+                            {order.tracking_number && (
+                              <div>
+                                <span className="text-gray-400 block">
+                                  Tracking
+                                </span>
+
+                                <span className="font-semibold text-gray-700 break-all">
+                                  {order.tracking_number}
+                                </span>
+                              </div>
+                            )}
+
+                            {order.estimated_delivery && (
+                              <div>
+                                <span className="text-gray-400 block">
+                                  Est. Delivery
+                                </span>
+
+                                <span className="font-semibold text-gray-700">
+                                  {formatDate(
+                                    order.estimated_delivery
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {order.payment_status && (
+                              <div>
+                                <span className="text-gray-400 block">
+                                  Payment
+                                </span>
+
+                                <span className="font-semibold text-gray-700">
+                                  {String(
+                                    order.payment_status
+                                  ).toUpperCase()}
+                                </span>
                               </div>
                             )}
 
                           </div>
 
-                          <div className="min-w-0">
-
-                            <span className="bg-amber-100 text-amber-900 text-[8px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
-                              {category}
-                            </span>
-
-                            <h3 className="font-serif text-base font-medium text-gray-900 mt-1">
-                              {productName}
-                            </h3>
-
-                            <p className="text-[11px] text-gray-500 mt-0.5">
-                              Ordered:{" "}
-                              {formatDate(
-                                order.ordered_at ||
-                                  order.created_at ||
-                                  order.date
-                              )}
-                            </p>
-
-                            {quantity > 0 && (
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                Quantity:{" "}
-                                {quantity}
-                              </p>
-                            )}
-
-                            {order.size && (
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                Size:{" "}
-                                {order.size}
-                              </p>
-                            )}
-
-                            {order.color && (
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                Color:{" "}
-                                {order.color}
-                              </p>
-                            )}
-
-                            <strong className="text-sm text-gray-900 mt-1 block">
-                              {formatPrice(
-                                totalPrice
-                              )}
-                            </strong>
-
-                          </div>
-
                         </div>
-
-                        {/* SHIPPING INFO */}
-
-                        {(order.courier ||
-                          order.tracking_number ||
-                          order.estimated_delivery) && (
-
-                          <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
-
-                            <div className="flex items-center gap-2 mb-2">
-
-                              <Truck className="w-3.5 h-3.5 text-gray-500" />
-
-                              <span className="text-[9px] uppercase tracking-wider font-bold text-gray-500">
-                                Shipping
-                              </span>
-
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-[10px]">
-
-                              {order.courier && (
-                                <div>
-                                  <span className="text-gray-400 block">
-                                    Courier
-                                  </span>
-
-                                  <span className="font-semibold text-gray-700">
-                                    {order.courier}
-                                  </span>
-                                </div>
-                              )}
-
-                              {order.tracking_number && (
-                                <div>
-                                  <span className="text-gray-400 block">
-                                    Tracking
-                                  </span>
-
-                                  <span className="font-semibold text-gray-700 break-all">
-                                    {order.tracking_number}
-                                  </span>
-                                </div>
-                              )}
-
-                              {order.estimated_delivery && (
-                                <div>
-                                  <span className="text-gray-400 block">
-                                    Est. Delivery
-                                  </span>
-
-                                  <span className="font-semibold text-gray-700">
-                                    {formatDate(
-                                      order.estimated_delivery
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-
-                              {order.payment_status && (
-                                <div>
-                                  <span className="text-gray-400 block">
-                                    Payment
-                                  </span>
-
-                                  <span className="font-semibold text-gray-700">
-                                    {String(
-                                      order.payment_status
-                                    ).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-
-                            </div>
-
-                          </div>
-                        )}
-
-                      </div>
-
-                      {/* ACTIONS */}
-
-                      <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100 text-[10px]">
-
-                        <button
-                          onClick={() =>
-                            handleTrackOrder(
-                              order
-                            )
-                          }
-                          className="py-2.5 bg-[#1C1816] text-white rounded font-semibold uppercase tracking-wider hover:bg-black flex items-center justify-center gap-1.5"
-                        >
-                          <Truck className="w-3.5 h-3.5" />
-
-                          Track
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            handleInvoice(
-                              order
-                            )
-                          }
-                          className="py-2.5 border border-gray-300 text-gray-800 rounded font-semibold uppercase tracking-wider hover:border-black bg-white flex items-center justify-center gap-1.5"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-
-                          Invoice
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            handleReorder(
-                              order
-                            )
-                          }
-                          className="py-2.5 border border-gray-300 text-gray-800 rounded font-semibold uppercase tracking-wider hover:border-black bg-white flex items-center justify-center gap-1.5"
-                        >
-                          <ShoppingBag className="w-3.5 h-3.5" />
-
-                          Reorder
-                        </button>
-
-                      </div>
+                      )}
 
                     </div>
-                  );
-                }
-              )}
 
-            </div>
+                    {/* ACTIONS */}
 
-          ) : null}
+                    <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100 text-[10px]">
 
-        </main>
+                      <button
+                        onClick={() =>
+                          handleTrackOrder(
+                            order
+                          )
+                        }
+                        className="py-2.5 bg-[#1C1816] text-white rounded font-semibold uppercase tracking-wider hover:bg-black flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Truck className="w-3.5 h-3.5" />
+                        Track
+                      </button>
 
-      </div>
+                      <button
+                        onClick={() =>
+                          handleInvoice(
+                            order
+                          )
+                        }
+                        className="py-2.5 border border-gray-300 text-gray-800 rounded font-semibold uppercase tracking-wider hover:border-black bg-white flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        Invoice
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          handleReorder(
+                            order
+                          )
+                        }
+                        className="py-2.5 border border-gray-300 text-gray-800 rounded font-semibold uppercase tracking-wider hover:border-black bg-white flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        Reorder
+                      </button>
+
+                    </div>
+
+                  </div>
+                );
+              }
+            )}
+
+          </div>
+
+        ) : null}
+
+      </main>
 
     </div>
   );
