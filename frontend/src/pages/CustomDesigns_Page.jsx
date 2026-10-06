@@ -441,7 +441,7 @@ export default function CustomDesigns_Page() {
           DESKTOP SIDEBAR
       -------------------------------------------------- */}
 
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex fixed top-0 left-0 h-screen z-30">
 
         <div>
 
@@ -745,14 +745,14 @@ export default function CustomDesigns_Page() {
       </aside>
 
       {/* --------------------------------------------------
-          MAIN CONTENT
+          MAIN CONTENT (with ml-64 offset for laptop view)
       -------------------------------------------------- */}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
 
         {/* DESKTOP HEADER */}
 
-        <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center">
+        <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center sticky top-0 z-20">
 
           <div className="text-xs text-gray-400">
             Portfolio
@@ -790,7 +790,7 @@ export default function CustomDesigns_Page() {
 
         {/* MOBILE HEADER */}
 
-        <header className="md:hidden bg-white border-b border-gray-200">
+        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-20">
 
           <div className="px-4 py-4 flex items-center justify-between">
 
@@ -826,6 +826,7 @@ export default function CustomDesigns_Page() {
                 className="relative text-gray-600 hover:text-black"
               >
                 <Bell className="w-5 h-5" />
+
                 <NotificationBadge />
               </Link>
 
