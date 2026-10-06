@@ -1,6 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, Heart, User, Star, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Search,
+  ShoppingBag,
+  Heart,
+  User,
+  Star,
+  ChevronDown,
+  ChevronUp,
+  Bell,
+  Menu,
+  X,
+  LayoutDashboard,
+  Package,
+  Scissors,
+  Ruler,
+  MapPin,
+  Headphones,
+  LogOut,
+  ChevronRight,
+  Settings
+} from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -17,16 +37,38 @@ export default function Product_Overview() {
   const [cartCount, setCartCount] = useState(0);
   const [toastMessage, setToastMessage] = useState('');
   
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userAvatar, setUserAvatar] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
   const [descOpen, setDescOpen] = useState(true);
   const [materialOpen, setMaterialOpen] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
-  };
+  }, []);
 
+  const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "WEFTIN Member";
+  const userEmail = currentUser?.email || "";
+  const userInitial = userName.charAt(0).toUpperCase() || "W";
+
+  // Load User & Product Data
   useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("weftin_user");
+      if (storedUser) {
+        const savedUser = JSON.parse(storedUser);
+        setCurrentUser(savedUser);
+        if (savedUser?.avatar) setUserAvatar(savedUser.avatar);
+      }
+    } catch (error) {
+      console.error("Unable to load user:", error);
+    }
+
     setLoading(true);
     fetch(`${API_BASE_URL}/api/products`)
       .then(res => res.json())
@@ -49,17 +91,27 @@ export default function Product_Overview() {
     }
   }, [id]);
 
+  // Load unread notifications
+  useEffect(() => {
+    if (!userEmail) return;
+    fetch(`${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(userEmail)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data?.count) setUnreadCount(Number(data.count));
+      })
+      .catch(err => console.error("Unread count error:", err));
+  }, [userEmail]);
+
   if (loading || !product) {
     return <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center text-xs uppercase tracking-widest text-gray-500">Loading product overview...</div>;
   }
 
-  // Build images array securely, using image2/3/4 if available, otherwise fallback intelligently
   const productImages = [
     product.image,
     product.image2 || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800",
     product.image3 || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=800",
     product.image4 || "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=800"
-  ].filter(Boolean); // removes any null/undefined entries
+  ].filter(Boolean);
 
   const relatedMasterpieces = [
     { id: 1, name: 'Midnight Indigo Silk Saree', price: '₹12,250', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=500' },
@@ -97,6 +149,13 @@ export default function Product_Overview() {
       console.error("Add to bag error:", error);
       showToast("Unable to add item to luxury bag.");
     }
+  };
+
+  const handleBuyItNow = () => {
+    handleAddToBag();
+    setTimeout(() => {
+      navigate("/cart");
+    }, 400);
   };
 
   const handleBespokeCustomDesign = async () => {
@@ -147,6 +206,25 @@ export default function Product_Overview() {
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
       
@@ -159,17 +237,24 @@ export default function Product_Overview() {
       )}
 
       {/* TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-xs py-2 text-center tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
-      {/* NAVIGATION BAR */}
+      {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
             <Search className="w-4 h-4 text-gray-400 mr-2" />
-            <input type="text" placeholder="Search anything..." className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" />
-          </div>
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search anything..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
+            />
+          </form>
 
           <div className="text-center">
             <Link to="/">
@@ -177,31 +262,168 @@ export default function Product_Overview() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-6">
-            <span className="text-xs font-medium text-gray-700 cursor-pointer">INR &or;</span>
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
             <Link to="/wishlist" className="text-gray-800 hover:text-black">
               <Heart className="w-5 h-5" />
             </Link>
-            <Link to="/profile" className="text-gray-800 hover:text-black">
-              <User className="w-5 h-5" />
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
+
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                  {userInitial}
+                </div>
+              )}
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
+            </Link>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
+            </button>
+
             <Link to="/cart" className="relative text-gray-800 hover:text-black">
               <ShoppingBag className="w-5 h-5" />
-              {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
+              {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">{cartCount}</span>}
             </Link>
           </div>
         </div>
 
         {/* Sub Nav Links */}
-        <nav className="hidden md:flex justify-center items-center gap-8 mt-4 pt-3 border-t border-gray-200/60 text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
           <Link to="/" className="hover:text-black transition-colors">Home</Link>
           <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
-          <a href="#" className="hover:text-black transition-colors">Collections</a>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
           <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
           <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
           <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
         </nav>
       </header>
+
+      {/* SLIDING NAVIGATION DRAWER */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
+      )}
+
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{userEmail || "Member Account"}</p>
+            </div>
+          </div>
+
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
+          </button>
+        </div>
+      </aside>
 
       {/* BREADCRUMB */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-4 text-xs text-gray-500">
@@ -217,7 +439,6 @@ export default function Product_Overview() {
           
           {/* Left: Thumbnail Selector + Main Image */}
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Thumbnails */}
             <div className="flex sm:flex-col gap-3 order-2 sm:order-1 overflow-x-auto">
               {productImages.map((img, idx) => (
                 <button 
@@ -230,7 +451,6 @@ export default function Product_Overview() {
               ))}
             </div>
 
-            {/* Main Featured Image */}
             <div className="relative flex-1 h-[520px] rounded-xl overflow-hidden bg-gray-100 order-1 sm:order-2">
               <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase tracking-widest px-3 py-1 font-bold">
                 {product.tag || 'ATELIER DROP'}
@@ -248,7 +468,6 @@ export default function Product_Overview() {
 
             <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-3">{product.name}</h2>
             
-            {/* Reviews */}
             <div className="flex items-center gap-2 mb-6">
               <div className="flex text-amber-500">
                 {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-amber-500" />)}
@@ -256,7 +475,6 @@ export default function Product_Overview() {
               <span className="text-xs text-gray-500">(24 verified reviews)</span>
             </div>
 
-            {/* Pricing */}
             <div className="flex items-baseline gap-4 mb-6 pb-6 border-b border-gray-100">
               <span className="text-3xl font-bold text-gray-950">{product.price}</span>
               {product.old_price && <span className="text-sm text-gray-400 line-through">{product.old_price}</span>}
@@ -266,7 +484,6 @@ export default function Product_Overview() {
               {product.description || 'Woven with pure gold-coated zari thread and premium mulberry silk, this magnificent masterpiece encapsulates heritage Indian craftsmanship in a rich, breathtaking drape.'}
             </p>
 
-            {/* Select Sizing */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs uppercase tracking-wider text-gray-600 font-semibold">Select Tailoring Size</label>
@@ -285,7 +502,6 @@ export default function Product_Overview() {
               </div>
             </div>
 
-            {/* Color Palette */}
             <div className="mb-6">
               <label className="block text-xs uppercase tracking-wider text-gray-600 font-semibold mb-2">Color Palette</label>
               <div className="flex gap-3 items-center">
@@ -303,7 +519,6 @@ export default function Product_Overview() {
               </div>
             </div>
 
-            {/* Quantity */}
             <div className="mb-8">
               <label className="block text-xs uppercase tracking-wider text-gray-600 font-semibold mb-2">Quantity</label>
               <div className="flex items-center w-32 border border-gray-300 rounded bg-gray-50">
@@ -313,29 +528,30 @@ export default function Product_Overview() {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="space-y-3 mb-8">
               <button 
                 onClick={handleAddToBag} 
-                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg"
+                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer"
               >
                 Add To Luxury Bag
               </button>
-              <button onClick={() => showToast('Redirecting to express checkout...')} className="w-full border-2 border-black text-black py-3.5 rounded text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black hover:text-white transition-colors">
+              <button 
+                onClick={handleBuyItNow} 
+                className="w-full border-2 border-black text-black py-3.5 rounded text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black hover:text-white transition-colors cursor-pointer"
+              >
                 Buy It Now
               </button>
               <button 
                 onClick={handleBespokeCustomDesign}
-                className="w-full bg-amber-50 border border-amber-300 text-amber-900 py-3 rounded text-xs uppercase tracking-[0.15em] font-semibold hover:bg-amber-100 transition-colors"
+                className="w-full bg-amber-50 border border-amber-300 text-amber-900 py-3 rounded text-xs uppercase tracking-[0.15em] font-semibold hover:bg-amber-100 transition-colors cursor-pointer"
               >
                 Bespoke Custom Design
               </button>
             </div>
 
-            {/* Accordions */}
             <div className="border-t border-gray-200 divide-y divide-gray-200 text-xs">
               <div className="py-4">
-                <button onClick={() => setDescOpen(!descOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900">
+                <button onClick={() => setDescOpen(!descOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900 cursor-pointer">
                   Product Description {descOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {descOpen && (
@@ -346,7 +562,7 @@ export default function Product_Overview() {
               </div>
 
               <div className="py-4">
-                <button onClick={() => setMaterialOpen(!materialOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900">
+                <button onClick={() => setMaterialOpen(!materialOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900 cursor-pointer">
                   Material & Care {materialOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {materialOpen && (
@@ -357,7 +573,7 @@ export default function Product_Overview() {
               </div>
 
               <div className="py-4">
-                <button onClick={() => setShippingOpen(!shippingOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900">
+                <button onClick={() => setShippingOpen(!shippingOpen)} className="flex justify-between items-center w-full font-serif font-bold text-sm text-gray-900 cursor-pointer">
                   Shipping & Returns {shippingOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {shippingOpen && (
@@ -372,7 +588,6 @@ export default function Product_Overview() {
 
         </div>
 
-        {/* RELATED MASTERPIECES */}
         <div className="mt-24">
           <h3 className="font-serif text-2xl font-light text-gray-900 mb-8">Related Masterpieces</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl">
@@ -408,21 +623,20 @@ export default function Product_Overview() {
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><a href="#" className="hover:text-black">Sarees</a></li>
-              <li><a href="#" className="hover:text-black">Lehengas</a></li>
-              <li><a href="#" className="hover:text-black">Dresses</a></li>
-              <li><a href="#" className="hover:text-black">Kurtis</a></li>
-              <li><a href="#" className="hover:text-black">Co-Ord Sets</a></li>
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><a href="#" className="hover:text-black">Help Center</a></li>
-              <li><a href="#" className="hover:text-black">Order Tracking</a></li>
-              <li><a href="#" className="hover:text-black">Returns & Adjustments</a></li>
-              <li><a href="#" className="hover:text-black">Shipping Policy</a></li>
-              <li><a href="#" className="hover:text-black">Fabric Quality Guide</a></li>
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
             </ul>
           </div>
           <div>
@@ -431,7 +645,7 @@ export default function Product_Overview() {
               <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
               <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
               <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
-              <li><Link to="/profile" className="hover:text-black">My Bespoke Fit</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
             </ul>
           </div>
         </div>
