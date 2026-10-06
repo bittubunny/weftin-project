@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -19,9 +18,8 @@ import {
   Headphones,
   LogOut,
   ChevronRight,
-  Settings
+  Settings,
 } from "lucide-react";
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Cart_Page() {
