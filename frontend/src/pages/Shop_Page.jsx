@@ -15,6 +15,8 @@ import {
   MapPin,
   Headphones,
   LogOut,
+  ChevronRight,
+  Settings
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -126,7 +128,6 @@ export default function Shop_Page() {
 
     updateCartCount();
 
-    // Refresh unread notifications periodically
     let notificationInterval;
 
     if (savedUser && savedUser.email) {
@@ -227,7 +228,6 @@ export default function Shop_Page() {
           err
         );
 
-        // Fallback mock items if backend is offline
         setProducts([
           {
             id: 1,
@@ -360,7 +360,6 @@ export default function Shop_Page() {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // SEARCH QUERY
     if (searchText.trim()) {
       const query = searchText.toLowerCase().trim();
       result = result.filter(
@@ -370,7 +369,6 @@ export default function Shop_Page() {
       );
     }
 
-    // CATEGORY
     if (appliedFilters.category !== "All") {
       result = result.filter(
         (p) =>
@@ -380,7 +378,6 @@ export default function Shop_Page() {
       );
     }
 
-    // SIZE
     if (appliedFilters.sizes.length > 0) {
       result = result.filter((product) => {
         if (!product.sizes) return false;
@@ -405,7 +402,6 @@ export default function Shop_Page() {
       });
     }
 
-    // COLOR
     if (appliedFilters.color) {
       result = result.filter((product) => {
         if (!product.color) return false;
@@ -417,7 +413,6 @@ export default function Shop_Page() {
       });
     }
 
-    // PRICE
     if (appliedFilters.priceRange) {
       result = result.filter((product) => {
         const numericPrice = parseFloat(
@@ -448,21 +443,18 @@ export default function Shop_Page() {
       });
     }
 
-    // IN STOCK
     if (appliedFilters.inStockOnly) {
       result = result.filter(
         (product) => product.in_stock === true
       );
     }
 
-    // CUSTOM STITCHING
     if (appliedFilters.customStitching) {
       result = result.filter(
         (product) => product.custom_stitching === true
       );
     }
 
-    // SORTING
     switch (sortBy) {
       case "Price: Low to High":
         result.sort((a, b) => {
@@ -514,23 +506,27 @@ export default function Shop_Page() {
     return filteredProducts.slice(start, start + itemsPerPage);
   }, [filteredProducts, currentPage]);
 
-  // =========================================================
-  // USER DISPLAY
-  // =========================================================
   const userName =
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "Account";
+    "WEFTIN Member";
 
-  const userInitial =
-    userName?.charAt(0)?.toUpperCase() || "U";
+  const userEmail = currentUser?.email || "";
+  const userInitial = userName?.charAt(0)?.toUpperCase() || "W";
 
-  // =========================================================
-  // MOBILE NAV LINK HELPER
-  // =========================================================
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -554,407 +550,196 @@ export default function Shop_Page() {
       </div>
 
       {/* =====================================================
-          DESKTOP / TABLET NAVIGATION
+          UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE)
       ====================================================== */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 lg:px-12 py-3 sm:py-4">
-
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-          {/* Search */}
-          <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
             <Search className="w-4 h-4 text-gray-400 mr-2" />
-
-            <input
-              type="text"
+            <input 
+              type="text" 
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Search anything..."
-              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full"
+              placeholder="Search anything..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
             />
-          </div>
+          </form>
 
-          {/* Logo */}
           <div className="text-center">
-            <h1 className="font-serif text-xl sm:text-2xl tracking-[0.2em] sm:tracking-[0.25em] font-bold text-gray-900">
-              WEFTIN
-            </h1>
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+            </Link>
           </div>
 
-          {/* Desktop Icons */}
-          <div className="hidden md:flex items-center gap-4 lg:gap-6">
-
-            <span className="text-xs font-medium text-gray-700 cursor-pointer">
-              INR &or;
-            </span>
-
-            <Link
-              to="/wishlist"
-              className="text-gray-800 hover:text-black relative"
-            >
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            
+            <Link to="/wishlist" className="text-gray-800 hover:text-black relative">
               <Heart className="w-5 h-5" />
-
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
                   {wishlistCount}
                 </span>
               )}
             </Link>
-
-            {/* Notification */}
-            <Link
-              to="/notifications"
-              className="relative text-gray-800 hover:text-black"
-              title="Notifications"
-            >
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
               <Bell className="w-5 h-5" />
-
               {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </Link>
 
-            {/* User */}
-            <Link
-              to="/profile"
-              className="text-gray-800 hover:text-black"
-              title={userName}
-            >
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
               {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-6 h-6 rounded-full object-cover border border-gray-300"
-                />
+                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-amber-700 text-white flex items-center justify-center text-[10px] font-semibold">
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
                   {userInitial}
                 </div>
               )}
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
-            {/* Cart */}
-            <Link
-              to="/cart"
-              className="relative text-gray-800 hover:text-black"
-            >
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
-
-          {/* Mobile Header Icons */}
-          <div className="flex md:hidden items-center gap-3">
-
-            {/* Cart */}
-            <Link
-              to="/cart"
-              className="relative text-gray-800"
-            >
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-amber-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
-            </Link>
-
-            {/* Notifications */}
-            <Link
-              to="/notifications"
-              className="relative text-gray-800"
-            >
-              <Bell className="w-5 h-5" />
-
-              {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </Link>
-
-            {/* User Avatar */}
-            <Link to="/profile">
-              {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-6 h-6 rounded-full object-cover border border-gray-300"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-amber-700 text-white flex items-center justify-center text-[10px] font-semibold">
-                  {userInitial}
-                </div>
-              )}
-            </Link>
-
-            {/* Hamburger */}
             <button
-              type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="text-gray-800"
-              aria-label="Open menu"
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
+
+            <Link to="/cart" className="relative text-gray-800 hover:text-black">
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">{cartCount}</span>}
+            </Link>
           </div>
         </div>
 
-        {/* Desktop Sub Nav */}
-        <nav className="hidden md:flex justify-center items-center gap-5 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.12em] lg:tracking-[0.15em] uppercase text-gray-700 font-medium">
-          <Link
-            to="/"
-            className="hover:text-black transition-colors"
-          >
-            Home
-          </Link>
-
-          <Link
-            to="/shop"
-            className="text-black font-semibold border-b border-black pb-0.5"
-          >
-            Shop
-          </Link>
-
-          <a
-            href="#"
-            className="hover:text-black transition-colors"
-          >
-            Collections
-          </a>
-
-          <a
-            href="/custom-designs"
-            className="hover:text-black transition-colors"
-          >
-            Custom Design
-          </a>
-
-          <Link
-            to="/lookbook"
-            className="hover:text-black transition-colors"
-          >
-            Lookbook
-          </Link>
-
-          <Link
-            to="/limited"
-            className="hover:text-black transition-colors"
-          >
-            Limited Edition
-          </Link>
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">Home</Link>
+          <Link to="/shop" className="text-black font-semibold border-b border-black pb-0.5">Shop</Link>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
+          <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
         </nav>
       </header>
 
       {/* =====================================================
-          MOBILE SLIDE-IN NAVIGATION
+          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR)
       ====================================================== */}
-
       {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
-          onClick={closeMobileMenu}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
 
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-        <div className="flex flex-col h-full">
-
-          {/* Mobile Menu Header */}
-          <div className="flex items-center justify-between px-5 py-5 border-b border-gray-200">
-            <h2 className="font-serif text-lg tracking-[0.2em] font-bold">
-              WEFTIN
-            </h2>
-
-            <button
-              type="button"
-              onClick={closeMobileMenu}
-              className="text-gray-700 hover:text-black"
-              aria-label="Close menu"
-            >
-              <X className="w-6 h-6" />
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Mobile User */}
-          <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-3">
-
+          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
             {userAvatar ? (
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="w-10 h-10 rounded-full object-cover border border-gray-300"
-              />
+              <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-amber-700 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
                 {userInitial}
               </div>
             )}
-
             <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">
-                {userName}
-              </p>
-
-              <Link
-                to="/profile"
-                onClick={closeMobileMenu}
-                className="text-[10px] text-gray-500 uppercase tracking-wider"
-              >
-                View Profile
-              </Link>
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{userEmail || "Member Account"}</p>
             </div>
           </div>
 
-          {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto px-5 py-5">
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
 
-            <div className="space-y-1">
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
 
-              <Link
-                to="/"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Home
-              </Link>
-
-              <Link
-                to="/shop"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg bg-amber-50 text-amber-900 font-semibold text-sm"
-              >
-                Shop
-              </Link>
-
-              <a
-                href="#"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Collections
-              </a>
-
-              <a
-                href="/custom-designs"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Custom Design
-              </a>
-
-
-              <Link
-                to="/lookbook"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Lookbook
-              </Link>
-
-              <Link
-                to="/limited"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Limited Edition
-              </Link>
-
-            </div>
-
-            {/* Mobile Account Links */}
-            <div className="mt-6 pt-5 border-t border-gray-200">
-
-              <p className="px-3 mb-2 text-[9px] uppercase tracking-[0.2em] font-bold text-gray-400">
-                Account
-              </p>
-
-              <Link
-                to="/wishlist"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <span className="flex items-center gap-3">
-                  <Heart className="w-4 h-4" />
-                  Wishlist
-                </span>
-
-                {wishlistCount > 0 && (
-                  <span className="bg-rose-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                to="/notifications"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <span className="flex items-center gap-3">
-                  <Bell className="w-4 h-4" />
-                  Notifications
-                </span>
-
-                {unreadCount > 0 && (
-                  <span className="bg-rose-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                to="/cart"
-                onClick={closeMobileMenu}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <span className="flex items-center gap-3">
-                  <ShoppingBag className="w-4 h-4" />
-                  Shopping Bag
-                </span>
-
-                {cartCount > 0 && (
-                  <span className="bg-amber-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                to="/profile"
-                onClick={closeMobileMenu}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <User className="w-4 h-4" />
-                Profile
-              </Link>
-
-            </div>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
           </nav>
+        </div>
 
-          {/* LOGOUT */}
-          <div className="p-4 border-t border-gray-100 bg-white">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              Log out
-            </button>
-          </div>
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
+          </button>
         </div>
       </aside>
 
@@ -962,28 +747,16 @@ export default function Shop_Page() {
           SHOP PAGE HEADER
       ====================================================== */}
       <div className="text-center py-8 sm:py-12 px-5 max-w-xl mx-auto">
-
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37] font-semibold block mb-1">
           EXCLUSIVE CURATION
         </span>
-
         <h2 className="text-3xl sm:text-4xl font-serif font-light text-gray-900 mb-2">
           Shop
         </h2>
-
         <p className="text-xs text-gray-600 leading-relaxed">
           Explore pristine heritage ethnic attire, custom-tailoring fabrics,
           and modern silhouettes.
         </p>
-
-        <div className="mt-4">
-          <Link
-            to="/admin/home-cms"
-            className="inline-block bg-black text-white px-4 py-2 rounded text-[10px] uppercase tracking-widest font-semibold hover:bg-gray-800"
-          >
-            ⚙ Manage Home Sections (Admin CMS)
-          </Link>
-        </div>
       </div>
 
       {/* =====================================================
@@ -995,13 +768,10 @@ export default function Shop_Page() {
             SIDEBAR FILTER PANEL
         ==================================================== */}
         <aside className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm space-y-7 lg:space-y-8">
-
-          {/* Categories */}
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
               Categories
             </h4>
-
             <div className="space-y-2 text-xs">
               <button
                 onClick={() => setSelectedCategory("All")}
@@ -1013,7 +783,6 @@ export default function Shop_Page() {
               >
                 All Categories
               </button>
-
               {categoriesList.map((cat) => (
                 <button
                   key={cat}
@@ -1030,12 +799,10 @@ export default function Shop_Page() {
             </div>
           </div>
 
-          {/* Sizes */}
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
               Sizes
             </h4>
-
             <div className="grid grid-cols-3 gap-2">
               {sizesList.map((sz) => (
                 <button
@@ -1043,15 +810,10 @@ export default function Shop_Page() {
                   onClick={() => {
                     if (selectedSizes.includes(sz)) {
                       setSelectedSizes(
-                        selectedSizes.filter(
-                          (s) => s !== sz
-                        )
+                        selectedSizes.filter((s) => s !== sz)
                       );
                     } else {
-                      setSelectedSizes([
-                        ...selectedSizes,
-                        sz,
-                      ]);
+                      setSelectedSizes([...selectedSizes, sz]);
                     }
                   }}
                   className={`py-2 text-[10px] font-semibold uppercase tracking-wider rounded border ${
@@ -1066,19 +828,15 @@ export default function Shop_Page() {
             </div>
           </div>
 
-          {/* Colors */}
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
               Colors
             </h4>
-
             <div className="flex flex-wrap gap-3 items-center">
               {colorsList.map((colClass, idx) => (
                 <button
                   key={idx}
-                  onClick={() =>
-                    setSelectedColor(colClass)
-                  }
+                  onClick={() => setSelectedColor(colClass)}
                   className={`w-6 h-6 rounded-full ${colClass} ${
                     selectedColor === colClass
                       ? "ring-2 ring-black scale-110"
@@ -1089,12 +847,10 @@ export default function Shop_Page() {
             </div>
           </div>
 
-          {/* Price Range */}
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
               Price Range
             </h4>
-
             <div className="space-y-2 text-xs text-gray-700">
               {[
                 "Under ₹5,000",
@@ -1102,64 +858,47 @@ export default function Shop_Page() {
                 "₹10,000 - ₹20,000",
                 "Over ₹20,000",
               ].map((range) => (
-                <label
-                  key={range}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
+                <label key={range} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="price"
                     checked={priceRange === range}
-                    onChange={() =>
-                      setPriceRange(range)
-                    }
+                    onChange={() => setPriceRange(range)}
                     className="accent-black"
                   />
-
                   {range}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Availability */}
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
               Availability
             </h4>
-
             <div className="space-y-2 text-xs text-gray-700">
-
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={inStockOnly}
-                  onChange={() =>
-                    setInStockOnly(!inStockOnly)
-                  }
+                  onChange={() => setInStockOnly(!inStockOnly)}
                   className="accent-black"
                 />
                 In Stock
               </label>
-
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={customStitching}
-                  onChange={() =>
-                    setCustomStitching(!customStitching)
-                  }
+                  onChange={() => setCustomStitching(!customStitching)}
                   className="accent-black"
                 />
                 Custom Stitching Available
               </label>
-
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-2 pt-2">
-
             <button
               onClick={() => {
                 setSelectedCategory("All");
@@ -1169,7 +908,6 @@ export default function Shop_Page() {
                 setInStockOnly(false);
                 setCustomStitching(false);
                 setSearchText("");
-
                 setAppliedFilters({
                   category: "All",
                   sizes: [],
@@ -1178,14 +916,12 @@ export default function Shop_Page() {
                   inStockOnly: false,
                   customStitching: false,
                 });
-
                 showToast("Filters cleared");
               }}
-              className="w-full border border-gray-300 py-2.5 text-[10px] uppercase tracking-wider rounded font-semibold text-gray-700 hover:bg-gray-50"
+              className="w-full border border-gray-300 py-2.5 text-[10px] uppercase tracking-wider rounded font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
             >
               Clear All
             </button>
-
             <button
               onClick={() => {
                 setAppliedFilters({
@@ -1196,14 +932,12 @@ export default function Shop_Page() {
                   inStockOnly: inStockOnly,
                   customStitching: customStitching,
                 });
-
                 showToast("Filters applied!");
               }}
-              className="w-full bg-black text-white py-2.5 text-[10px] uppercase tracking-wider rounded font-semibold hover:bg-gray-800"
+              className="w-full bg-black text-white py-2.5 text-[10px] uppercase tracking-wider rounded font-semibold hover:bg-gray-800 cursor-pointer"
             >
               Apply Now
             </button>
-
           </div>
         </aside>
 
@@ -1211,28 +945,18 @@ export default function Shop_Page() {
             PRODUCT CATALOGUE
         ==================================================== */}
         <div className="lg:col-span-3 space-y-6">
-
-          {/* Top Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm gap-4">
-
             <span className="text-xs text-gray-500">
-              Showing{" "}
-              <strong>{paginatedProducts.length}</strong> of{" "}
-              <strong>{filteredProducts.length}</strong> items from NeonDB for "
+              Showing <strong>{paginatedProducts.length}</strong> of{" "}
+              <strong>{filteredProducts.length}</strong> items for "
               <strong>{appliedFilters.category}</strong>"
             </span>
-
             <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
-              <span className="text-gray-400 whitespace-nowrap">
-                Sort By:
-              </span>
-
+              <span className="text-gray-400 whitespace-nowrap">Sort By:</span>
               <select
                 value={sortBy}
-                onChange={(e) =>
-                  setSortBy(e.target.value)
-                }
-                className="bg-gray-50 border border-gray-200 px-3 py-2 rounded text-gray-800 font-semibold focus:outline-none w-full sm:w-auto"
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-gray-50 border border-gray-200 px-3 py-2 rounded text-gray-800 font-semibold focus:outline-none w-full sm:w-auto cursor-pointer"
               >
                 <option>Featured Highlights</option>
                 <option>Price: Low to High</option>
@@ -1242,48 +966,33 @@ export default function Shop_Page() {
             </div>
           </div>
 
-          {/* Products */}
           {loading ? (
             <div className="text-center py-20 text-xs uppercase tracking-widest text-gray-500 animate-pulse">
-              Loading database items from NeonDB...
+              Loading database items...
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 py-20 px-6 text-center">
-              <p className="font-serif text-lg text-gray-800 mb-2">
-                No products found
-              </p>
-
-              <p className="text-xs text-gray-500">
-                Try changing your filters or selecting another category.
-              </p>
+              <p className="font-serif text-lg text-gray-800 mb-2">No products found</p>
+              <p className="text-xs text-gray-500">Try changing your filters or selecting another category.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-
               {paginatedProducts.map((p) => (
                 <div
                   key={p.id}
                   className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
                 >
-
-                  {/* Product Image */}
                   <div className="relative h-72 sm:h-80 bg-gray-100 overflow-hidden">
-
                     <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] uppercase px-2.5 py-1 tracking-widest">
                       {p.tag || p.category}
                     </span>
-
-                    {/* Wishlist */}
                     <button
-                      onClick={() =>
-                        handleAddToWishlist(p)
-                      }
+                      onClick={() => handleAddToWishlist(p)}
                       className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white text-rose-700 shadow cursor-pointer transition-transform active:scale-95 z-10"
                       title="Save to Wishlist"
                     >
                       <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
                     </button>
-
                     <img
                       src={p.image}
                       alt={p.name}
@@ -1291,17 +1000,11 @@ export default function Shop_Page() {
                     />
                   </div>
 
-                  {/* Product Details */}
                   <div className="p-4 flex flex-col flex-grow justify-between">
-
                     <div>
-                      <h3 className="font-serif text-sm font-medium mb-1">
-                        {p.name}
-                      </h3>
-
+                      <h3 className="font-serif text-sm font-medium mb-1">{p.name}</h3>
                       <p className="text-xs font-bold text-gray-900">
                         {p.price}
-
                         {p.old_price && (
                           <span className="text-gray-400 line-through font-normal ml-2">
                             {p.old_price}
@@ -1311,35 +1014,26 @@ export default function Shop_Page() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
-
-                      {/* Quick View */}
                       <Link
                         to={`/product/${p.id}`}
                         className="text-[10px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 text-center rounded"
                       >
                         Quick View
                       </Link>
-
-                      {/* Add To Bag */}
                       <button
-                        onClick={() =>
-                          handleAddToCart(p)
-                        }
-                        className="text-[10px] uppercase tracking-wider py-2 bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-1 rounded"
+                        onClick={() => handleAddToCart(p)}
+                        className="text-[10px] uppercase tracking-wider py-2 bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-1 rounded cursor-pointer"
                       >
                         <ShoppingBag className="w-3 h-3" />
                         Add to Bag
                       </button>
-
                     </div>
                   </div>
                 </div>
               ))}
-
             </div>
           )}
 
-          {/* DYNAMIC PAGINATION BUTTONS */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 pt-8">
               {Array.from({ length: totalPages }, (_, index) => {
@@ -1351,7 +1045,7 @@ export default function Shop_Page() {
                       setCurrentPage(pageNum);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className={`w-9 h-9 rounded-lg border text-xs flex items-center justify-center font-semibold transition-all ${
+                    className={`w-9 h-9 rounded-lg border text-xs flex items-center justify-center font-semibold transition-all cursor-pointer ${
                       currentPage === pageNum
                         ? "bg-black text-white border-black"
                         : "border-gray-200 bg-white text-gray-700 hover:border-black"
@@ -1370,170 +1064,50 @@ export default function Shop_Page() {
           FOOTER
       ====================================================== */}
       <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
-
           <div className="md:col-span-2">
-            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">
-              WEFTIN
-            </h3>
-
+            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">WEFTIN</h3>
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
               A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.
             </p>
-
-            <p className="text-[11px] text-gray-600">
-              <strong>Concierge:</strong> concierge@weftin.com
-            </p>
-
-            <p className="text-[11px] text-gray-600">
-              <strong>Direct Line:</strong> 1-800-WEFT-LUXE
-            </p>
+            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com</p>
+            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE</p>
           </div>
-
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
-              Collections
-            </h4>
-
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li>
-                <a href="#" className="hover:text-black">
-                  Sarees
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Lehengas
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Dresses
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Kurtis
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Co-Ord Sets
-                </a>
-              </li>
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
             </ul>
           </div>
-
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
-              Concierge Care
-            </h4>
-
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li>
-                <a href="#" className="hover:text-black">
-                  Help Center
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Order Tracking
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Returns & Adjustments
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Shipping Policy
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="hover:text-black">
-                  Fabric Quality Guide
-                </a>
-              </li>
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
+              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide</Link></li>
             </ul>
           </div>
-
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
-              Account
-            </h4>
-
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li>
-                <Link
-                  to="/profile"
-                  className="hover:text-black"
-                >
-                  Sign In
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/profile"
-                  className="hover:text-black"
-                >
-                  Register Membership
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/dashboard"
-                  className="hover:text-black"
-                >
-                  Order History
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/profile"
-                  className="hover:text-black"
-                >
-                  My Bespoke Fit
-                </Link>
-              </li>
+              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
             </ul>
           </div>
         </div>
-
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-8 text-[11px] text-gray-500">
-
-          <p>
-            © 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.
-          </p>
-
+          <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-
-            <a
-              href="#"
-              className="hover:text-black"
-            >
-              Privacy Policy
-            </a>
-
-            <a
-              href="#"
-              className="hover:text-black"
-            >
-              Terms of Service
-            </a>
-
+            <a href="#" className="hover:text-black">Privacy Policy</a>
+            <a href="#" className="hover:text-black">Terms of Service</a>
           </div>
         </div>
       </footer>
