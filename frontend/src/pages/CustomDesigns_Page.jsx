@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   Layers,
-  XCircle
+  XCircle,
+  Sparkles
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -38,6 +39,10 @@ export default function CustomDesigns_Page() {
   // Shop CMS states for Custom Design integration
   const [cmsProducts, setCmsProducts] = useState([]);
   const [cmsLoading, setCmsLoading] = useState(true);
+
+  // Shop catalog display states for customer custom requests
+  const [shopProducts, setShopProducts] = useState([]);
+  const [shopLoading, setShopLoading] = useState(true);
 
   // --------------------------------------------------
   // CURRENT USER
@@ -236,10 +241,64 @@ export default function CustomDesigns_Page() {
     }
   };
 
+  const fetchShopProducts = async () => {
+    try {
+      setShopLoading(true);
+      const res = await fetch(`${API_BASE}/api/products`);
+      if (!res.ok) throw new Error("Failed to fetch shop products");
+      const data = await res.json();
+      setShopProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching shop catalog:", err);
+    } finally {
+      setShopLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadRequests();
     fetchCmsProducts();
+    fetchShopProducts();
   }, [userEmail]);
+
+  // --------------------------------------------------
+  // INSTANTLY REQUEST CUSTOM DESIGN FROM SHOP PRODUCT
+  // --------------------------------------------------
+
+  const handleRequestCustomFromProduct = async (product) => {
+    const token = localStorage.getItem("weftin_token");
+
+    try {
+      const payload = {
+        user_email: userEmail,
+        product_id: product.id,
+        product_name: product.name,
+        product_category: product.category || "Bespoke Collection",
+        product_price: product.price || "₹8,999",
+        product_image: product.image,
+        status: "Drafting Blueprint",
+        line: "BESPOKE CUSTOM LINE",
+        message: `Custom tailoring request initiated for ${product.name}. Awaiting master artisan blueprint review.`
+      };
+
+      const res = await fetch(`${API_BASE}/api/custom-designs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Failed to create custom design request");
+
+      showToast(`Custom request created for ${product.name}!`);
+      loadRequests();
+    } catch (err) {
+      console.error("Custom request error:", err);
+      showToast("Unable to submit custom design request.");
+    }
+  };
 
   // --------------------------------------------------
   // HANDLE PLACEMENT CHANGE (CMS)
@@ -875,170 +934,206 @@ export default function CustomDesigns_Page() {
                 <RefreshCw className="w-4 h-4" />
                 Refresh
               </button>
-
-              <button
-                onClick={() => navigate("/shop")}
-                className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-amber-400" />
-                Explore Shop & Customize
-              </button>
             </div>
 
           </div>
 
+          {/* =====================================================
+              SHOP CATALOG PRODUCT DISPLAY (Select & Customize)
+          ====================================================== */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-serif text-lg font-bold flex items-center gap-2 text-gray-950">
+                  <Sparkles className="w-5 h-5 text-amber-700" /> Choose Masterpiece to Customize
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">Select any item from the catalog below to instantly submit a bespoke tailoring request.</p>
+              </div>
+            </div>
+
+            {shopLoading ? (
+              <div className="text-center py-12">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Loading shop catalog...</p>
+              </div>
+            ) : shopProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">No products available.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {shopProducts.map((prod) => (
+                  <div key={prod.id} className="bg-[#FAF8F5] rounded-xl border border-gray-200 p-4 flex flex-col justify-between group">
+                    <div>
+                      <div className="relative h-48 rounded-lg overflow-hidden bg-gray-100 mb-3">
+                        <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <span className="absolute top-2 left-2 bg-amber-700 text-white text-[9px] uppercase tracking-widest px-2 py-0.5 rounded">
+                          {prod.category || "Collection"}
+                        </span>
+                      </div>
+                      <h4 className="font-serif text-sm font-bold text-gray-900 mb-1">{prod.name}</h4>
+                      <p className="text-xs font-bold text-amber-900 mb-3">{prod.price}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRequestCustomFromProduct(prod)}
+                      className="w-full bg-[#1C1816] hover:bg-black text-white py-2.5 rounded text-[11px] uppercase tracking-widest font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <Scissors className="w-3.5 h-3.5 text-amber-400" /> Request Custom Design
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* REQUESTS LIST */}
 
-          {loading ? (
-            <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-              <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
-              <h3 className="font-serif text-xl text-gray-800">
-                Loading your custom designs...
-              </h3>
-              <p className="text-xs text-gray-500 mt-2">
-                Retrieving your atelier requests.
-              </p>
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-              <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="font-serif text-xl text-gray-800 mb-2">
-                No custom design requests found.
-              </h3>
-              <p className="text-xs text-gray-500 mb-6">
-                Select a masterpiece from the Shop and click
-                "Bespoke Custom Design" to initiate a tailoring blueprint.
-              </p>
-              <button
-                onClick={() => navigate("/shop")}
-                className="bg-black text-white px-8 py-3.5 text-xs uppercase tracking-widest rounded font-semibold inline-block hover:bg-gray-800 cursor-pointer"
-              >
-                Explore Shop Collections
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {requests.map((req) => (
-                <div
-                  key={req.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm"
-                >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-4 border-b border-gray-100 text-xs">
-                    <span className="font-mono font-bold text-gray-600">
-                      CD-{String(req.id).padStart(4, "0")}
-                    </span>
+          <div className="space-y-6">
+            <h3 className="font-serif text-lg font-bold text-gray-900">Your Active Requests ({requests.length})</h3>
 
-                    <span
-                      className={`self-start sm:self-auto px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${getStatusClass(
-                        req.status
-                      )}`}
-                    >
-                      {req.status || "Drafting Blueprint"}
-                    </span>
-                  </div>
-
-                  <div className="py-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                    <div className="flex gap-4 items-center min-w-0">
-                      <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
-                        {req.product_image ? (
-                          <img
-                            src={req.product_image}
-                            alt={req.product_name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                            No Image
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <span className="bg-amber-100 text-amber-900 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
-                          {req.line || "BESPOKE CUSTOM LINE"}
-                        </span>
-
-                        <h3 className="font-serif text-xl font-medium text-gray-900 mt-1 break-words">
-                          {req.product_name}
-                        </h3>
-
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Occasion / Category:
-                          <strong className="text-gray-800 ml-1">
-                            {req.product_category || "Bespoke Occasion"}
-                          </strong>
-                        </p>
-
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          Created on {formatDate(req.created_at)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-left md:text-right bg-amber-50/60 p-4 rounded-xl border border-amber-200/60 w-full md:w-auto">
-                      <span className="text-[10px] uppercase tracking-wider text-amber-800 block">
-                        Cost Blueprint
+            {loading ? (
+              <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
+                <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
+                <h3 className="font-serif text-xl text-gray-800">
+                  Loading your custom designs...
+                </h3>
+                <p className="text-xs text-gray-500 mt-2">
+                  Retrieving your atelier requests.
+                </p>
+              </div>
+            ) : requests.length === 0 ? (
+              <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
+                <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="font-serif text-xl text-gray-800 mb-2">
+                  No custom design requests found.
+                </h3>
+                <p className="text-xs text-gray-500 mb-6">
+                  Select a masterpiece from the catalog above to initiate a tailoring blueprint.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {requests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-4 border-b border-gray-100 text-xs">
+                      <span className="font-mono font-bold text-gray-600">
+                        CD-{String(req.id).padStart(4, "0")}
                       </span>
 
-                      <strong className="text-2xl font-serif font-bold text-gray-900">
-                        {req.product_price || "Price on request"}
-                      </strong>
+                      <span
+                        className={`self-start sm:self-auto px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${getStatusClass(
+                          req.status
+                        )}`}
+                      >
+                        {req.status || "Drafting Blueprint"}
+                      </span>
+                    </div>
+
+                    <div className="py-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                      <div className="flex gap-4 items-center min-w-0">
+                        <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
+                          {req.product_image ? (
+                            <img
+                              src={req.product_image}
+                              alt={req.product_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <span className="bg-amber-100 text-amber-900 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
+                            {req.line || "BESPOKE CUSTOM LINE"}
+                          </span>
+
+                          <h3 className="font-serif text-xl font-medium text-gray-900 mt-1 break-words">
+                            {req.product_name}
+                          </h3>
+
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Occasion / Category:
+                            <strong className="text-gray-800 ml-1">
+                              {req.product_category || "Bespoke Occasion"}
+                            </strong>
+                          </p>
+
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            Created on {formatDate(req.created_at)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-left md:text-right bg-amber-50/60 p-4 rounded-xl border border-amber-200/60 w-full md:w-auto">
+                        <span className="text-[10px] uppercase tracking-wider text-amber-800 block">
+                          Cost Blueprint
+                        </span>
+
+                        <strong className="text-2xl font-serif font-bold text-gray-900">
+                          {req.product_price || "Price on request"}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
+                      <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                      <p className="italic">
+                        {req.message ||
+                          "Your bespoke request has been received by our atelier."}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/custom-workspace/${req.id}`,
+                            {
+                              state: {
+                                request: req
+                              }
+                            }
+                          )
+                        }
+                        className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors cursor-pointer"
+                      >
+                        Open Workspace
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/custom-workspace/${req.id}`,
+                            {
+                              state: {
+                                request: req
+                              }
+                            }
+                          )
+                        }
+                        className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white cursor-pointer"
+                      >
+                        Discuss Sketch
+                      </button>
+
+                      <button
+                        onClick={() => deleteRequest(req.id)}
+                        className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Request
+                      </button>
                     </div>
                   </div>
-
-                  <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
-                    <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                    <p className="italic">
-                      {req.message ||
-                        "Your bespoke request has been received by our atelier."}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/custom-workspace/${req.id}`,
-                          {
-                            state: {
-                              request: req
-                            }
-                          }
-                        )
-                      }
-                      className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors cursor-pointer"
-                    >
-                      Open Workspace
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/custom-workspace/${req.id}`,
-                          {
-                            state: {
-                              request: req
-                            }
-                          }
-                        )
-                      }
-                      className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white cursor-pointer"
-                    >
-                      Discuss Sketch
-                    </button>
-
-                    <button
-                      onClick={() => deleteRequest(req.id)}
-                      className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Request
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* =====================================================
               SHOP CATALOG PRODUCTS CMS (Embedded on Custom Designs Page)
