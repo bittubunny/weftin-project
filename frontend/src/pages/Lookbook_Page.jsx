@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -7,12 +7,26 @@ import {
   User,
   Bell,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  Package,
+  Scissors,
+  Ruler,
+  MapPin,
+  Headphones,
+  LogOut,
+  ChevronRight,
+  Settings
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250";
+
 export default function Lookbook_Page() {
+  const navigate = useNavigate();
+
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
@@ -22,6 +36,7 @@ export default function Lookbook_Page() {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userAvatar, setUserAvatar] = useState("");
@@ -266,6 +281,27 @@ export default function Lookbook_Page() {
   };
 
   // =========================================================
+  // LOGOUT & SEARCH
+  // =========================================================
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
+  // =========================================================
   // USER DISPLAY
   // =========================================================
 
@@ -273,10 +309,30 @@ export default function Lookbook_Page() {
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "Account";
+    "WEFTIN Member";
 
   const userInitial =
-    userName.charAt(0).toUpperCase();
+    userName.charAt(0).toUpperCase() || "W";
+
+  const NotificationBadge = () => {
+    if (unreadCount <= 0) return null;
+    return (
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadCount > 9 ? "9+" : unreadCount}
+      </span>
+    );
+  };
+
+  const UserAvatar = ({ size = "w-8 h-8" }) => {
+    if (userAvatar) {
+      return <img src={userAvatar} alt={userName} className={`${size} rounded-full object-cover border border-amber-600 shadow-xs`} />;
+    }
+    return (
+      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs`}>
+        {userInitial}
+      </div>
+    );
+  };
 
   // =========================================================
   // LOADING
@@ -324,423 +380,194 @@ export default function Lookbook_Page() {
           TOP ANNOUNCEMENT BAR
       ====================================================== */}
 
-      <div className="bg-[#111111] text-[#E5D5BC] text-[9px] sm:text-xs py-2 px-3 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
         EXPLORE THE LOOKBOOK — CURATED EDITORIAL LOOKS FOR THE SEASON
       </div>
 
       {/* =====================================================
-          DESKTOP / MAIN HEADER
+          UNIFIED NAVIGATION HEADER
       ====================================================== */}
 
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 lg:px-12 py-4">
-
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-          {/* SEARCH */}
-
-          <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
             <Search className="w-4 h-4 text-gray-400 mr-2" />
-
-            <input
-              type="text"
-              placeholder="Search lookbook..."
-              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full"
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search lookbook..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
             />
-          </div>
-
-          {/* LOGO */}
+          </form>
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
             </Link>
-
-            <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-gray-500">
-              Atelier
-            </span>
           </div>
 
-          {/* DESKTOP ICONS */}
-
-          <div className="hidden md:flex items-center gap-5 lg:gap-6">
-
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            
             <button
               onClick={() => {
                 setWishlistCount((c) => c + 1);
                 showToast("Added to Wishlist");
               }}
-              className="relative text-gray-800 hover:text-black cursor-pointer"
+              className="text-gray-800 hover:text-black cursor-pointer"
               title="Wishlist"
             >
               <Heart className="w-5 h-5" />
-
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                  {wishlistCount}
-                </span>
-              )}
             </button>
-
-            {/* NOTIFICATIONS */}
-
-            <Link
-              to="/notifications"
-              className="relative text-gray-800 hover:text-black transition-colors"
-              title="Notifications"
-            >
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
               <Bell className="w-5 h-5" />
-
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {unreadCount > 99
-                    ? "99+"
-                    : unreadCount}
-                </span>
-              )}
+              <NotificationBadge />
             </Link>
 
-            {/* USER */}
-
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 text-gray-800 hover:text-black transition-colors"
-              title="View Account Profile"
-            >
-              {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-7 h-7 rounded-full object-cover border border-gray-300"
-                />
-              ) : (
-                <span className="w-7 h-7 rounded-full bg-amber-700 text-white text-[11px] flex items-center justify-center font-semibold">
-                  {userInitial}
-                </span>
-              )}
-            </Link>
-
-            {/* CART */}
-
-            <Link
-              to="/cart"
-              className="relative text-gray-800 hover:text-black transition-colors"
-              title="Shopping Bag"
-            >
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
-          </div>
-
-          {/* MOBILE ICONS */}
-
-          <div className="md:hidden flex items-center gap-3">
-
-            <Link
-              to="/notifications"
-              className="relative text-gray-800"
-              title="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {unreadCount > 99
-                    ? "99+"
-                    : unreadCount}
-                </span>
-              )}
-            </Link>
-
-            <Link
-              to="/cart"
-              className="relative text-gray-800"
-              title="Shopping Bag"
-            >
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
-            <Link
-              to="/profile"
-              title="Profile"
-            >
-              {userAvatar ? (
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-7 h-7 rounded-full object-cover border border-gray-300"
-                />
-              ) : (
-                <span className="w-7 h-7 rounded-full bg-amber-700 text-white text-[11px] flex items-center justify-center font-semibold">
-                  {userInitial}
-                </span>
-              )}
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+              <UserAvatar size="w-7 h-7" />
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
             <button
-              onClick={() =>
-                setMobileMenuOpen(true)
-              }
-              className="text-gray-800 cursor-pointer"
-              title="Open Menu"
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
+            <Link to="/cart" className="relative text-gray-800 hover:text-black">
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
           </div>
-
         </div>
 
-        {/* ===================================================
-            DESKTOP SUB NAV
-        ==================================================== */}
-
-        <nav className="hidden md:flex justify-center items-center gap-5 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
-
-          <Link
-            to="/"
-            className="hover:text-black transition-colors"
-          >
-            Home
-          </Link>
-
-          <Link
-            to="/shop"
-            className="hover:text-black transition-colors"
-          >
-            Shop
-          </Link>
-
-          <a
-            href="#"
-            className="hover:text-black transition-colors"
-          >
-            Collections
-          </a>
-
-          <a
-            href="/custom-designs"
-            className="hover:text-black transition-colors"
-          >
-            Custom Design
-          </a>
-
-          <Link
-            to="/lookbook"
-            className="text-black font-semibold border-b border-black pb-0.5"
-          >
-            Lookbook
-          </Link>
-
-          <Link
-            to="/limited"
-            className="hover:text-black transition-colors"
-          >
-            Limited Edition
-          </Link>
-
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">Home</Link>
+          <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="text-black font-semibold border-b border-black pb-0.5">Lookbook</Link>
+          <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
         </nav>
-
       </header>
 
       {/* =====================================================
-          MOBILE MENU OVERLAY
+          SLIDING NAVIGATION DRAER
       ====================================================== */}
 
       {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
-          onClick={() =>
-            setMobileMenuOpen(false)
-          }
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      {/* =====================================================
-          MOBILE MENU
-      ====================================================== */}
-
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-[#FAF8F5] z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
-
-          <div>
-            <h2 className="font-serif text-lg tracking-[0.2em] font-bold">
-              WEFTIN
-            </h2>
-
-            <span className="text-[8px] uppercase tracking-[0.25em] text-gray-500">
-              Atelier
-            </span>
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <button
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-          >
-            <X className="w-6 h-6" />
+          <div onClick={() => { setMobileMenuOpen(false); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+            <UserAvatar size="w-10 h-10" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{currentUser?.email || "Member Account"}</p>
+            </div>
+          </div>
+
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
+            </Link>
+            <Link to="/limited" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
           </button>
-
         </div>
-
-        {/* USER */}
-
-        <div className="p-5 border-b border-gray-200 flex items-center gap-3">
-
-          {userAvatar ? (
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <span className="w-10 h-10 rounded-full bg-amber-700 text-white flex items-center justify-center font-semibold">
-              {userInitial}
-            </span>
-          )}
-
-          <div className="min-w-0">
-            <p className="text-sm font-semibold truncate">
-              {userName}
-            </p>
-
-            <p className="text-[10px] text-gray-500 truncate">
-              {currentUser?.email || "Atelier Member"}
-            </p>
-          </div>
-
-        </div>
-
-        <nav className="p-4 space-y-1">
-
-          <Link
-            to="/"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Home
-          </Link>
-
-          <Link
-            to="/shop"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Shop
-          </Link>
-
-          <a
-            href="#"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Collections
-          </a>
-
-          <a
-            href="/custom-designs"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Custom Design
-          </a>
-
-          <Link
-            to="/lookbook"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 bg-black text-white text-xs uppercase tracking-widest"
-          >
-            Lookbook
-          </Link>
-
-          <Link
-            to="/limited"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Limited Edition
-          </Link>
-
-          <div className="border-t border-gray-200 my-3" />
-
-          <Link
-            to="/notifications"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="flex items-center justify-between px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            <span>Notifications</span>
-
-            {unreadCount > 0 && (
-              <span className="bg-amber-700 text-white text-[9px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/profile"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            Profile
-          </Link>
-
-          <Link
-            to="/cart"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="flex items-center justify-between px-4 py-3 text-xs uppercase tracking-widest hover:bg-gray-100"
-          >
-            <span>Shopping Bag</span>
-
-            {cartCount > 0 && (
-              <span className="bg-amber-700 text-white text-[9px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-        </nav>
-
       </aside>
 
       {/* =====================================================
