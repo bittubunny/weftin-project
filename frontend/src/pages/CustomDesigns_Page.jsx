@@ -263,28 +263,22 @@ export default function CustomDesigns_Page() {
 
   // --------------------------------------------------
   // INSTANTLY REQUEST CUSTOM DESIGN FROM SHOP PRODUCT
-  // (Exact same payload & logic as Product Overview page)
   // --------------------------------------------------
 
   const handleRequestCustomFromProduct = async (product) => {
     const token = localStorage.getItem("weftin_token");
 
-    if (!userEmail) {
-      showToast("Please sign in to submit a custom design request.");
-      return;
-    }
-
     try {
       const payload = {
         user_email: userEmail,
-        product_id: Number(product.id),
+        product_id: product.id,
         product_name: product.name,
         product_category: product.category || "Bespoke Collection",
         product_price: product.price || "₹8,999",
         product_image: product.image,
         status: "Drafting Blueprint",
         line: "BESPOKE CUSTOM LINE",
-        message: `Master tailor received your bespoke request for ${product.name}. We are currently compiling fabric availability and embroidery layout drafts.`
+        message: `Custom tailoring request initiated for ${product.name}. Awaiting master artisan blueprint review.`
       };
 
       const res = await fetch(`${API_BASE}/api/custom-designs`, {
@@ -296,17 +290,13 @@ export default function CustomDesigns_Page() {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      if (!res.ok) throw new Error("Failed to create custom design request");
 
-      if (!res.ok) {
-        throw new Error(data.detail || "Failed to create custom design request");
-      }
-
-      showToast(`Bespoke design request submitted for ${product.name}!`);
+      showToast(`Custom request created for ${product.name}!`);
       loadRequests();
     } catch (err) {
       console.error("Custom request error:", err);
-      showToast(err.message || "Unable to submit custom design request.");
+      showToast("Unable to submit custom design request.");
     }
   };
 
