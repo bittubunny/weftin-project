@@ -17,7 +17,9 @@ import {
   RefreshCw,
   ShoppingBag,
   Menu,
-  X
+  X,
+  ChevronRight,
+  Settings
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -172,6 +174,59 @@ export default function CustomDesigns_Page() {
         setBestSellers([]);
       });
   }, []);
+
+  // --------------------------------------------------
+  // BESPOKE CUSTOM DESIGN INITIATION (MATCHING PRODUCT OVERVIEW)
+  // --------------------------------------------------
+
+  const handleBespokeCustomDesign = async (product) => {
+    const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
+    const token = localStorage.getItem("weftin_token");
+
+    if (!savedUser?.email) {
+      showToast("Please sign in before creating a custom design.");
+      setTimeout(() => navigate("/login"), 1000);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/custom-designs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            user_email: savedUser.email,
+            product_id: Number(product.id),
+            product_name: product.name,
+            product_category: product.category,
+            product_price: product.price,
+            product_image: product.image
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to create custom design");
+      }
+
+      showToast("Bespoke custom design request created!");
+
+      setTimeout(() => {
+        navigate("/custom-designs");
+        loadRequests(); // Refresh requests list
+      }, 500);
+
+    } catch (error) {
+      console.error("Custom design error:", error);
+      showToast("Unable to create custom design request.");
+    }
+  };
 
   // --------------------------------------------------
   // NOTIFICATION BADGE
@@ -347,6 +402,13 @@ export default function CustomDesigns_Page() {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
   // --------------------------------------------------
   // NOT LOGGED IN
   // --------------------------------------------------
@@ -387,7 +449,7 @@ export default function CustomDesigns_Page() {
         </div>
       )}
 
-      {/* DESKTOP SIDEBAR */}
+      {/* DESKTOP SIDEBAR (LEGACY CUSTOM DESIGN SIDEBAR) */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex fixed top-0 left-0 h-screen z-30">
         <div>
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
@@ -502,164 +564,291 @@ export default function CustomDesigns_Page() {
       {/* MOBILE OVERLAY */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
           onClick={closeMobileMenu}
         />
       )}
 
-      {/* MOBILE SLIDE-IN NAVIGATION */}
+      {/* MOBILE SLIDE-IN NAVIGATION DRAWER (MATCHING HOME PAGE EXACTLY) */}
       <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${
           mobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full"
         }`}
       >
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-          <Link
-            to="/"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3"
-          >
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
-              <span className="text-[8px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
-          </Link>
+        <div>
+          {/* DRAWER HEADER */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              className="flex items-center gap-3"
+            >
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">
+                W
+              </div>
 
-          <button
-            type="button"
-            onClick={closeMobileMenu}
-            className="p-2 text-gray-600 hover:text-black cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                  WEFTIN
+                </h2>
 
-        <div 
-          onClick={() => {
-            closeMobileMenu();
-            navigate("/profile");
-          }}
-          className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 cursor-pointer hover:bg-amber-50/40 transition-colors"
-        >
-          <UserAvatar />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {userName}
-            </p>
-            <p className="text-[10px] text-gray-500 truncate">
-              {userEmail}
-            </p>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">
+                  ATELIER NAVIGATION
+                </span>
+              </div>
+            </Link>
+
+            <button
+              onClick={closeMobileMenu}
+              className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer"
+              aria-label="Close navigation drawer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
+
+          {/* USER PROFILE SNIPPET */}
+          <div 
+            onClick={() => {
+              closeMobileMenu();
+              navigate("/profile");
+            }}
+            className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors"
+          >
+            {currentUser?.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt={userName}
+                className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">
+                {userName}
+              </p>
+
+              <p className="text-[10px] text-gray-500 truncate">
+                {userEmail || "Member Account"}
+              </p>
+            </div>
+          </div>
+
+          {/* COMPLETE NAVIGATION LINKS MATCHING HOME PAGE */}
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+              Main Pages
+            </div>
+
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <LayoutDashboard className="w-4 h-4 text-amber-700" />
+                Home
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/shop"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <ShoppingBag className="w-4 h-4 text-amber-700" />
+                Shop Catalog
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/collections"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-amber-700" />
+                Collections
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/custom-designs"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Scissors className="w-4 h-4 text-amber-700" />
+                Custom Designs & Workspace
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/lookbook"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Heart className="w-4 h-4 text-amber-700" />
+                Lookbook Journal
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/limited"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <span className="w-4 h-4 flex items-center justify-center text-sm">★</span>
+                Limited Edition Drop
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">
+              Member Portal & Profile
+            </div>
+
+            <Link
+              to="/dashboard"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <LayoutDashboard className="w-4 h-4 text-gray-700" />
+                Dashboard Overview
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/orders"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-gray-700" />
+                My Orders & History
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/measurements"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Ruler className="w-4 h-4 text-gray-700" />
+                Bespoke Fit Measurements
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/wishlist"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Heart className="w-4 h-4 text-gray-700" />
+                Saved Wishlist
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/addresses"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-gray-700" />
+                Delivery Addresses
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/profile"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <User className="w-4 h-4 text-gray-700" />
+                Member Profile
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/notifications"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Bell className="w-4 h-4 text-gray-700" />
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              to="/support"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Headphones className="w-4 h-4 text-gray-700" />
+                Concierge Support
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">
+              Administration
+            </div>
+
+            <Link
+              to="/admin/home-cms"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors"
+            >
+              <span className="flex items-center gap-3 font-semibold text-amber-300">
+                <Settings className="w-4 h-4" />
+                Admin Product CMS
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
         </div>
 
-        <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-          <Link
-            to="/dashboard"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </Link>
-
-          <Link
-            to="/orders"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Package className="w-4 h-4" />
-            My Orders
-          </Link>
-
-          <Link
-            to="/custom-designs"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-          >
-            <Scissors className="w-4 h-4" />
-            Custom Designs
-          </Link>
-
-          <Link
-            to="/measurements"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Ruler className="w-4 h-4" />
-            Measurements
-          </Link>
-
-          <Link
-            to="/wishlist"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Heart className="w-4 h-4" />
-            Wishlist
-          </Link>
-
-          <Link
-            to="/addresses"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <MapPin className="w-4 h-4" />
-            Addresses
-          </Link>
-
-          <Link
-            to="/profile"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <User className="w-4 h-4" />
-            Profile
-          </Link>
-
-          <Link
-            to="/notifications"
-            onClick={closeMobileMenu}
-            className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <span className="flex items-center gap-3">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </span>
-            <NotificationBadge sidebar />
-          </Link>
-
-          <Link
-            to="/support"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Headphones className="w-4 h-4" />
-            Support
-          </Link>
-        </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-          <Link
-            to="/"
-            onClick={() => {
-              localStorage.removeItem("weftin_user");
-              localStorage.removeItem("weftin_token");
-              closeMobileMenu();
-            }}
-            className="flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
+        {/* DRAWER FOOTER / LOGOUT */}
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
           >
             <LogOut className="w-4 h-4" />
-            Log out
-          </Link>
+            Log out of account
+          </button>
         </div>
       </aside>
 
@@ -715,37 +904,38 @@ export default function CustomDesigns_Page() {
                 W
               </div>
               <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                <h1 className="font-serif text-base tracking-[0.2em] font-bold text-gray-900">
                   WEFTIN
                 </h1>
-                <span className="text-[7px] uppercase tracking-[0.2em] text-gray-400 block">
+                <span className="text-[8px] uppercase tracking-[0.15em] text-gray-400 block">
                   ATELIER TAILORS
                 </span>
               </div>
             </Link>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
               <Link
                 to="/cart"
-                className="relative text-gray-600 hover:text-black"
+                className="relative text-gray-700 hover:text-black"
               >
                 <ShoppingBag className="w-5 h-5" />
               </Link>
 
               <Link
                 to="/notifications"
-                className="relative text-gray-600 hover:text-black"
+                className="relative text-gray-700 hover:text-black"
               >
                 <Bell className="w-5 h-5" />
                 <NotificationBadge />
               </Link>
 
-              <UserAvatar size="w-8 h-8" />
+              <UserAvatar size="w-7 h-7" />
 
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
-                className="text-gray-700 hover:text-black cursor-pointer"
+                className="p-1 text-gray-700 hover:text-black cursor-pointer"
+                aria-label="Open navigation drawer"
               >
                 <Menu className="w-6 h-6" />
               </button>
@@ -847,9 +1037,7 @@ export default function CustomDesigns_Page() {
                         </button>
 
                         <button
-                          onClick={() =>
-                            navigate("/shop", { state: { selectedProduct: item } })
-                          }
+                          onClick={() => handleBespokeCustomDesign(item)}
                           className="py-2 bg-black text-white text-[10px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
                         >
                           Custom Design
@@ -1071,7 +1259,7 @@ export default function CustomDesigns_Page() {
                 <button
                   onClick={() => {
                     setQuickViewProduct(null);
-                    navigate("/shop", { state: { selectedProduct: quickViewProduct } });
+                    handleBespokeCustomDesign(quickViewProduct);
                   }}
                   className="w-full bg-black text-white py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-900 cursor-pointer mb-3 rounded"
                 >
