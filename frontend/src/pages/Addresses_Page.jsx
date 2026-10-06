@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -16,7 +16,10 @@ import {
   Trash2,
   X,
   Menu,
-  ShoppingCart
+  ShoppingBag,
+  ChevronRight,
+  Settings,
+  Search
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -25,6 +28,8 @@ const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80";
 
 export default function Addresses_Page() {
+  const navigate = useNavigate();
+
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState("");
@@ -33,6 +38,7 @@ export default function Addresses_Page() {
   const [editingAddress, setEditingAddress] = useState(null);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -73,6 +79,23 @@ export default function Addresses_Page() {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
   // --------------------------------------------------
   // GET LOGGED-IN USER
   // --------------------------------------------------
@@ -83,6 +106,7 @@ export default function Addresses_Page() {
     if (!savedUser) {
       showToast("Please login to manage your addresses.");
       setLoading(false);
+      navigate("/login");
       return;
     }
 
@@ -116,7 +140,7 @@ export default function Addresses_Page() {
       showToast("Unable to load user information.");
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   // --------------------------------------------------
   // FETCH PROFILE
@@ -208,30 +232,14 @@ export default function Addresses_Page() {
   // NOTIFICATION BADGE
   // --------------------------------------------------
 
-  const NotificationBadge = ({ mobile = false, header = false }) => {
+  const NotificationBadge = () => {
     if (unreadCount <= 0) {
       return null;
     }
 
-    if (header) {
-      return (
-        <span className="absolute -top-1 -right-1 bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </span>
-      );
-    }
-
-    if (mobile) {
-      return (
-        <span className="inline-flex bg-rose-700 text-white min-w-4 h-4 px-1 rounded-full items-center justify-center text-[9px] font-bold shrink-0">
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </span>
-      );
-    }
-
     return (
-      <span className="bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold shrink-0">
-        {unreadCount > 99 ? "99+" : unreadCount}
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadCount > 99 ? "9+" : unreadCount}
       </span>
     );
   };
@@ -517,647 +525,384 @@ export default function Addresses_Page() {
     });
   };
 
-  // --------------------------------------------------
-  // LOGOUT
-  // --------------------------------------------------
-
-  const handleLogout = () => {
-    localStorage.removeItem("weftin_user");
-    localStorage.removeItem("weftin_token");
-    closeMobileMenu();
-    window.location.href = "/";
-  };
+  const userName = profileData.name || "WEFTIN Member";
+  const userInitial = userName.charAt(0).toUpperCase() || "W";
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex">
+    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
-      {/* ================================================= */}
       {/* TOAST */}
-      {/* ================================================= */}
-
       {toastMessage && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-[100] bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30 max-w-[calc(100vw-2rem)]">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+        <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ================================================= */}
-      {/* MOBILE MENU OVERLAY */}
-      {/* ================================================= */}
+      {/* TOP ANNOUNCEMENT BAR */}
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+        LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
+      </div>
 
-      {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
-          onClick={closeMobileMenu}
-        />
-      )}
+      {/* UNIFIED NAVIGATION HEADER */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
+            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search anything..." 
+              className="bg-transparent text-xs text-gray-800 focus:outline-none w-full" 
+            />
+          </form>
 
-      {/* ================================================= */}
-      {/* MOBILE SLIDE-IN NAVIGATION */}
-      {/* ================================================= */}
-
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-        <div className="h-full flex flex-col">
-
-          {/* MOBILE LOGO */}
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-
-            <div className="flex items-center gap-3">
-
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-                W
-              </div>
-
-              <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                  WEFTIN
-                </h1>
-
-                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                  ATELIER TAILORS
-                </span>
-              </div>
-
-            </div>
-
-            <button
-              onClick={closeMobileMenu}
-              className="p-2 rounded-lg hover:bg-gray-100"
-              aria-label="Close menu"
-            >
-              <X className="w-5 h-5 text-gray-600" />
-            </button>
-
+          <div className="text-center">
+            <Link to="/">
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+            </Link>
           </div>
 
-          {/* MOBILE NAVIGATION */}
-          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-
-            <Link
-              to="/dashboard"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              Dashboard
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            
+            <Link to="/wishlist" className="text-gray-800 hover:text-black">
+              <Heart className="w-5 h-5" />
             </Link>
-
-            <Link
-              to="/orders"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Package className="w-4 h-4 shrink-0" />
-              My Orders
-            </Link>
-
-            <Link
-              to="/custom-designs"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Scissors className="w-4 h-4 shrink-0" />
-              Custom Designs
-            </Link>
-
-            <Link
-              to="/measurements"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Ruler className="w-4 h-4 shrink-0" />
-              Measurements
-            </Link>
-
-            <Link
-              to="/wishlist"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Heart className="w-4 h-4 shrink-0" />
-              Wishlist
-            </Link>
-
-            <Link
-              to="/addresses"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <MapPin className="w-4 h-4 shrink-0" />
-              Addresses
-            </Link>
-
-            <Link
-              to="/profile"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <User className="w-4 h-4 shrink-0" />
-              Profile
-            </Link>
-
-            {/* MOBILE NOTIFICATIONS */}
-            <Link
-              to="/notifications"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between"
-            >
-              <span className="flex items-center gap-3 min-w-0">
-                <Bell className="w-4 h-4 shrink-0" />
-
-                <span className="truncate">
-                  Notifications
-                </span>
-              </span>
-
-              <NotificationBadge mobile />
-            </Link>
-
-            <Link
-              to="/support"
-              onClick={closeMobileMenu}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Headphones className="w-4 h-4 shrink-0" />
-              Support
-            </Link>
-
-          </nav>
-
-          {/* MOBILE LOGOUT */}
-          <div className="mt-auto p-4 border-t border-gray-100">
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg"
-            >
-              <LogOut className="w-4 h-4" />
-              Log out
-            </button>
-
-          </div>
-
-        </div>
-      </aside>
-
-      {/* ================================================= */}
-      {/* DESKTOP SIDEBAR */}
-      {/* ================================================= */}
-
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
-
-        <div>
-
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
-
-            <div>
-
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
-
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-
-            </div>
-
-          </div>
-
-          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600">
-
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </Link>
-
-            <Link
-              to="/orders"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Package className="w-4 h-4" />
-              My Orders
-            </Link>
-
-            <Link
-              to="/custom-designs"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Scissors className="w-4 h-4" />
-              Custom Designs
-            </Link>
-
-            <Link
-              to="/measurements"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Ruler className="w-4 h-4" />
-              Measurements
-            </Link>
-
-            <Link
-              to="/wishlist"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Heart className="w-4 h-4" />
-              Wishlist
-            </Link>
-
-            <Link
-              to="/addresses"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-            >
-              <MapPin className="w-4 h-4" />
-              Addresses
-            </Link>
-
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <User className="w-4 h-4" />
-              Profile
-            </Link>
-
-            {/* DESKTOP NOTIFICATIONS */}
-            <Link
-              to="/notifications"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between"
-            >
-              <span className="flex items-center gap-3 min-w-0">
-                <Bell className="w-4 h-4 shrink-0" />
-
-                <span className="truncate">
-                  Notifications
-                </span>
-              </span>
-
+            
+            <Link to="/notifications" className="relative text-gray-800 hover:text-black">
+              <Bell className="w-5 h-5" />
               <NotificationBadge />
             </Link>
 
-            <Link
-              to="/support"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              <Headphones className="w-4 h-4" />
-              Support
+            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+              {profileData.avatar ? (
+                <img src={profileData.avatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                  {userInitial}
+                </div>
+              )}
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
-
-          </nav>
-
-        </div>
-
-        <div className="p-4 border-t border-gray-100">
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg text-left"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out
-          </button>
-
-        </div>
-
-      </aside>
-
-      {/* ================================================= */}
-      {/* MAIN */}
-      {/* ================================================= */}
-
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
-
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center">
-
-          {/* LEFT */}
-          <div className="flex items-center gap-3 min-w-0">
 
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 shrink-0"
-              aria-label="Open menu"
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open navigation drawer"
             >
-              <Menu className="w-5 h-5 text-gray-700" />
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
-            <div className="text-[10px] sm:text-xs text-gray-400 truncate">
+            <Link to="/cart" className="relative text-gray-800 hover:text-black">
+              <ShoppingBag className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
 
-              <span className="hidden sm:inline">
-                Portfolio
-                <span className="mx-2">&gt;</span>
-              </span>
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+          <Link to="/" className="hover:text-black transition-colors">Home</Link>
+          <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
+          <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-black transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="hover:text-black transition-colors">Lookbook</Link>
+          <Link to="/limited" className="hover:text-black transition-colors">Limited Edition</Link>
+        </nav>
+      </header>
 
-              <span className="text-gray-900 font-semibold uppercase tracking-wider">
-                ADDRESSES
-              </span>
+      {/* SLIDING NAVIGATION DRAWER */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
+      )}
 
-            </div>
-
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">ATELIER NAVIGATION</span>
+              </div>
+            </Link>
+            <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* RIGHT */}
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-
-            {/* CART */}
-            <Link
-              to="/cart"
-              className="relative p-2 rounded-lg hover:bg-gray-50"
-              title="Cart"
-            >
-              <ShoppingCart className="w-5 h-5 text-gray-600" />
-            </Link>
-
-            {/* TOP NOTIFICATION */}
-            <Link
-              to="/notifications"
-              className="relative p-2 rounded-lg hover:bg-gray-50"
-              title="Notifications"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-
-              <NotificationBadge header />
-            </Link>
-
-            {/* USER */}
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 border-l pl-2 sm:pl-4 border-gray-200"
-            >
-
-              <img
-                src={profileData.avatar || DEFAULT_AVATAR}
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR;
-                }}
-              />
-
-              <div className="hidden sm:block max-w-[180px]">
-
-                <span className="text-xs font-semibold text-gray-800 block truncate">
-                  {profileData.name || "User"}
-                </span>
-
-                <span className="text-[10px] text-gray-400 block truncate">
-                  {profileData.email || userEmail}
-                </span>
-
+          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+            {profileData.avatar ? (
+              <img src={profileData.avatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
               </div>
-
-            </Link>
-
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-[10px] text-gray-500 truncate">{userEmail || "Member Account"}</p>
+            </div>
           </div>
 
-        </header>
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-700" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
 
-        {/* ================================================= */}
-        {/* CONTENT */}
-        {/* ================================================= */}
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-700" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-700" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-amber-700" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
+            </Link>
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
 
-        <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl w-full">
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
+        </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
+          </button>
+        </div>
+      </aside>
 
-            <div>
+      {/* ================================================= */}
+      {/* MAIN CONTENT AREA */}
+      {/* ================================================= */}
 
-              <div className="flex items-center gap-2 text-amber-700 mb-1">
+      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full">
 
-                <MapPin className="w-5 h-5" />
-
-                <h2 className="text-2xl sm:text-3xl font-serif text-gray-900">
-                  Delivery Addresses
-                </h2>
-
-              </div>
-
-              <p className="text-xs text-gray-500 max-w-xl">
-                Manage your saved delivery addresses and choose your default destination.
-              </p>
-
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-amber-700 mb-1">
+              <MapPin className="w-5 h-5" />
+              <h2 className="text-2xl sm:text-3xl font-serif text-gray-900">
+                Delivery Addresses
+              </h2>
             </div>
+            <p className="text-xs text-gray-500 max-w-xl">
+              Manage your saved delivery addresses and choose your default destination.
+            </p>
+          </div>
+
+          <button
+            onClick={openAddModal}
+            className="w-full sm:w-auto bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-amber-400" />
+            New Delivery Spot
+          </button>
+        </div>
+
+        {/* LOADING */}
+        {loading && (
+          <div className="bg-white border border-gray-200 rounded-xl p-8 sm:p-12 text-center shadow-sm">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-amber-700 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-sm text-gray-500">
+              Loading your delivery addresses...
+            </p>
+          </div>
+        )}
+
+        {/* EMPTY */}
+        {!loading && addresses.length === 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl p-8 sm:p-12 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-5">
+              <MapPin className="w-7 h-7 text-amber-700" />
+            </div>
+
+            <h3 className="font-serif text-xl text-gray-900 mb-2">
+              No saved addresses
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Add your first delivery address to make checkout faster.
+            </p>
 
             <button
               onClick={openAddModal}
-              className="w-full sm:w-auto bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm"
+              className="bg-gray-900 text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-amber-400" />
-              New Delivery Spot
+              Add Address
             </button>
-
           </div>
+        )}
 
-          {/* LOADING */}
-          {loading && (
-            <div className="bg-white border border-gray-200 rounded-xl p-8 sm:p-12 text-center">
-
-              <div className="w-8 h-8 border-2 border-gray-300 border-t-amber-700 rounded-full animate-spin mx-auto mb-4"></div>
-
-              <p className="text-sm text-gray-500">
-                Loading your delivery addresses...
-              </p>
-
-            </div>
-          )}
-
-          {/* EMPTY */}
-          {!loading && addresses.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-8 sm:p-12 text-center">
-
-              <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-5">
-                <MapPin className="w-7 h-7 text-amber-700" />
-              </div>
-
-              <h3 className="font-serif text-xl text-gray-900 mb-2">
-                No saved addresses
-              </h3>
-
-              <p className="text-sm text-gray-500 mb-6">
-                Add your first delivery address to make checkout faster.
-              </p>
-
-              <button
-                onClick={openAddModal}
-                className="bg-gray-900 text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold"
+        {/* ADDRESSES */}
+        {!loading && addresses.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {addresses.map((addr) => (
+              <div
+                key={addr.id}
+                className={`bg-white rounded-xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between ${
+                  addr.is_default
+                    ? "border-amber-600 ring-1 ring-amber-600/30"
+                    : "border-gray-200"
+                }`}
               >
-                Add Address
-              </button>
-
-            </div>
-          )}
-
-          {/* ADDRESSES */}
-          {!loading && addresses.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {addresses.map((addr) => (
-
-                <div
-                  key={addr.id}
-                  className={`bg-white rounded-xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between ${
-                    addr.is_default
-                      ? "border-amber-600 ring-1 ring-amber-600/30"
-                      : "border-gray-200"
-                  }`}
-                >
-
-                  <div>
-
-                    {/* CARD HEADER */}
-                    <div className="flex justify-between items-start mb-4 gap-3">
-
-                      <div className="flex items-center gap-3 min-w-0">
-
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200 shrink-0">
-                          <MapPin className="w-4 h-4" />
-                        </div>
-
-                        <div className="min-w-0">
-
-                          <h3 className="font-serif text-base font-bold text-gray-900 truncate">
-                            {addr.title}
-                          </h3>
-
-                          <span className="bg-amber-100 text-amber-900 text-[8px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
-                            {addr.type}
-                          </span>
-
-                        </div>
-
+                <div>
+                  {/* CARD HEADER */}
+                  <div className="flex justify-between items-start mb-4 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200 shrink-0">
+                        <MapPin className="w-4 h-4" />
                       </div>
 
-                      <div className="flex gap-2 shrink-0">
-
-                        <button
-                          onClick={() => openEditModal(addr)}
-                          className="p-2 border border-gray-200 rounded hover:border-black text-gray-600"
-                          title="Edit address"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button
-                          onClick={() => deleteAddress(addr.id)}
-                          className="p-2 border border-gray-200 rounded hover:border-rose-600 text-rose-700"
-                          title="Delete address"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-
+                      <div className="min-w-0">
+                        <h3 className="font-serif text-base font-bold text-gray-900 truncate">
+                          {addr.title}
+                        </h3>
+                        <span className="bg-amber-100 text-amber-900 text-[8px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
+                          {addr.type}
+                        </span>
                       </div>
-
                     </div>
 
-                    {/* ADDRESS */}
-                    <div className="text-xs text-gray-600 space-y-1 mb-6">
-
-                      <p className="font-medium text-gray-900 break-words">
-                        {addr.address}
-                      </p>
-
-                      <p>
-                        {addr.city}
-                      </p>
-
-                      <p className="text-gray-500 font-mono mt-2 break-all">
-                        📞 {addr.phone}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-gray-100 text-[11px]">
-
-                    <span className="font-mono text-gray-400">
-                      ID: AD-{String(addr.id).padStart(2, "0")}
-                    </span>
-
-                    {addr.is_default ? (
-
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold px-3 py-1 rounded">
-                        ✓ DEFAULT DELIVERY SPOT
-                      </span>
-
-                    ) : (
-
+                    <div className="flex gap-2 shrink-0">
                       <button
-                        onClick={() => setDefaultAddress(addr.id)}
-                        className="text-amber-800 font-semibold uppercase tracking-wider hover:underline"
+                        onClick={() => openEditModal(addr)}
+                        className="p-2 border border-gray-200 rounded hover:border-black text-gray-600 cursor-pointer"
+                        title="Edit address"
                       >
-                        Make Default Spot
+                        <Edit3 className="w-3.5 h-3.5" />
                       </button>
 
-                    )}
-
+                      <button
+                        onClick={() => deleteAddress(addr.id)}
+                        className="p-2 border border-gray-200 rounded hover:border-rose-600 text-rose-700 cursor-pointer"
+                        title="Delete address"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
+                  {/* ADDRESS */}
+                  <div className="text-xs text-gray-600 space-y-1 mb-6">
+                    <p className="font-medium text-gray-900 break-words">
+                      {addr.address}
+                    </p>
+                    <p>
+                      {addr.city}
+                    </p>
+                    <p className="text-gray-500 font-mono mt-2 break-all">
+                      📞 {addr.phone}
+                    </p>
+                  </div>
                 </div>
 
-              ))}
+                {/* FOOTER */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-gray-100 text-[11px]">
+                  <span className="font-mono text-gray-400">
+                    ID: AD-{String(addr.id).padStart(2, "0")}
+                  </span>
 
-            </div>
-          )}
+                  {addr.is_default ? (
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold px-3 py-1 rounded">
+                      ✓ DEFAULT DELIVERY SPOT
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setDefaultAddress(addr.id)}
+                      className="text-amber-800 font-semibold uppercase tracking-wider hover:underline cursor-pointer"
+                    >
+                      Make Default Spot
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        </main>
-
-      </div>
+      </main>
 
       {/* ================================================= */}
       {/* ADD / EDIT ADDRESS MODAL */}
       {/* ================================================= */}
 
       {showModal && (
-
         <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-
           <div className="bg-white w-full max-w-lg max-h-[95vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-
+            
             {/* MODAL HEADER */}
             <div className="px-5 sm:px-6 py-5 border-b border-gray-200 flex justify-between items-center gap-4">
-
               <div className="min-w-0">
-
                 <h2 className="font-serif text-xl sm:text-2xl text-gray-900">
                   {editingAddress
                     ? "Edit Delivery Address"
                     : "Add Delivery Address"}
                 </h2>
-
                 <p className="text-xs text-gray-500 mt-1">
                   {editingAddress
                     ? "Update your saved delivery information."
                     : "Add a new address for future deliveries."}
                 </p>
-
               </div>
 
               <button
                 onClick={closeModal}
-                className="p-2 rounded-lg hover:bg-gray-100 shrink-0"
+                className="p-2 rounded-lg hover:bg-gray-100 shrink-0 cursor-pointer"
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
-
             </div>
 
             {/* FORM */}
@@ -1165,33 +910,27 @@ export default function Addresses_Page() {
               onSubmit={handleSubmit}
               className="p-5 sm:p-6 space-y-5 overflow-y-auto"
             >
-
               {/* TITLE */}
               <div>
-
                 <label className="block text-xs font-semibold text-gray-700 mb-2">
                   ADDRESS TITLE
                 </label>
-
                 <input
                   type="text"
                   name="title"
                   value={form.title}
                   onChange={handleInputChange}
                   placeholder="Example: My Home"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700 bg-gray-50/50"
                   required
                 />
-
               </div>
 
               {/* TYPE */}
               <div>
-
                 <label className="block text-xs font-semibold text-gray-700 mb-2">
                   ADDRESS TYPE
                 </label>
-
                 <select
                   name="type"
                   value={form.type}
@@ -1202,111 +941,93 @@ export default function Addresses_Page() {
                   <option value="WORK">Work</option>
                   <option value="OTHER">Other</option>
                 </select>
-
               </div>
 
               {/* ADDRESS */}
               <div>
-
                 <label className="block text-xs font-semibold text-gray-700 mb-2">
                   FULL ADDRESS
                 </label>
-
                 <textarea
                   name="address"
                   value={form.address}
                   onChange={handleInputChange}
                   placeholder="House / Flat number, Street, Area"
                   rows="3"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700 resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700 resize-none bg-gray-50/50"
                   required
                 />
-
               </div>
 
               {/* CITY */}
               <div>
-
                 <label className="block text-xs font-semibold text-gray-700 mb-2">
                   CITY / STATE / PINCODE
                 </label>
-
                 <input
                   type="text"
                   name="city"
                   value={form.city}
                   onChange={handleInputChange}
                   placeholder="Hyderabad, Telangana — 500081"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700 bg-gray-50/50"
                   required
                 />
-
               </div>
 
               {/* PHONE */}
               <div>
-
                 <label className="block text-xs font-semibold text-gray-700 mb-2">
                   PHONE NUMBER
                 </label>
-
                 <input
                   type="tel"
                   name="phone"
                   value={form.phone}
                   onChange={handleInputChange}
                   placeholder="+91 98765 43210"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-amber-700 bg-gray-50/50"
                   required
                 />
-
               </div>
 
               {/* DEFAULT */}
               <label className="flex items-center gap-3 cursor-pointer">
-
                 <input
                   type="checkbox"
                   name="is_default"
                   checked={form.is_default}
                   onChange={handleInputChange}
-                  className="w-4 h-4 accent-amber-700"
+                  className="w-4 h-4 accent-amber-700 cursor-pointer"
                 />
-
                 <span className="text-sm text-gray-700">
                   Make this my default delivery address
                 </span>
-
               </label>
 
               {/* BUTTONS */}
               <div className="flex gap-3 pt-2">
-
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 border border-gray-300 text-gray-700 px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold hover:bg-gray-50"
+                  className="flex-1 border border-gray-300 text-gray-700 px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold hover:bg-gray-50 cursor-pointer"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="flex-1 bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold"
+                  className="flex-1 bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold cursor-pointer shadow-sm"
                 >
                   {editingAddress
                     ? "Save Changes"
                     : "Save Address"}
                 </button>
-
               </div>
 
             </form>
-
           </div>
-
         </div>
-
       )}
 
     </div>
