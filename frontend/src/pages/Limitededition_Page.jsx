@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -10,12 +10,22 @@ import {
   Sparkles,
   Bell,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  Package,
+  Scissors,
+  Ruler,
+  MapPin,
+  Headphones,
+  LogOut,
+  ChevronRight,
+  Settings
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Limitededition_Page() {
+  const navigate = useNavigate();
 
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -32,6 +42,7 @@ export default function Limitededition_Page() {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userAvatar, setUserAvatar] = useState("");
@@ -405,12 +416,49 @@ export default function Limitededition_Page() {
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "Account";
+    "WEFTIN Member";
 
   const userInitial =
     userName
       .charAt(0)
-      .toUpperCase();
+      .toUpperCase() || "W";
+
+  const handleLogout = () => {
+    localStorage.removeItem("weftin_user");
+    localStorage.removeItem("weftin_token");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchText.trim();
+    if (!query) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+  };
+
+  const NotificationBadge = () => {
+    if (unreadCount <= 0) return null;
+    return (
+      <span className="absolute -top-1 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+        {unreadCount > 9 ? "9+" : unreadCount}
+      </span>
+    );
+  };
+
+  const UserAvatar = ({ size = "w-8 h-8" }) => {
+    if (userAvatar) {
+      return <img src={userAvatar} alt={userName} className={`${size} rounded-full object-cover border border-amber-600 shadow-xs`} />;
+    }
+    return (
+      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs`}>
+        {userInitial}
+      </div>
+    );
+  };
 
   // =========================================================
   // ICON
@@ -519,489 +567,192 @@ export default function Limitededition_Page() {
       </div>
 
       {/* =====================================================
-          HEADER
+          UNIFIED NAVIGATION HEADER
       ====================================================== */}
 
-      <header className="sticky top-0 z-40 bg-[#110E0D]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 lg:px-12 py-4">
-
+      <header className="sticky top-0 z-40 bg-[#110E0D]/90 backdrop-blur-md border-b border-white/10 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-          {/* SEARCH */}
-
-          <div className="hidden lg:flex items-center bg-white/5 rounded-full px-4 py-2 w-64 border border-white/10">
-
+          
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-white/5 rounded-full px-4 py-2 w-64 border border-white/10">
             <Search className="w-4 h-4 text-gray-400 mr-2" />
-
-            <input
-              type="text"
-              placeholder="Search limited vault..."
-              className="bg-transparent text-xs text-white focus:outline-none w-full"
+            <input 
+              type="text" 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search limited vault..." 
+              className="bg-transparent text-xs text-white focus:outline-none w-full" 
             />
-
-          </div>
-
-          {/* LOGO */}
+          </form>
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-xl sm:text-2xl tracking-[0.25em] font-bold text-white">
-                WEFTIN
-              </h1>
+              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-white">WEFTIN</h1>
             </Link>
-
-            <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-amber-400">
+            <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-amber-400 block">
               Atelier Vault
             </span>
-
           </div>
 
-          {/* DESKTOP ICONS */}
-
-          <div className="hidden md:flex items-center gap-5 lg:gap-6">
-
-            {/* WISHLIST */}
-
+          <div className="flex items-center gap-5 lg:gap-6">
+            <span className="text-xs font-medium text-gray-300 cursor-pointer hidden sm:inline">INR &or;</span>
+            
             <button
               onClick={() => {
-                setWishlistCount(
-                  (c) => c + 1
-                );
-
-                showToast(
-                  "Added to Wishlist"
-                );
+                setWishlistCount((c) => c + 1);
+                showToast("Added to Wishlist");
               }}
-              className="relative text-gray-300 hover:text-white cursor-pointer"
+              className="text-gray-300 hover:text-white cursor-pointer"
               title="Wishlist"
             >
-
               <Heart className="w-5 h-5" />
-
-              {wishlistCount > 0 && (
-
-                <span className="absolute -top-1 -right-2 bg-amber-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-
-                  {wishlistCount}
-
-                </span>
-
-              )}
-
             </button>
-
-            {/* NOTIFICATIONS */}
-
-            <Link
-              to="/notifications"
-              className="relative text-gray-300 hover:text-white"
-              title="Notifications"
-            >
-
+            
+            <Link to="/notifications" className="relative text-gray-300 hover:text-white">
               <Bell className="w-5 h-5" />
-
-              {unreadCount > 0 && (
-
-                <span className="absolute -top-1 -right-2 bg-amber-600 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-
-                  {unreadCount > 99
-                    ? "99+"
-                    : unreadCount}
-
-                </span>
-
-              )}
-
+              <NotificationBadge />
             </Link>
 
-            {/* PROFILE */}
-
-            <Link
-              to="/profile"
-              title="View Account Profile"
-              className="text-gray-300 hover:text-white"
-            >
-
-              {userAvatar ? (
-
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-7 h-7 rounded-full object-cover border border-white/20"
-                />
-
-              ) : (
-
-                <span className="w-7 h-7 rounded-full bg-amber-700 text-white text-[11px] flex items-center justify-center font-semibold">
-
-                  {userInitial}
-
-                </span>
-
-              )}
-
-            </Link>
-
-            {/* CART */}
-
-            <Link
-              to="/cart"
-              className="relative text-gray-300 hover:text-white"
-              title="Shopping Bag"
-            >
-
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-
-                  {cartCount}
-
-                </span>
-
-              )}
-
-            </Link>
-
-          </div>
-
-          {/* MOBILE */}
-
-          <div className="md:hidden flex items-center gap-3">
-
-            <Link
-              to="/notifications"
-              className="relative text-gray-300"
-            >
-
-              <Bell className="w-5 h-5" />
-
-              {unreadCount > 0 && (
-
-                <span className="absolute -top-1 -right-2 bg-amber-600 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-
-                  {unreadCount > 99
-                    ? "99+"
-                    : unreadCount}
-
-                </span>
-
-              )}
-
-            </Link>
-
-            <Link
-              to="/cart"
-              className="relative text-gray-300"
-            >
-
-              <ShoppingBag className="w-5 h-5" />
-
-              {cartCount > 0 && (
-
-                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-
-                  {cartCount}
-
-                </span>
-
-              )}
-
-            </Link>
-
-            <Link to="/profile">
-
-              {userAvatar ? (
-
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-7 h-7 rounded-full object-cover"
-                />
-
-              ) : (
-
-                <span className="w-7 h-7 rounded-full bg-amber-700 text-white text-[11px] flex items-center justify-center font-semibold">
-
-                  {userInitial}
-
-                </span>
-
-              )}
-
+            <Link to="/profile" className="flex items-center gap-2 text-gray-300 hover:text-white">
+              <UserAvatar size="w-7 h-7" />
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
             <button
-              onClick={() =>
-                setMobileMenuOpen(true)
-              }
-              className="text-gray-300"
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-300 hover:text-white cursor-pointer flex items-center gap-1.5 border-l pl-4 border-white/10"
+              aria-label="Open navigation drawer"
             >
-
-              <Menu className="w-6 h-6" />
-
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
+            <Link to="/cart" className="relative text-gray-300 hover:text-white">
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-amber-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
           </div>
-
         </div>
 
-        {/* DESKTOP NAV */}
-
-        <nav className="hidden md:flex justify-center items-center gap-5 lg:gap-8 mt-4 pt-3 border-t border-white/10 text-xs tracking-[0.15em] uppercase text-gray-300 font-medium">
-
-          <Link
-            to="/"
-            className="hover:text-amber-400"
-          >
-            Home
-          </Link>
-
-          <Link
-            to="/shop"
-            className="hover:text-amber-400"
-          >
-            Shop
-          </Link>
-
-          <a
-            href="#"
-            className="hover:text-amber-400"
-          >
-            Collections
-          </a>
-
-          <a
-            href="/custom-designs"
-            className="hover:text-amber-400"
-          >
-            Custom Design
-          </a>
-
-          <Link
-            to="/lookbook"
-            className="hover:text-amber-400"
-          >
-            Lookbook
-          </Link>
-
-          <Link
-            to="/limited"
-            className="text-amber-400 font-semibold border-b border-amber-400 pb-0.5"
-          >
-            Limited Edition
-          </Link>
-
+        {/* Sub Nav Links */}
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-white/10 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-300 font-medium">
+          <Link to="/" className="hover:text-amber-400 transition-colors">Home</Link>
+          <Link to="/shop" className="hover:text-amber-400 transition-colors">Shop</Link>
+          <Link to="/collections" className="hover:text-amber-400 transition-colors">Collections</Link>
+          <Link to="/custom-designs" className="hover:text-amber-400 transition-colors">Custom Design</Link>
+          <Link to="/lookbook" className="hover:text-amber-400 transition-colors">Lookbook</Link>
+          <Link to="/limited" className="text-amber-400 font-semibold border-b border-amber-400 pb-0.5">Limited Edition</Link>
         </nav>
-
       </header>
 
       {/* =====================================================
-          MOBILE OVERLAY
+          SLIDING NAVIGATION DRAWER
       ====================================================== */}
 
       {mobileMenuOpen && (
-
-        <div
-          className="md:hidden fixed inset-0 bg-black/60 z-40"
-          onClick={() =>
-            setMobileMenuOpen(false)
-          }
-        />
-
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      {/* =====================================================
-          MOBILE MENU
-      ====================================================== */}
-
-      <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-[#171311] z-50 shadow-2xl transform transition-transform duration-300 ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
-
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-
-          <div>
-
-            <h2 className="font-serif text-lg tracking-[0.2em] font-bold">
-              WEFTIN
-            </h2>
-
-            <span className="text-[8px] uppercase tracking-[0.25em] text-amber-400">
-              Atelier Vault
-            </span>
-
+      <aside className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-[#171311] text-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div>
+          <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/20">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm border border-white/10">W</div>
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-white">WEFTIN</h2>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-amber-400 block font-medium">ATELIER VAULT</span>
+              </div>
+            </Link>
+            <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/5 transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <button
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-          >
+          <div onClick={() => { setMobileMenuOpen(false); navigate("/profile"); }} className="px-6 py-4 border-b border-white/10 flex items-center gap-3 bg-amber-950/20 cursor-pointer hover:bg-amber-950/40 transition-colors">
+            <UserAvatar size="w-10 h-10" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">{userName}</p>
+              <p className="text-[10px] text-gray-400 truncate">{currentUser?.email || "Member Account"}</p>
+            </div>
+          </div>
 
-            <X className="w-6 h-6" />
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-300 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-amber-400 font-bold">Main Pages</div>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-400" />Home</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-400" />Shop Catalog</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/collections" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-400" />Collections</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/custom-designs" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Scissors className="w-4 h-4 text-amber-400" />Custom Designs & Workspace</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/lookbook" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-400" />Lookbook Journal</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/limited" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-600 text-white font-semibold group">
+              <span className="flex items-center gap-3"><span className="w-4 h-4 flex items-center justify-center text-sm">★</span>Limited Edition Drop</span>
+              <ChevronRight className="w-3.5 h-3.5 text-white" />
+            </Link>
 
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-400 font-bold border-t border-white/10 mt-2">Member Portal & Profile</div>
+            <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-400" />Dashboard Overview</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Package className="w-4 h-4 text-gray-400" />My Orders & History</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/measurements" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-400" />Bespoke Fit Measurements</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-gray-400" />Saved Wishlist</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/addresses" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-400" />Delivery Addresses</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-400" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-400" />Notifications</span>
+              {unreadCount > 0 && <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">{unreadCount}</span>}
+            </Link>
+            <Link to="/support" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 hover:text-white transition-colors group">
+              <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-400" />Concierge Support</span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-400 font-bold border-t border-white/10 mt-2">Administration</div>
+            <Link to="/admin/home-cms" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white border border-white/10 transition-colors">
+              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-white/10 bg-black/20">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-400 font-semibold hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer border border-rose-900/50 bg-black/40 shadow-2xs">
+            <LogOut className="w-4 h-4" /> Log out of account
           </button>
-
         </div>
-
-        {/* USER */}
-
-        <div className="p-5 border-b border-white/10 flex items-center gap-3">
-
-          {userAvatar ? (
-
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-
-          ) : (
-
-            <span className="w-10 h-10 rounded-full bg-amber-700 flex items-center justify-center font-semibold">
-              {userInitial}
-            </span>
-
-          )}
-
-          <div className="min-w-0">
-
-            <p className="text-sm font-semibold truncate">
-              {userName}
-            </p>
-
-            <p className="text-[10px] text-gray-400 truncate">
-              {currentUser?.email ||
-                "Atelier Member"}
-            </p>
-
-          </div>
-
-        </div>
-
-        <nav className="p-4 space-y-1">
-
-          <MobileLink
-            to="/"
-            label="Home"
-            close={() =>
-              setMobileMenuOpen(false)
-            }
-          />
-
-          <MobileLink
-            to="/shop"
-            label="Shop"
-            close={() =>
-              setMobileMenuOpen(false)
-            }
-          />
-
-          <a
-            href="#"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-white/5"
-          >
-            Collections
-          </a>
-
-          <a
-            href="/custom-designs"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-white/5"
-          >
-            Custom Design
-          </a>
-
-          <MobileLink
-            to="/lookbook"
-            label="Lookbook"
-            close={() =>
-              setMobileMenuOpen(false)
-            }
-          />
-
-          <Link
-            to="/limited"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="block px-4 py-3 bg-amber-700 text-white text-xs uppercase tracking-widest"
-          >
-            Limited Edition
-          </Link>
-
-          <div className="border-t border-white/10 my-3" />
-
-          <Link
-            to="/notifications"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="flex items-center justify-between px-4 py-3 text-xs uppercase tracking-widest hover:bg-white/5"
-          >
-
-            <span>
-              Notifications
-            </span>
-
-            {unreadCount > 0 && (
-
-              <span className="bg-amber-700 text-white text-[9px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
-
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-
-              </span>
-
-            )}
-
-          </Link>
-
-          <MobileLink
-            to="/profile"
-            label="Profile"
-            close={() =>
-              setMobileMenuOpen(false)
-            }
-          />
-
-          <Link
-            to="/cart"
-            onClick={() =>
-              setMobileMenuOpen(false)
-            }
-            className="flex items-center justify-between px-4 py-3 text-xs uppercase tracking-widest hover:bg-white/5"
-          >
-
-            <span>
-              Shopping Bag
-            </span>
-
-            {cartCount > 0 && (
-
-              <span className="bg-amber-700 text-white text-[9px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
-
-                {cartCount}
-
-              </span>
-
-            )}
-
-          </Link>
-
-        </nav>
-
       </aside>
 
       {/* =====================================================
@@ -1352,31 +1103,6 @@ function CountdownValue({
       </span>
 
     </div>
-
-  );
-
-}
-
-
-// =========================================================
-// MOBILE LINK
-// =========================================================
-
-function MobileLink({
-  to,
-  label,
-  close
-}) {
-
-  return (
-
-    <Link
-      to={to}
-      onClick={close}
-      className="block px-4 py-3 text-xs uppercase tracking-widest hover:bg-white/5"
-    >
-      {label}
-    </Link>
 
   );
 
