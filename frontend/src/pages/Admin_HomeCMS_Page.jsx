@@ -24,10 +24,12 @@ export default function Admin_HomeCMS_Page() {
     }, 3000);
   };
 
-  // Check if session is already authenticated as admin
+  // Check if session is already authenticated as admin ID 10
   useEffect(() => {
     const sessionAuth = sessionStorage.getItem("weftin_admin_auth");
-    if (sessionAuth === "true") {
+    const storedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
+
+    if (sessionAuth === "true" && storedUser?.id === 10) {
       setIsAdminAuthenticated(true);
       fetchProducts();
     } else {
@@ -35,7 +37,7 @@ export default function Admin_HomeCMS_Page() {
     }
   }, []);
 
-  // Handle Admin Credential Submission
+  // Handle Admin Credential Submission & ID 10 Verification
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     if (!adminEmailInput.trim() || !adminPasswordInput.trim()) {
@@ -44,10 +46,8 @@ export default function Admin_HomeCMS_Page() {
     }
 
     setAuthenticating(true);
-    const token = localStorage.getItem("weftin_token");
 
     try {
-      // Authenticate against backend admin check or regular login endpoint injected with admin table
       const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,18 +59,18 @@ export default function Admin_HomeCMS_Page() {
 
       const data = await res.json();
 
-      if (res.ok) {
-        // Verify if this user is explicitly an admin in your DB or matches your admin criteria
-        // (You can also check a custom property like data.user.is_admin if your DB record has it)
-        const userEmail = data.user?.email || adminEmailInput;
-        
-        if (userEmail.toLowerCase().includes("admin") || data.user?.is_admin) {
+      if (res.ok && data?.user) {
+        // Explicitly verify ID 10 and target admin email
+        const userId = Number(data.user.id || data.user.user_id);
+        const userEmail = String(data.user.email || "").trim().toLowerCase();
+
+        if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
           sessionStorage.setItem("weftin_admin_auth", "true");
           setIsAdminAuthenticated(true);
-          showToast("Admin credentials verified successfully.");
+          showToast("Admin credentials verified successfully (ID: 10).");
           fetchProducts();
         } else {
-          showToast("Access denied. This account does not have administrator privileges.");
+          showToast("Access denied. Account does not match authorized admin ID (10).");
         }
       } else {
         showToast(data.detail || "Invalid admin credentials.");
@@ -183,7 +183,7 @@ export default function Admin_HomeCMS_Page() {
 
           <h2 className="font-serif text-2xl font-light text-center text-gray-900 mb-1">Admin Portal Security</h2>
           <p className="text-xs text-gray-500 text-center mb-8 leading-relaxed">
-            Please enter your administrator credentials to unlock the Home Page Product CMS.
+            Please enter admin credentials (ID: 10) to unlock the Home Page Product CMS.
           </p>
 
           <form onSubmit={handleAdminLogin} className="space-y-5 text-xs">
@@ -194,7 +194,7 @@ export default function Admin_HomeCMS_Page() {
                 <input
                   type="email"
                   required
-                  placeholder="admin@weftin.com"
+                  placeholder="weftin.admin891@gmail.com"
                   value={adminEmailInput}
                   onChange={(e) => setAdminEmailInput(e.target.value)}
                   className="w-full bg-[#FAF8F5] border border-gray-200 pl-10 pr-4 py-3 rounded text-gray-800 focus:outline-none focus:border-black"
@@ -225,7 +225,7 @@ export default function Admin_HomeCMS_Page() {
               {authenticating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Verifying Admin...
+                  Verifying Admin (ID 10)...
                 </>
               ) : (
                 <>
@@ -250,7 +250,7 @@ export default function Admin_HomeCMS_Page() {
   }
 
   // ============================================================
-  // MAIN ADMIN CMS INTERFACE (IF AUTHENTICATED)
+  // MAIN ADMIN CMS INTERFACE (IF AUTHENTICATED AS ID 10)
   // ============================================================
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans p-8 lg:p-12 relative">
@@ -278,7 +278,7 @@ export default function Admin_HomeCMS_Page() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="font-serif text-3xl font-light text-gray-900">
-                Home Page Product CMS
+                Home Page Product CMS (Admin ID: 10)
               </h1>
               <p className="text-xs text-gray-500 mt-1">
                 Select existing products from your Shop catalog and assign them to Home Page sections. Changes are saved instantly to NeonDB.
