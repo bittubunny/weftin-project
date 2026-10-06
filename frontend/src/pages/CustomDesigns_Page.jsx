@@ -17,7 +17,9 @@ import {
   RefreshCw,
   ShoppingBag,
   Menu,
-  X
+  X,
+  Layers,
+  XCircle
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -32,6 +34,10 @@ export default function CustomDesigns_Page() {
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Shop CMS states for Custom Design integration
+  const [cmsProducts, setCmsProducts] = useState([]);
+  const [cmsLoading, setCmsLoading] = useState(true);
 
   // --------------------------------------------------
   // CURRENT USER
@@ -107,11 +113,18 @@ export default function CustomDesigns_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE}/api/notifications/unread-count/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) {
@@ -158,7 +171,7 @@ export default function CustomDesigns_Page() {
   };
 
   // --------------------------------------------------
-  // LOAD USER CUSTOM DESIGNS
+  // LOAD USER CUSTOM DESIGNS & SHOP PRODUCTS CMS
   // --------------------------------------------------
 
   const loadRequests = async () => {
@@ -199,9 +212,81 @@ export default function CustomDesigns_Page() {
     }
   };
 
+  const fetchCmsProducts = async () => {
+    const token = localStorage.getItem("weftin_token");
+
+    try {
+      setCmsLoading(true);
+      const res = await fetch(`${API_BASE}/api/admin/home-products`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch shop products");
+      }
+
+      const data = await res.json();
+      setCmsProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching Home CMS products:", err);
+    } finally {
+      setCmsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadRequests();
+    fetchCmsProducts();
   }, [userEmail]);
+
+  // --------------------------------------------------
+  // HANDLE PLACEMENT CHANGE (CMS)
+  // --------------------------------------------------
+
+  const handlePlacementChange = async (productId, newPlacement) => {
+    const token = localStorage.getItem("weftin_token");
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/admin/home-products/${productId}/placement`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            section_placement: newPlacement
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Failed to update placement.");
+      }
+
+      showToast(
+        newPlacement === "Not on Home"
+          ? "Product removed from Home page."
+          : `Product assigned to ${newPlacement}.`
+      );
+
+      setCmsProducts((current) =>
+        current.map((prod) =>
+          prod.id === productId
+            ? { ...prod, section_placement: newPlacement }
+            : prod
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || "Backend connection error.");
+    }
+  };
 
   // --------------------------------------------------
   // DELETE REQUEST
@@ -305,10 +390,6 @@ export default function CustomDesigns_Page() {
     });
   };
 
-  // --------------------------------------------------
-  // CLOSE MOBILE MENU
-  // --------------------------------------------------
-
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
@@ -333,7 +414,7 @@ export default function CustomDesigns_Page() {
 
           <button
             onClick={() => navigate("/profile")}
-            className="bg-black text-white px-8 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold"
+            className="bg-black text-white px-8 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold cursor-pointer"
           >
             Sign In
           </button>
@@ -366,19 +447,21 @@ export default function CustomDesigns_Page() {
 
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
 
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
+                W
+              </div>
 
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
+              <div>
+                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                  WEFTIN
+                </h1>
 
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
+                  ATELIER TAILORS
+                </span>
+              </div>
+            </Link>
 
           </div>
 
@@ -505,11 +588,10 @@ export default function CustomDesigns_Page() {
         }`}
       >
 
-        {/* Mobile menu header */}
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
 
           <Link
-            to="/dashboard"
+            to="/"
             onClick={closeMobileMenu}
             className="flex items-center gap-3"
           >
@@ -531,14 +613,13 @@ export default function CustomDesigns_Page() {
           <button
             type="button"
             onClick={closeMobileMenu}
-            className="p-2 text-gray-600 hover:text-black"
+            className="p-2 text-gray-600 hover:text-black cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
         </div>
 
-        {/* Mobile user */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
 
           <UserAvatar />
@@ -555,7 +636,6 @@ export default function CustomDesigns_Page() {
 
         </div>
 
-        {/* Mobile navigation */}
         <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
 
           <Link
@@ -621,7 +701,6 @@ export default function CustomDesigns_Page() {
             Profile
           </Link>
 
-          {/* Notifications */}
           <Link
             to="/notifications"
             onClick={closeMobileMenu}
@@ -635,7 +714,6 @@ export default function CustomDesigns_Page() {
             <NotificationBadge sidebar />
           </Link>
 
-          {/* Support */}
           <Link
             to="/support"
             onClick={closeMobileMenu}
@@ -647,7 +725,6 @@ export default function CustomDesigns_Page() {
 
         </nav>
 
-        {/* Mobile logout */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
 
           <Link
@@ -673,29 +750,19 @@ export default function CustomDesigns_Page() {
 
       <div className="flex-1 flex flex-col min-w-0">
 
-        {/* --------------------------------------------------
-            DESKTOP HEADER
-        -------------------------------------------------- */}
+        {/* DESKTOP HEADER */}
 
         <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center">
 
           <div className="text-xs text-gray-400">
-
             Portfolio
-
-            <span className="mx-2">
-              &gt;
-            </span>
-
+            <span className="mx-2">&gt;</span>
             <span className="text-gray-900 font-semibold uppercase tracking-wider">
               Custom Designs
             </span>
-
           </div>
 
           <div className="flex items-center gap-5">
-
-            {/* CART */}
             <Link
               to="/cart"
               className="relative text-gray-600 hover:text-black transition-colors"
@@ -703,42 +770,32 @@ export default function CustomDesigns_Page() {
               <ShoppingBag className="w-5 h-5" />
             </Link>
 
-            {/* NOTIFICATIONS */}
             <Link
               to="/notifications"
               className="relative text-gray-600 hover:text-black transition-colors"
             >
               <Bell className="w-5 h-5" />
-
               <NotificationBadge />
             </Link>
 
-            {/* USER */}
             <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
-
               <UserAvatar />
-
               <span className="text-xs font-semibold text-gray-800">
                 {userName}
               </span>
-
             </div>
-
           </div>
 
         </header>
 
-        {/* --------------------------------------------------
-            MOBILE HEADER
-        -------------------------------------------------- */}
+        {/* MOBILE HEADER */}
 
         <header className="md:hidden bg-white border-b border-gray-200">
 
           <div className="px-4 py-4 flex items-center justify-between">
 
-            {/* Logo */}
             <Link
-              to="/dashboard"
+              to="/"
               className="flex items-center gap-3"
             >
               <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
@@ -756,10 +813,7 @@ export default function CustomDesigns_Page() {
               </div>
             </Link>
 
-            {/* Mobile actions */}
             <div className="flex items-center gap-4">
-
-              {/* Cart */}
               <Link
                 to="/cart"
                 className="relative text-gray-600 hover:text-black"
@@ -767,68 +821,55 @@ export default function CustomDesigns_Page() {
                 <ShoppingBag className="w-5 h-5" />
               </Link>
 
-              {/* Notifications */}
               <Link
                 to="/notifications"
                 className="relative text-gray-600 hover:text-black"
               >
                 <Bell className="w-5 h-5" />
-
                 <NotificationBadge />
               </Link>
 
-              {/* User */}
               <UserAvatar size="w-8 h-8" />
 
-              {/* Menu */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
-                className="text-gray-700 hover:text-black"
+                className="text-gray-700 hover:text-black cursor-pointer"
               >
                 <Menu className="w-6 h-6" />
               </button>
-
             </div>
 
           </div>
 
         </header>
 
-        {/* --------------------------------------------------
-            PAGE
-        -------------------------------------------------- */}
+        {/* PAGE BODY */}
 
-        <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl w-full">
+        <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl w-full space-y-12">
 
           {/* PAGE HEADER */}
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 
             <div>
-
               <div className="flex items-center gap-2 text-amber-700 mb-1">
-
                 <Scissors className="w-5 h-5" />
-
                 <h2 className="text-2xl font-serif text-gray-900">
                   Custom Embroidery Requests
                 </h2>
-
               </div>
 
               <p className="text-xs text-gray-500">
                 Submit layouts, track hand-weaving blueprints, and direct
                 chat with premier master embroiderers.
               </p>
-
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-
               <button
                 onClick={loadRequests}
-                className="border border-gray-300 hover:border-black text-gray-700 px-4 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2"
+                className="border border-gray-300 hover:border-black text-gray-700 px-4 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -836,83 +877,52 @@ export default function CustomDesigns_Page() {
 
               <button
                 onClick={() => navigate("/shop")}
-                className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm"
+                className="bg-[#1C1816] hover:bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <Plus className="w-4 h-4 text-amber-400" />
                 Explore Shop & Customize
               </button>
-
             </div>
 
           </div>
 
-          {/* --------------------------------------------------
-              LOADING
-          -------------------------------------------------- */}
+          {/* REQUESTS LIST */}
 
           {loading ? (
-
             <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-
               <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
-
               <h3 className="font-serif text-xl text-gray-800">
                 Loading your custom designs...
               </h3>
-
               <p className="text-xs text-gray-500 mt-2">
                 Retrieving your atelier requests.
               </p>
-
             </div>
-
           ) : requests.length === 0 ? (
-
-            /* --------------------------------------------------
-                EMPTY STATE
-            -------------------------------------------------- */
-
             <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
-
               <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-
               <h3 className="font-serif text-xl text-gray-800 mb-2">
                 No custom design requests found.
               </h3>
-
               <p className="text-xs text-gray-500 mb-6">
                 Select a masterpiece from the Shop and click
                 "Bespoke Custom Design" to initiate a tailoring blueprint.
               </p>
-
               <button
                 onClick={() => navigate("/shop")}
-                className="bg-black text-white px-8 py-3.5 text-xs uppercase tracking-widest rounded font-semibold inline-block hover:bg-gray-800"
+                className="bg-black text-white px-8 py-3.5 text-xs uppercase tracking-widest rounded font-semibold inline-block hover:bg-gray-800 cursor-pointer"
               >
                 Explore Shop Collections
               </button>
-
             </div>
-
           ) : (
-
-            /* --------------------------------------------------
-                REQUESTS
-            -------------------------------------------------- */
-
             <div className="space-y-6">
-
               {requests.map((req) => (
-
                 <div
                   key={req.id}
                   className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm"
                 >
-
-                  {/* TOP */}
-
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-4 border-b border-gray-100 text-xs">
-
                     <span className="font-mono font-bold text-gray-600">
                       CD-{String(req.id).padStart(4, "0")}
                     </span>
@@ -924,37 +934,25 @@ export default function CustomDesigns_Page() {
                     >
                       {req.status || "Drafting Blueprint"}
                     </span>
-
                   </div>
 
-                  {/* PRODUCT */}
-
                   <div className="py-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-
                     <div className="flex gap-4 items-center min-w-0">
-
                       <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border">
-
                         {req.product_image ? (
-
                           <img
                             src={req.product_image}
                             alt={req.product_name}
                             className="w-full h-full object-cover"
                           />
-
                         ) : (
-
                           <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
                             No Image
                           </div>
-
                         )}
-
                       </div>
 
                       <div className="min-w-0">
-
                         <span className="bg-amber-100 text-amber-900 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded uppercase">
                           {req.line || "BESPOKE CUSTOM LINE"}
                         </span>
@@ -964,32 +962,19 @@ export default function CustomDesigns_Page() {
                         </h3>
 
                         <p className="text-xs text-gray-500 mt-0.5">
-
                           Occasion / Category:
-
                           <strong className="text-gray-800 ml-1">
-                            {req.product_category ||
-                              "Bespoke Occasion"}
+                            {req.product_category || "Bespoke Occasion"}
                           </strong>
-
                         </p>
 
                         <p className="text-[11px] text-gray-400 mt-0.5">
-
-                          Created on{" "}
-
-                          {formatDate(req.created_at)}
-
+                          Created on {formatDate(req.created_at)}
                         </p>
-
                       </div>
-
                     </div>
 
-                    {/* COST */}
-
                     <div className="text-left md:text-right bg-amber-50/60 p-4 rounded-xl border border-amber-200/60 w-full md:w-auto">
-
                       <span className="text-[10px] uppercase tracking-wider text-amber-800 block">
                         Cost Blueprint
                       </span>
@@ -997,28 +982,18 @@ export default function CustomDesigns_Page() {
                       <strong className="text-2xl font-serif font-bold text-gray-900">
                         {req.product_price || "Price on request"}
                       </strong>
-
                     </div>
-
                   </div>
 
-                  {/* MESSAGE */}
-
                   <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
-
                     <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-
                     <p className="italic">
                       {req.message ||
                         "Your bespoke request has been received by our atelier."}
                     </p>
-
                   </div>
 
-                  {/* ACTIONS */}
-
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
                     <button
                       onClick={() =>
                         navigate(
@@ -1030,7 +1005,7 @@ export default function CustomDesigns_Page() {
                           }
                         )
                       }
-                      className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors"
+                      className="bg-[#1C1816] hover:bg-black text-white py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors cursor-pointer"
                     >
                       Open Workspace
                     </button>
@@ -1046,28 +1021,132 @@ export default function CustomDesigns_Page() {
                           }
                         )
                       }
-                      className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white"
+                      className="border border-gray-300 hover:border-black text-gray-800 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors bg-white cursor-pointer"
                     >
                       Discuss Sketch
                     </button>
 
                     <button
                       onClick={() => deleteRequest(req.id)}
-                      className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2"
+                      className="border border-rose-200 text-rose-700 hover:bg-rose-50 py-3 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete Request
                     </button>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
+
+          {/* =====================================================
+              SHOP CATALOG PRODUCTS CMS (Embedded on Custom Designs Page)
+          ====================================================== */}
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm mt-12">
+            <h3 className="font-serif text-lg font-bold mb-2 flex items-center gap-2 text-gray-950">
+              <Layers className="w-5 h-5 text-amber-700" />
+              Shop Catalog Products Assignment ({cmsProducts.length})
+            </h3>
+            <p className="text-xs text-gray-500 mb-6">
+              Assign products from your catalog directly into home page sections.
+            </p>
+
+            {cmsLoading ? (
+              <div className="text-center py-10">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">
+                  Loading Shop products...
+                </p>
+              </div>
+            ) : cmsProducts.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">
+                  No products found in the Shop database.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cmsProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 gap-5"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-16 h-20 object-cover rounded shadow-sm flex-shrink-0"
+                      />
+
+                      <div className="min-w-0">
+                        <h4 className="font-serif text-sm font-bold text-gray-900">
+                          {product.name}
+                        </h4>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                          {product.price}
+                          {" • "}
+                          Category:{" "}
+                          <span className="font-semibold text-gray-700">
+                            {product.category}
+                          </span>
+                        </p>
+
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          Shop Product ID: {product.id}
+                        </p>
+
+                        <span
+                          className={`inline-block mt-2 text-[9px] uppercase font-bold tracking-widest px-2 py-1 rounded ${
+                            product.section_placement === "Not on Home"
+                              ? "bg-gray-200 text-gray-600"
+                              : "bg-amber-100 text-amber-900"
+                          }`}
+                        >
+                          {product.section_placement === "Not on Home"
+                            ? "Not on Home"
+                            : `Home: ${product.section_placement}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
+                      <select
+                        value={
+                          product.section_placement || "Not on Home"
+                        }
+                        onChange={(e) =>
+                          handlePlacementChange(
+                            product.id,
+                            e.target.value
+                          )
+                        }
+                        className="bg-white border border-amber-300 text-xs px-4 py-2.5 rounded font-bold text-amber-950 focus:outline-none focus:border-black shadow-sm cursor-pointer"
+                      >
+                        <option value="Not on Home">Not on Home</option>
+                        <option value="Featured">Featured Collection</option>
+                        <option value="Best Seller">Best Seller</option>
+                        <option value="Trending">Trending Now</option>
+                      </select>
+
+                      {product.section_placement !== "Not on Home" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handlePlacementChange(product.id, "Not on Home")
+                          }
+                          className="p-2.5 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                          title="Remove from Home page"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
         </main>
 
