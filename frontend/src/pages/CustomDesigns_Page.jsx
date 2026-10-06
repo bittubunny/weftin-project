@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -33,8 +33,12 @@ export default function CustomDesigns_Page() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Best Sellers and Quick View state
+  const [bestSellers, setBestSellers] = useState([]);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
   // --------------------------------------------------
-  // CURRENT USER
+  // CURRENT USER & PROFILE SYNC
   // --------------------------------------------------
 
   useEffect(() => {
@@ -42,7 +46,6 @@ export default function CustomDesigns_Page() {
       const savedUser = JSON.parse(
         localStorage.getItem("weftin_user") || "null"
       );
-
       setCurrentUser(savedUser);
     } catch (error) {
       console.error("Failed to load user:", error);
@@ -62,23 +65,30 @@ export default function CustomDesigns_Page() {
   const userInitial = userName.charAt(0).toUpperCase();
 
   // --------------------------------------------------
-  // USER AVATAR
+  // USER AVATAR (Interactive profile redirect)
   // --------------------------------------------------
 
   const UserAvatar = ({ size = "w-8 h-8" }) => {
+    const handleAvatarClick = (e) => {
+      e.stopPropagation();
+      navigate("/profile");
+    };
+
     if (currentUser?.avatar) {
       return (
         <img
           src={currentUser.avatar}
           alt={userName}
-          className={`${size} rounded-full object-cover border border-amber-500`}
+          onClick={handleAvatarClick}
+          className={`${size} rounded-full object-cover border border-amber-500 cursor-pointer hover:opacity-90 transition-opacity`}
         />
       );
     }
 
     return (
       <div
-        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-200`}
+        onClick={handleAvatarClick}
+        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-200 cursor-pointer hover:bg-amber-200 transition-colors`}
       >
         {userInitial}
       </div>
@@ -89,13 +99,13 @@ export default function CustomDesigns_Page() {
   // TOAST
   // --------------------------------------------------
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToastMessage(msg);
 
     setTimeout(() => {
       setToastMessage("");
     }, 3000);
-  };
+  }, []);
 
   // --------------------------------------------------
   // LOAD NOTIFICATION COUNT
@@ -141,6 +151,27 @@ export default function CustomDesigns_Page() {
 
     loadUnreadCount(userEmail);
   }, [userEmail]);
+
+  // --------------------------------------------------
+  // LOAD BEST SELLERS FOR CUSTOM DESIGN INSPIRATION (4 ITEMS)
+  // --------------------------------------------------
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/home-products?section=Best+Seller`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch Best Sellers");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setBestSellers(Array.isArray(data) ? data.slice(0, 4) : []);
+      })
+      .catch((err) => {
+        console.error("Best seller fetch error:", err);
+        setBestSellers([]);
+      });
+  }, []);
 
   // --------------------------------------------------
   // NOTIFICATION BADGE
@@ -348,10 +379,7 @@ export default function CustomDesigns_Page() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex">
 
-      {/* --------------------------------------------------
-          TOAST
-      -------------------------------------------------- */}
-
+      {/* TOAST */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
@@ -359,36 +387,26 @@ export default function CustomDesigns_Page() {
         </div>
       )}
 
-      {/* --------------------------------------------------
-          DESKTOP SIDEBAR
-      -------------------------------------------------- */}
-
+      {/* DESKTOP SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex fixed top-0 left-0 h-screen z-30">
-
         <div>
-
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-
             <Link to="/" className="flex items-center gap-3">
               <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
                 W
               </div>
-
               <div>
                 <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
                   WEFTIN
                 </h1>
-
                 <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
                   ATELIER TAILORS
                 </span>
               </div>
             </Link>
-
           </div>
 
           <nav className="p-4 space-y-1 text-xs font-medium text-gray-600">
-
             <Link
               to="/dashboard"
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
@@ -453,7 +471,6 @@ export default function CustomDesigns_Page() {
                 <Bell className="w-4 h-4" />
                 Notifications
               </span>
-
               <NotificationBadge sidebar />
             </Link>
 
@@ -464,13 +481,10 @@ export default function CustomDesigns_Page() {
               <Headphones className="w-4 h-4" />
               Support
             </Link>
-
           </nav>
-
         </div>
 
         <div className="p-4 border-t border-gray-100">
-
           <Link
             to="/"
             onClick={() => {
@@ -482,15 +496,10 @@ export default function CustomDesigns_Page() {
             <LogOut className="w-4 h-4" />
             Log out
           </Link>
-
         </div>
-
       </aside>
 
-      {/* --------------------------------------------------
-          MOBILE OVERLAY
-      -------------------------------------------------- */}
-
+      {/* MOBILE OVERLAY */}
       {mobileMenuOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/40 z-40"
@@ -498,10 +507,7 @@ export default function CustomDesigns_Page() {
         />
       )}
 
-      {/* --------------------------------------------------
-          MOBILE SLIDE-IN NAVIGATION
-      -------------------------------------------------- */}
-
+      {/* MOBILE SLIDE-IN NAVIGATION */}
       <aside
         className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
           mobileMenuOpen
@@ -509,9 +515,7 @@ export default function CustomDesigns_Page() {
             : "-translate-x-full"
         }`}
       >
-
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-
           <Link
             to="/"
             onClick={closeMobileMenu}
@@ -520,12 +524,10 @@ export default function CustomDesigns_Page() {
             <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
               W
             </div>
-
             <div>
               <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
                 WEFTIN
               </h1>
-
               <span className="text-[8px] uppercase tracking-[0.2em] text-gray-400 block">
                 ATELIER TAILORS
               </span>
@@ -539,27 +541,27 @@ export default function CustomDesigns_Page() {
           >
             <X className="w-5 h-5" />
           </button>
-
         </div>
 
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-
+        <div 
+          onClick={() => {
+            closeMobileMenu();
+            navigate("/profile");
+          }}
+          className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 cursor-pointer hover:bg-amber-50/40 transition-colors"
+        >
           <UserAvatar />
-
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
               {userName}
             </p>
-
             <p className="text-[10px] text-gray-500 truncate">
               {userEmail}
             </p>
           </div>
-
         </div>
 
         <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-
           <Link
             to="/dashboard"
             onClick={closeMobileMenu}
@@ -632,7 +634,6 @@ export default function CustomDesigns_Page() {
               <Bell className="w-4 h-4" />
               Notifications
             </span>
-
             <NotificationBadge sidebar />
           </Link>
 
@@ -644,11 +645,9 @@ export default function CustomDesigns_Page() {
             <Headphones className="w-4 h-4" />
             Support
           </Link>
-
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-
           <Link
             to="/"
             onClick={() => {
@@ -661,21 +660,14 @@ export default function CustomDesigns_Page() {
             <LogOut className="w-4 h-4" />
             Log out
           </Link>
-
         </div>
-
       </aside>
 
-      {/* --------------------------------------------------
-          MAIN CONTENT (with ml-64 offset for laptop view)
-      -------------------------------------------------- */}
-
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0 md:ml-64">
 
         {/* DESKTOP HEADER */}
-
         <header className="hidden md:flex bg-white border-b border-gray-200 px-8 py-4 justify-between items-center sticky top-0 z-20">
-
           <div className="text-xs text-gray-400">
             Portfolio
             <span className="mx-2">&gt;</span>
@@ -700,22 +692,21 @@ export default function CustomDesigns_Page() {
               <NotificationBadge />
             </Link>
 
-            <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
+            <div 
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 border-l pl-4 border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <UserAvatar />
               <span className="text-xs font-semibold text-gray-800">
                 {userName}
               </span>
             </div>
           </div>
-
         </header>
 
         {/* MOBILE HEADER */}
-
         <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-20">
-
           <div className="px-4 py-4 flex items-center justify-between">
-
             <Link
               to="/"
               className="flex items-center gap-3"
@@ -723,12 +714,10 @@ export default function CustomDesigns_Page() {
               <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
                 W
               </div>
-
               <div>
                 <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
                   WEFTIN
                 </h1>
-
                 <span className="text-[7px] uppercase tracking-[0.2em] text-gray-400 block">
                   ATELIER TAILORS
                 </span>
@@ -748,7 +737,6 @@ export default function CustomDesigns_Page() {
                 className="relative text-gray-600 hover:text-black"
               >
                 <Bell className="w-5 h-5" />
-
                 <NotificationBadge />
               </Link>
 
@@ -762,19 +750,14 @@ export default function CustomDesigns_Page() {
                 <Menu className="w-6 h-6" />
               </button>
             </div>
-
           </div>
-
         </header>
 
         {/* PAGE BODY */}
-
         <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl w-full space-y-12">
 
           {/* PAGE HEADER */}
-
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-
             <div>
               <div className="flex items-center gap-2 text-amber-700 mb-1">
                 <Scissors className="w-5 h-5" />
@@ -806,11 +789,84 @@ export default function CustomDesigns_Page() {
                 Explore Shop & Customize
               </button>
             </div>
-
           </div>
 
-          {/* REQUESTS LIST */}
+          {/* BEST SELLERS 4-ITEM INSPIRATION DISPLAY */}
+          <section className="bg-[#FAF2EC] rounded-2xl p-6 sm:p-8 border border-amber-900/10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
+                  ATELIER INSPIRATION
+                </span>
+                <h3 className="font-serif text-xl text-gray-900">
+                  Top Best Sellers Ready for Customization
+                </h3>
+              </div>
+              <button
+                onClick={() => navigate("/shop")}
+                className="text-xs uppercase tracking-wider font-bold text-amber-900 hover:underline mt-2 sm:mt-0 cursor-pointer"
+              >
+                View All Catalog &rarr;
+              </button>
+            </div>
 
+            {bestSellers.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {bestSellers.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 flex flex-col justify-between"
+                  >
+                    <div className="relative h-64 bg-gray-100 overflow-hidden">
+                      <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
+                        {item.tag || "BEST SELLER"}
+                      </span>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+
+                    <div className="p-4 flex flex-col flex-grow justify-between">
+                      <div>
+                        <h4 className="font-serif text-sm font-medium mb-1 truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs font-bold text-gray-900 mb-3">
+                          {item.price}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => setQuickViewProduct(item)}
+                          className="py-2 border border-gray-300 text-gray-800 text-[10px] uppercase tracking-wider hover:bg-gray-50 cursor-pointer rounded"
+                        >
+                          Quick View
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            navigate("/shop", { state: { selectedProduct: item } })
+                          }
+                          className="py-2 bg-black text-white text-[10px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
+                        >
+                          Custom Design
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-xs text-gray-500">
+                Loading best sellers...
+              </div>
+            )}
+          </section>
+
+          {/* REQUESTS LIST */}
           {loading ? (
             <div className="bg-white p-10 sm:p-16 rounded-xl border border-gray-200 text-center shadow-sm">
               <RefreshCw className="w-8 h-8 text-amber-700 mx-auto mb-4 animate-spin" />
@@ -965,6 +1021,74 @@ export default function CustomDesigns_Page() {
         </main>
 
       </div>
+
+      {/* QUICK VIEW MODAL FOR BEST SELLERS */}
+      {quickViewProduct && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setQuickViewProduct(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2">
+              <div className="h-80 sm:h-[420px] bg-gray-100">
+                <img
+                  src={quickViewProduct.image}
+                  alt={quickViewProduct.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="p-6 sm:p-8 relative flex flex-col justify-center">
+                <button
+                  onClick={() => setQuickViewProduct(null)}
+                  className="absolute top-4 right-4 p-2 text-gray-500 hover:text-black cursor-pointer"
+                  aria-label="Close quick view"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <span className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-semibold mb-3">
+                  {quickViewProduct.tag || "BEST SELLER"}
+                </span>
+
+                <h3 className="font-serif text-2xl text-gray-900 mb-3">
+                  {quickViewProduct.name}
+                </h3>
+
+                <p className="text-lg font-bold text-gray-900 mb-5">
+                  {quickViewProduct.price}
+                </p>
+
+                {quickViewProduct.category && (
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-6">
+                    {quickViewProduct.category}
+                  </p>
+                )}
+
+                <button
+                  onClick={() => {
+                    setQuickViewProduct(null);
+                    navigate("/shop", { state: { selectedProduct: quickViewProduct } });
+                  }}
+                  className="w-full bg-black text-white py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-900 cursor-pointer mb-3 rounded"
+                >
+                  Custom Design
+                </button>
+
+                <button
+                  onClick={() => setQuickViewProduct(null)}
+                  className="w-full border border-gray-300 text-gray-800 py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-50 cursor-pointer rounded"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
