@@ -23,6 +23,7 @@ import Register_Page from './pages/Register_Page';
 import Admin_HomeCMS_Page from './pages/Admin_HomeCMS_Page';
 import Admin_Lookbook_Page from "./pages/Admin_Lookbook_Page";
 import Admin_Limitededition_Page from "./pages/Admin_Limitededition_Page";
+import Collections_Page from "./pages/Collections_Page"; // Adjust path based on your folder structure
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/track-order/:id" element={<TrackOrder_Page />} />
         <Route path="/login" element={<Login_Page />} />
         <Route path="/register" element={<Register_Page />} />
+        <Route path="/collections" element={<Collections_Page />} />
 <Route path="/admin/home-cms" element={<Admin_HomeCMS_Page />} /> 
 <Route
   path="/admin/lookbook"
