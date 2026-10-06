@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -35,6 +35,9 @@ export default function Shop_Page() {
   const [userAvatar, setUserAvatar] = useState("");
   const [searchText, setSearchText] = useState("");
 
+  // Wishlist item IDs tracker for instant state styling
+  const [wishlistProductIds, setWishlistProductIds] = useState(new Set());
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
@@ -61,13 +64,12 @@ export default function Shop_Page() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToastMessage(msg);
-
     setTimeout(() => {
       setToastMessage("");
     }, 3000);
-  };
+  }, []);
 
   const categoriesList = [
     "Sarees",
@@ -97,6 +99,30 @@ export default function Shop_Page() {
   };
 
   // =========================================================
+  // FETCH USER WISHLIST TO SYNC HEARTS
+  // =========================================================
+  const fetchUserWishlist = useCallback(async (email) => {
+    const token = localStorage.getItem("weftin_token");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/wishlist/${encodeURIComponent(email)}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const ids = new Set(data.map((item) => Number(item.product_id || item.id)));
+          setWishlistProductIds(ids);
+          setWishlistCount(data.length);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading wishlist state:", err);
+    }
+  }, []);
+
+  // =========================================================
   // READ SEARCH PARAMS FROM URL
   // =========================================================
   useEffect(() => {
@@ -124,6 +150,7 @@ export default function Shop_Page() {
 
       fetchUserAvatar(savedUser.email);
       fetchUnreadCount(savedUser.email);
+      fetchUserWishlist(savedUser.email);
     }
 
     updateCartCount();
@@ -141,7 +168,7 @@ export default function Shop_Page() {
         clearInterval(notificationInterval);
       }
     };
-  }, []);
+  }, [fetchUserWishlist]);
 
   // =========================================================
   // FETCH USER AVATAR
@@ -258,9 +285,9 @@ export default function Shop_Page() {
   }, [selectedCategory]);
 
   // =========================================================
-  // WISHLIST
+  // WISHLIST TOGGLE (PINK FILL ON CLICK)
   // =========================================================
-  const handleAddToWishlist = async (p) => {
+  const handleToggleWishlist = async (p) => {
     const savedUser = JSON.parse(
       localStorage.getItem("weftin_user") || "null"
     );
@@ -271,35 +298,60 @@ export default function Shop_Page() {
     }
 
     const token = localStorage.getItem("weftin_token");
+    const productId = Number(p.id);
+    const isAlreadyWishlisted = wishlistProductIds.has(productId);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          user_email: savedUser.email,
-          product_id: p.id,
-          name: p.name,
-          price: p.price,
-          image: p.image,
-          tag: p.tag || "ATELIER EXCLUSIVE",
-        }),
-      });
+      if (isAlreadyWishlisted) {
+        // Remove from wishlist
+        const response = await fetch(`${API_BASE_URL}/api/wishlist/${productId}?user_email=${encodeURIComponent(savedUser.email)}`, {
+          method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        showToast(
-          data.message || `Saved ${p.name} to Wishlist!`
-        );
+        if (response.ok) {
+          setWishlistProductIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(productId);
+            return newSet;
+          });
+          setWishlistCount((prev) => Math.max(0, prev - 1));
+          showToast(`Removed ${p.name} from Wishlist`);
+        } else {
+          showToast("Failed to update wishlist.");
+        }
       } else {
-        showToast(data.detail || "Failed to save.");
+        // Add to wishlist
+        const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            user_email: savedUser.email,
+            product_id: p.id,
+            name: p.name,
+            price: p.price,
+            image: p.image,
+            tag: p.tag || "ATELIER EXCLUSIVE",
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setWishlistProductIds((prev) => new Set(prev).add(productId));
+          setWishlistCount((prev) => prev + 1);
+          showToast(`Saved ${p.name} to Wishlist!`);
+        } else {
+          showToast(data.detail || "Failed to save.");
+        }
       }
     } catch (err) {
-      console.error("Wishlist fetch error:", err);
+      console.error("Wishlist toggle error:", err);
       showToast("Backend connection error.");
     }
   };
@@ -673,9 +725,9 @@ export default function Shop_Page() {
               <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-amber-700" />Home</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
+            <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
               <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
             </Link>
             <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><Package className="w-4 h-4 text-amber-700" />Collections</span>
@@ -775,7 +827,7 @@ export default function Shop_Page() {
             <div className="space-y-2 text-xs">
               <button
                 onClick={() => setSelectedCategory("All")}
-                className={`block w-full text-left py-2 px-2 rounded ${
+                className={`block w-full text-left py-2 px-2 rounded cursor-pointer ${
                   selectedCategory === "All"
                     ? "bg-amber-50 text-amber-900 font-semibold"
                     : "text-gray-600 hover:text-black"
@@ -787,7 +839,7 @@ export default function Shop_Page() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`block w-full text-left py-2 px-2 rounded ${
+                  className={`block w-full text-left py-2 px-2 rounded cursor-pointer ${
                     selectedCategory === cat
                       ? "bg-amber-50 text-amber-900 font-semibold"
                       : "text-gray-600 hover:text-black"
@@ -816,7 +868,7 @@ export default function Shop_Page() {
                       setSelectedSizes([...selectedSizes, sz]);
                     }
                   }}
-                  className={`py-2 text-[10px] font-semibold uppercase tracking-wider rounded border ${
+                  className={`py-2 text-[10px] font-semibold uppercase tracking-wider rounded border cursor-pointer ${
                     selectedSizes.includes(sz)
                       ? "bg-black text-white border-black"
                       : "border-gray-200 text-gray-700 hover:border-black"
@@ -837,7 +889,7 @@ export default function Shop_Page() {
                 <button
                   key={idx}
                   onClick={() => setSelectedColor(colClass)}
-                  className={`w-6 h-6 rounded-full ${colClass} ${
+                  className={`w-6 h-6 rounded-full ${colClass} cursor-pointer ${
                     selectedColor === colClass
                       ? "ring-2 ring-black scale-110"
                       : "opacity-80 hover:opacity-100"
@@ -864,7 +916,7 @@ export default function Shop_Page() {
                     name="price"
                     checked={priceRange === range}
                     onChange={() => setPriceRange(range)}
-                    className="accent-black"
+                    className="accent-black cursor-pointer"
                   />
                   {range}
                 </label>
@@ -882,7 +934,7 @@ export default function Shop_Page() {
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={() => setInStockOnly(!inStockOnly)}
-                  className="accent-black"
+                  className="accent-black cursor-pointer"
                 />
                 In Stock
               </label>
@@ -891,7 +943,7 @@ export default function Shop_Page() {
                   type="checkbox"
                   checked={customStitching}
                   onChange={() => setCustomStitching(!customStitching)}
-                  className="accent-black"
+                  className="accent-black cursor-pointer"
                 />
                 Custom Stitching Available
               </label>
@@ -977,60 +1029,63 @@ export default function Shop_Page() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {paginatedProducts.map((p) => (
-                <div
-                  key={p.id}
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
-                >
-                  <div className="relative h-72 sm:h-80 bg-gray-100 overflow-hidden">
-                    <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] uppercase px-2.5 py-1 tracking-widest">
-                      {p.tag || p.category}
-                    </span>
-                    <button
-                      onClick={() => handleAddToWishlist(p)}
-                      className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white text-rose-700 shadow cursor-pointer transition-transform active:scale-95 z-10"
-                      title="Save to Wishlist"
-                    >
-                      <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                    </button>
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
-
-                  <div className="p-4 flex flex-col flex-grow justify-between">
-                    <div>
-                      <h3 className="font-serif text-sm font-medium mb-1">{p.name}</h3>
-                      <p className="text-xs font-bold text-gray-900">
-                        {p.price}
-                        {p.old_price && (
-                          <span className="text-gray-400 line-through font-normal ml-2">
-                            {p.old_price}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
-                      <Link
-                        to={`/product/${p.id}`}
-                        className="text-[10px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 text-center rounded"
-                      >
-                        Quick View
-                      </Link>
+              {paginatedProducts.map((p) => {
+                const isWishlisted = wishlistProductIds.has(Number(p.id));
+                return (
+                  <div
+                    key={p.id}
+                    className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
+                  >
+                    <div className="relative h-72 sm:h-80 bg-gray-100 overflow-hidden">
+                      <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] uppercase px-2.5 py-1 tracking-widest">
+                        {p.tag || p.category}
+                      </span>
                       <button
-                        onClick={() => handleAddToCart(p)}
-                        className="text-[10px] uppercase tracking-wider py-2 bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-1 rounded cursor-pointer"
+                        onClick={() => handleToggleWishlist(p)}
+                        className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white text-rose-700 shadow cursor-pointer transition-transform active:scale-95 z-10"
+                        title={isWishlisted ? "Remove from Wishlist" : "Save to Wishlist"}
                       >
-                        <ShoppingBag className="w-3 h-3" />
-                        Add to Bag
+                        <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500"}`} />
                       </button>
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+
+                    <div className="p-4 flex flex-col flex-grow justify-between">
+                      <div>
+                        <h3 className="font-serif text-sm font-medium mb-1">{p.name}</h3>
+                        <p className="text-xs font-bold text-gray-900">
+                          {p.price}
+                          {p.old_price && (
+                            <span className="text-gray-400 line-through font-normal ml-2">
+                              {p.old_price}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
+                        <Link
+                          to={`/product/${p.id}`}
+                          className="text-[10px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 text-center rounded"
+                        >
+                          Quick View
+                        </Link>
+                        <button
+                          onClick={() => handleAddToCart(p)}
+                          className="text-[10px] uppercase tracking-wider py-2 bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-1 rounded cursor-pointer"
+                        >
+                          <ShoppingBag className="w-3 h-3" />
+                          Add to Bag
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
