@@ -73,12 +73,15 @@ export default function CustomWorkspace_Page() {
   };
 
   // --------------------------------------------------
-  // CUSTOM DESIGN REQUEST
+  // CUSTOM DESIGN REQUEST & MEASUREMENTS
   // --------------------------------------------------
 
   const [requestData, setRequestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [userMeasurements, setUserMeasurements] = useState([]);
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState("");
 
   // --------------------------------------------------
   // TOAST
@@ -95,10 +98,10 @@ export default function CustomWorkspace_Page() {
   };
 
   // --------------------------------------------------
-  // FETCH CUSTOM DESIGN
+  // FETCH CUSTOM DESIGN & MEASUREMENTS WITH JWT TOKEN
   // --------------------------------------------------
 
-  const loadRequest = async () => {
+  const loadRequestAndMeasurements = async () => {
     if (!id) {
       setErrorMessage("No custom design request ID was provided.");
       setLoading(false);
@@ -117,18 +120,18 @@ export default function CustomWorkspace_Page() {
       setLoading(true);
       setErrorMessage("");
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/custom-designs/${encodeURIComponent(userEmail)}`,
-        {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          }
-        }
-      );
+      const [designsRes, measurementsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/custom-designs/${encodeURIComponent(userEmail)}`, {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        }),
+        fetch(`${API_BASE_URL}/api/measurements/${encodeURIComponent(userEmail)}`, {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        })
+      ]);
 
-      const data = await response.json();
+      const data = await designsRes.json();
 
-      if (!response.ok) {
+      if (!designsRes.ok) {
         throw new Error(
           data?.detail || "Failed to load custom design requests."
         );
@@ -149,6 +152,19 @@ export default function CustomWorkspace_Page() {
       }
 
       setRequestData(foundRequest);
+
+      if (measurementsRes.ok) {
+        const measurementsData = await measurementsRes.json();
+        if (Array.isArray(measurementsData)) {
+          setUserMeasurements(measurementsData);
+          const defaultProf = measurementsData.find((m) => m.is_default);
+          if (defaultProf) {
+            setSelectedMeasurementId(String(defaultProf.id));
+          } else if (measurementsData.length > 0) {
+            setSelectedMeasurementId(String(measurementsData[0].id));
+          }
+        }
+      }
     } catch (error) {
       console.error("Error loading custom workspace:", error);
 
@@ -164,7 +180,7 @@ export default function CustomWorkspace_Page() {
 
   useEffect(() => {
     if (userEmail) {
-      loadRequest();
+      loadRequestAndMeasurements();
     }
   }, [id, userEmail]);
 
@@ -310,7 +326,7 @@ export default function CustomWorkspace_Page() {
       sender: "Atelier Expert",
       time: "Atelier",
       text:
-        "You can use this workspace to review your design progress, quotation and future tailoring updates."
+        "You can use this workspace to review your design progress, quotation, and select your fit measurements."
     }
   ]);
 
@@ -354,7 +370,7 @@ export default function CustomWorkspace_Page() {
     ]);
 
     showToast(
-      "Quotation approved. Payment integration can be connected next."
+      "Quotation approved successfully."
     );
   };
 
@@ -496,8 +512,8 @@ export default function CustomWorkspace_Page() {
 
           <div className="flex flex-col sm:flex-row gap-3 mt-7">
             <button
-              onClick={loadRequest}
-              className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-wider font-semibold hover:bg-gray-800"
+              onClick={loadRequestAndMeasurements}
+              className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-lg text-xs uppercase tracking-wider font-semibold hover:bg-gray-800 cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
               Try Again
@@ -505,7 +521,7 @@ export default function CustomWorkspace_Page() {
 
             <button
               onClick={() => navigate("/custom-designs")}
-              className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-800 px-5 py-3 rounded-lg text-xs uppercase tracking-wider font-semibold hover:border-black"
+              className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-800 px-5 py-3 rounded-lg text-xs uppercase tracking-wider font-semibold hover:border-black cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Custom Designs
@@ -545,19 +561,21 @@ export default function CustomWorkspace_Page() {
           {/* BRAND */}
 
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
+                W
+              </div>
 
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
+              <div>
+                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                  WEFTIN
+                </h1>
 
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
+                  ATELIER TAILORS
+                </span>
+              </div>
+            </Link>
           </div>
 
           {/* USER CARD */}
@@ -834,6 +852,70 @@ export default function CustomWorkspace_Page() {
               </div>
 
               {/* ==================================================
+                  SAVED MEASUREMENTS MAPPING / SELECTOR
+              ================================================== */}
+
+              <div className="mt-8 pt-6 border-t border-gray-100">
+
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 flex items-center gap-2">
+                    <Ruler className="w-4 h-4 text-amber-700" /> Linked Fit Measurements
+                  </span>
+
+                  <Link
+                    to="/measurements"
+                    className="text-[10px] uppercase tracking-wider text-amber-800 font-semibold hover:underline"
+                  >
+                    Manage Profiles +
+                  </Link>
+                </div>
+
+                {userMeasurements.length === 0 ? (
+                  <div className="p-4 bg-amber-50/50 border border-amber-200/60 rounded-lg flex items-center justify-between text-xs">
+                    <p className="text-amber-900">No measurement profiles saved yet. Add your fit specs for the tailor.</p>
+                    <button
+                      onClick={() => navigate("/measurements")}
+                      className="bg-black text-white px-4 py-2 rounded text-[10px] uppercase tracking-wider font-semibold cursor-pointer"
+                    >
+                      Add Profile
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <select
+                      value={selectedMeasurementId}
+                      onChange={(e) => {
+                        setSelectedMeasurementId(e.target.value);
+                        showToast("Measurement profile linked to this workspace!");
+                      }}
+                      className="w-full bg-gray-50 border border-gray-300 text-xs px-4 py-3 rounded-lg font-semibold text-gray-900 focus:outline-none focus:border-black cursor-pointer"
+                    >
+                      {userMeasurements.map((prof) => (
+                        <option key={prof.id} value={prof.id}>
+                          {prof.name} ({prof.usage || "Standard Fit"}) {prof.is_default ? " — [Default Profile]" : ""}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Preview details of the currently selected profile */}
+                    {selectedMeasurementId && (() => {
+                      const activeProf = userMeasurements.find((m) => String(m.id) === String(selectedMeasurementId));
+                      if (!activeProf) return null;
+                      return (
+                        <div className="p-3.5 bg-[#FAF8F5] border border-gray-200 rounded-lg text-[11px] text-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div><span className="text-gray-400 block text-[9px]">HEIGHT</span>{activeProf.height || "—"}</div>
+                          <div><span className="text-gray-400 block text-[9px]">BUST / CHEST</span>{activeProf.bust || "—"}</div>
+                          <div><span className="text-gray-400 block text-[9px]">WAIST</span>{activeProf.waist || "—"}</div>
+                          <div><span className="text-gray-400 block text-[9px]">SHOULDER</span>{activeProf.shoulder || "—"}</div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+              </div>
+
+              {/* ==================================================
                   CRAFTING PIPELINE
               ================================================== */}
 
@@ -925,7 +1007,7 @@ export default function CustomWorkspace_Page() {
                           onClick={() =>
                             removePhoto(photo.id)
                           }
-                          className="absolute top-3 right-3 z-10 bg-rose-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-3 right-3 z-10 bg-rose-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                           title="Remove photo"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -1072,7 +1154,7 @@ export default function CustomWorkspace_Page() {
                     disabled={
                       isPaid || isLocallyPaid
                     }
-                    className={`py-3.5 rounded-lg text-xs uppercase tracking-[0.15em] font-bold shadow-sm text-center transition-all ${
+                    className={`py-3.5 rounded-lg text-xs uppercase tracking-[0.15em] font-bold shadow-sm text-center transition-all cursor-pointer ${
                       isPaid || isLocallyPaid
                         ? "bg-emerald-700 text-white cursor-default"
                         : "bg-[#D4AF37] hover:bg-[#c29f30] text-black"
@@ -1091,7 +1173,7 @@ export default function CustomWorkspace_Page() {
                         "Cost correction request submitted to concierge"
                       )
                     }
-                    className="bg-white border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center"
+                    className="bg-white border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-lg text-xs uppercase tracking-[0.15em] font-semibold text-center cursor-pointer"
                   >
                     Request Cost Correction
                   </button>
@@ -1192,7 +1274,7 @@ export default function CustomWorkspace_Page() {
 
               <button
                 type="submit"
-                className="bg-black text-white p-3 rounded-xl hover:bg-gray-800 flex items-center justify-center"
+                className="bg-black text-white p-3 rounded-xl hover:bg-gray-800 flex items-center justify-center cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>
