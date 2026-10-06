@@ -21,7 +21,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onr
 export default function Profile_Page() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("All");
   const [toastMessage, setToastMessage] = useState("");
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,7 +38,6 @@ export default function Profile_Page() {
 
   const showToast = (msg) => {
     setToastMessage(msg);
-
     setTimeout(() => {
       setToastMessage("");
     }, 3000);
@@ -129,14 +127,14 @@ export default function Profile_Page() {
       const data = await response.json();
 
       if (response.ok) {
-        showToast(
-          "Profile details updated successfully in database!"
-        );
+        showToast("Profile details updated successfully in database!");
 
+        // FIX: Update local storage correctly with the new avatar and name
         const savedUser =
           JSON.parse(localStorage.getItem("weftin_user")) || {};
 
         savedUser.name = profileData.name;
+        savedUser.avatar = profileData.avatar;
 
         localStorage.setItem(
           "weftin_user",
@@ -195,23 +193,24 @@ export default function Profile_Page() {
       <aside className="hidden md:flex md:w-56 lg:w-64 bg-white border-r border-gray-200 flex-col justify-between sticky top-0 h-screen shrink-0">
         <div>
           <div className="p-5 lg:p-6 border-b border-gray-100 flex items-center gap-3">
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
-              W
-            </div>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
+                W
+              </div>
 
-            <div className="min-w-0">
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
+              <div className="min-w-0">
+                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                  WEFTIN
+                </h1>
 
-              <span className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-gray-400 block truncate">
-                ATELIER TAILORS
-              </span>
-            </div>
+                <span className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-gray-400 block truncate">
+                  ATELIER TAILORS
+                </span>
+              </div>
+            </Link>
           </div>
 
           <nav className="p-3 lg:p-4 space-y-1 text-xs font-medium text-gray-600">
-
             <Link
               to="/dashboard"
               className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
@@ -293,7 +292,7 @@ export default function Profile_Page() {
         <div className="p-3 lg:p-4 border-t border-gray-100">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors text-left"
+            className="flex items-center gap-3 px-3 lg:px-4 py-2 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg w-full transition-colors text-left cursor-pointer"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Log out</span>
@@ -323,10 +322,9 @@ export default function Profile_Page() {
       >
         <div className="h-full flex flex-col">
 
-          {/* Mobile Menu Header */}
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
             <Link
-              to="/dashboard"
+              to="/"
               onClick={closeMobileMenu}
               className="flex items-center gap-3"
             >
@@ -347,14 +345,13 @@ export default function Profile_Page() {
 
             <button
               onClick={closeMobileMenu}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer"
               aria-label="Close navigation"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Mobile User Information */}
           <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
             <img
               src={profileData.avatar}
@@ -373,7 +370,6 @@ export default function Profile_Page() {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-1 text-xs font-medium text-gray-600">
 
             <Link
@@ -462,14 +458,13 @@ export default function Profile_Page() {
             </Link>
           </nav>
 
-          {/* Mobile Logout */}
           <div className="p-4 border-t border-gray-100">
             <button
               onClick={() => {
                 closeMobileMenu();
                 handleLogout();
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span>Log out</span>
@@ -483,14 +478,12 @@ export default function Profile_Page() {
       ========================================================= */}
       <main className="flex-1 flex flex-col min-h-screen min-w-0">
 
-        {/* =======================================================
-            MOBILE HEADER
-        ======================================================= */}
+        {/* MOBILE HEADER */}
         <div className="md:hidden bg-white border-b border-gray-200">
           <div className="px-4 py-4 flex items-center justify-between gap-3">
 
             <Link
-              to="/dashboard"
+              to="/"
               className="flex items-center gap-3 min-w-0"
             >
               <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
@@ -509,8 +502,6 @@ export default function Profile_Page() {
             </Link>
 
             <div className="flex items-center gap-3 shrink-0">
-
-              {/* Cart */}
               <Link
                 to="/cart"
                 className="relative text-gray-600"
@@ -518,7 +509,6 @@ export default function Profile_Page() {
                 <ShoppingBag className="w-5 h-5" />
               </Link>
 
-              {/* Notifications */}
               <Link
                 to="/notifications"
                 className="relative text-gray-600"
@@ -527,17 +517,15 @@ export default function Profile_Page() {
                 <NotificationBadge />
               </Link>
 
-              {/* User Avatar */}
               <img
                 src={profileData.avatar}
                 alt="Avatar"
                 className="w-8 h-8 rounded-full object-cover border border-amber-500"
               />
 
-              {/* Menu */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="text-gray-600 hover:text-black transition-colors"
+                className="text-gray-600 hover:text-black transition-colors cursor-pointer"
                 aria-label="Open navigation"
               >
                 <Menu className="w-6 h-6" />
@@ -546,9 +534,7 @@ export default function Profile_Page() {
           </div>
         </div>
 
-        {/* =======================================================
-            DESKTOP HEADER
-        ======================================================= */}
+        {/* DESKTOP HEADER */}
         <header className="hidden md:flex bg-white border-b border-gray-200 px-5 lg:px-8 py-4 justify-between items-center">
           <div className="text-[10px] lg:text-xs uppercase tracking-widest text-gray-500">
             Portfolio <span className="mx-2">/</span>
@@ -558,8 +544,6 @@ export default function Profile_Page() {
           </div>
 
           <div className="flex items-center gap-4 lg:gap-6">
-
-            {/* Cart */}
             <Link
               to="/cart"
               className="relative text-gray-600 hover:text-black transition-colors"
@@ -567,7 +551,6 @@ export default function Profile_Page() {
               <ShoppingBag className="w-5 h-5" />
             </Link>
 
-            {/* Notifications */}
             <Link
               to="/notifications"
               className="relative text-gray-600 hover:text-black transition-colors"
@@ -576,7 +559,6 @@ export default function Profile_Page() {
               <NotificationBadge />
             </Link>
 
-            {/* User */}
             <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
               <img
                 src={profileData.avatar}
@@ -591,15 +573,12 @@ export default function Profile_Page() {
           </div>
         </header>
 
-        {/* =======================================================
-            PROFILE CONTENT
-        ======================================================= */}
+        {/* PROFILE CONTENT */}
         <div className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full space-y-8 lg:space-y-10">
 
           <div>
             <h2 className="text-xl sm:text-2xl font-serif font-light text-gray-900 flex items-start sm:items-center gap-2">
               <User className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700 mt-1 sm:mt-0 shrink-0" />
-
               <span>
                 My Luxury Credentials Portfolio
               </span>
@@ -760,7 +739,7 @@ export default function Profile_Page() {
                 {isEditing && (
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors"
+                    className="w-full sm:w-auto bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -774,7 +753,7 @@ export default function Profile_Page() {
 
                     setIsEditing(!isEditing);
                   }}
-                  className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors shadow-sm"
+                  className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white px-6 sm:px-8 py-3 text-xs font-semibold uppercase tracking-[0.15em] rounded transition-colors shadow-sm cursor-pointer"
                 >
                   {isEditing
                     ? "Save Changes"
@@ -788,7 +767,7 @@ export default function Profile_Page() {
           <div className="md:hidden border-t border-gray-200 pt-6">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold bg-white border border-gray-200 hover:bg-rose-50 rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold bg-white border border-gray-200 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Log out
