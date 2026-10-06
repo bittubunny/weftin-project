@@ -15,7 +15,8 @@ import {
   Ruler,
   MapPin,
   Headphones,
-  LogOut
+  LogOut,
+  ChevronRight
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -536,7 +537,7 @@ export default function Home_Page() {
           onClick={() =>
             navigate("/admin/home-cms")
           }
-          className="bg-black text-[#D4AF37] px-4 py-3 rounded-full shadow-2xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-amber-500/40 hover:bg-gray-900"
+          className="bg-black text-[#D4AF37] px-4 py-3 rounded-full shadow-2xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-amber-500/40 hover:bg-gray-900 cursor-pointer"
         >
           <Settings className="w-4 h-4" />
 
@@ -652,6 +653,16 @@ export default function Home_Page() {
                 {userName}
               </span>
             </Link>
+
+            {/* SLIDING MENU TOGGLE BUTTON (DESKTOP) */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
+              aria-label="Open Navigation Drawer"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
+            </button>
 
             {/* CART */}
 
@@ -821,7 +832,7 @@ export default function Home_Page() {
               onClick={() =>
                 setMobileMenuOpen(true)
               }
-              className="p-1 text-gray-700 hover:text-black"
+              className="p-1 text-gray-700 hover:text-black cursor-pointer"
               aria-label="Open navigation"
             >
               <Menu className="w-6 h-6" />
@@ -831,237 +842,288 @@ export default function Home_Page() {
       </header>
 
       {/* ======================================================
-          MOBILE SLIDE-IN MENU
+          SLIDING NAVIGATION DRAWER (ALL PAGES & SECTIONS)
       ====================================================== */}
 
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
           onClick={closeMobileMenu}
         />
       )}
 
       <aside
-        className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${
           mobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full"
         }`}
       >
+        <div>
+          {/* DRAWER HEADER */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              className="flex items-center gap-3"
+            >
+              <div className="bg-black text-[#E5D5BC] w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-sm">
+                W
+              </div>
 
-        {/* MENU HEADER */}
+              <div>
+                <h2 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
+                  WEFTIN
+                </h2>
 
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block font-medium">
+                  ATELIER NAVIGATION
+                </span>
+              </div>
+            </Link>
 
-          <Link
-            to="/"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3"
-          >
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">
-              W
-            </div>
-
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
-                WEFTIN
-              </h1>
-
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">
-                ATELIER TAILORS
-              </span>
-            </div>
-          </Link>
-
-          <button
-            onClick={closeMobileMenu}
-            className="p-2 text-gray-500 hover:text-black"
-            aria-label="Close navigation"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* USER */}
-
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-
-          {userAvatar ? (
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-10 h-10 rounded-full object-cover border border-amber-500"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-200">
-              {userInitial}
-            </div>
-          )}
-
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {userName}
-            </p>
-
-            <p className="text-[10px] text-gray-400 truncate">
-              {userEmail}
-            </p>
+            <button
+              onClick={closeMobileMenu}
+              className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200/50 transition-colors cursor-pointer"
+              aria-label="Close navigation drawer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
+
+          {/* USER PROFILE SNIPPET */}
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30">
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                {userInitial}
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-900 truncate">
+                {userName}
+              </p>
+
+              <p className="text-[10px] text-gray-500 truncate">
+                {userEmail || "Member Account"}
+              </p>
+            </div>
+          </div>
+
+          {/* COMPLETE NAVIGATION LINKS */}
+          <nav className="p-4 space-y-1 text-xs font-medium text-gray-700 overflow-y-auto max-h-[calc(100vh-250px)]">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+              Main Pages
+            </div>
+
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <LayoutDashboard className="w-4 h-4 text-amber-700" />
+                Home
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/shop"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <ShoppingBag className="w-4 h-4 text-amber-700" />
+                Shop Catalog
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/collections"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-amber-700" />
+                Collections
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/custom-designs"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Scissors className="w-4 h-4 text-amber-700" />
+                Custom Designs & Workspace
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/lookbook"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Heart className="w-4 h-4 text-amber-700" />
+                Lookbook Journal
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/limited"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <StarIcon />
+                Limited Edition Drop
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">
+              Member Portal & Profile
+            </div>
+
+            <Link
+              to="/dashboard"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <LayoutDashboard className="w-4 h-4 text-gray-700" />
+                Dashboard Overview
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/orders"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-gray-700" />
+                My Orders & History
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/measurements"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Ruler className="w-4 h-4 text-gray-700" />
+                Bespoke Fit Measurements
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/wishlist"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Heart className="w-4 h-4 text-gray-700" />
+                Saved Wishlist
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/addresses"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <MapPin className="w-4 h-4 text-gray-700" />
+                Delivery Addresses
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/profile"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <User className="w-4 h-4 text-gray-700" />
+                Member Profile
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              to="/notifications"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Bell className="w-4 h-4 text-gray-700" />
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span className="bg-rose-700 text-white text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              to="/support"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+            >
+              <span className="flex items-center gap-3">
+                <Headphones className="w-4 h-4 text-gray-700" />
+                Concierge Support
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">
+              Administration
+            </div>
+
+            <Link
+              to="/admin/home-cms"
+              onClick={closeMobileMenu}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-[#D4AFX7] hover:bg-gray-900 text-white transition-colors"
+            >
+              <span className="flex items-center gap-3 font-semibold text-amber-300">
+                <Settings className="w-4 h-4" />
+                Admin Product CMS
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
+          </nav>
         </div>
 
-        {/* MOBILE NAV */}
-
-        <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-
-          <Link
-            to="/"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Home
-          </Link>
-
-          <Link
-            to="/shop"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Shop
-          </Link>
-
-          <a
-            href="#collections"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Package className="w-4 h-4" />
-            Collections
-          </a>
-
-          <Link
-            to="/custom-designs"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Scissors className="w-4 h-4" />
-            Custom Design
-          </Link>
-
-          <Link
-            to="/lookbook"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Heart className="w-4 h-4" />
-            Lookbook
-          </Link>
-
-          <Link
-            to="/limited"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <StarIcon />
-            Limited Edition
-          </Link>
-
-          <div className="my-3 border-t border-gray-100" />
-
-          <Link
-            to="/dashboard"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </Link>
-
-          <Link
-            to="/orders"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Package className="w-4 h-4" />
-            My Orders
-          </Link>
-
-          <Link
-            to="/measurements"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Ruler className="w-4 h-4" />
-            Measurements
-          </Link>
-
-          <Link
-            to="/wishlist"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Heart className="w-4 h-4" />
-            Wishlist
-          </Link>
-
-          <Link
-            to="/addresses"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <MapPin className="w-4 h-4" />
-            Addresses
-          </Link>
-
-          <Link
-            to="/profile"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <User className="w-4 h-4" />
-            Profile
-          </Link>
-
-          <Link
-            to="/notifications"
-            onClick={closeMobileMenu}
-            className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <span className="flex items-center gap-3">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </span>
-
-            {unreadCount > 0 && (
-              <span className="bg-rose-700 text-white text-[10px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/support"
-            onClick={closeMobileMenu}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            <Headphones className="w-4 h-4" />
-            Support
-          </Link>
-        </nav>
-
-        {/* LOGOUT */}
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
-
+        {/* DRAWER FOOTER / LOGOUT */}
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
           >
             <LogOut className="w-4 h-4" />
-            Log out
+            Log out of account
           </button>
         </div>
       </aside>
@@ -1103,7 +1165,7 @@ export default function Home_Page() {
 
             <button
               onClick={() => navigate("/shop")}
-              className="bg-white text-black px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] hover:bg-amber-100 transition-colors"
+              className="bg-white text-black px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] hover:bg-amber-100 transition-colors cursor-pointer"
             >
               Shop New Arrivals
             </button>
@@ -1112,7 +1174,7 @@ export default function Home_Page() {
               onClick={() =>
                 navigate("/custom-designs")
               }
-              className="border border-white/80 text-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
+              className="border border-white/80 text-white px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] hover:bg-white/10 transition-colors cursor-pointer"
             >
               Start Custom Design
             </button>
@@ -1156,7 +1218,7 @@ export default function Home_Page() {
               onClick={() =>
                 setActiveTab(cat)
               }
-              className={`px-5 py-2 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border ${
+              className={`px-5 py-2 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border cursor-pointer ${
                 activeTab === cat
                   ? "bg-[#5C1D24] text-white border-[#5C1D24] shadow-md"
                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-900"
@@ -1209,7 +1271,7 @@ export default function Home_Page() {
                       onClick={() =>
                         setQuickViewProduct(prod)
                       }
-                      className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50"
+                      className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 cursor-pointer"
                     >
                       Quick View
                     </button>
@@ -1218,7 +1280,7 @@ export default function Home_Page() {
                       onClick={() =>
                         addProductToCart(prod)
                       }
-                      className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black"
+                      className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black cursor-pointer"
                     >
                       Add to Bag
                     </button>
@@ -1335,7 +1397,7 @@ export default function Home_Page() {
                       onClick={() =>
                         setSelectedSize(sz)
                       }
-                      className={`px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded border ${
+                      className={`px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded border cursor-pointer ${
                         selectedSize === sz
                           ? "bg-amber-600 text-white border-amber-600"
                           : "border-white/20 text-gray-300"
@@ -1381,7 +1443,7 @@ export default function Home_Page() {
                         setSelectedColor(color.name)
                       }
                       aria-label={color.name}
-                      className={`w-8 h-8 rounded-full ${color.bg} ${
+                      className={`w-8 h-8 rounded-full ${color.bg} cursor-pointer ${
                         selectedColor === color.name
                           ? "ring-4 ring-amber-400 scale-110"
                           : "opacity-70"
@@ -1413,7 +1475,7 @@ export default function Home_Page() {
                     }
                   )
                 }
-                className="w-full bg-[#D4AF37] hover:bg-[#c29e2f] text-black py-4 rounded font-bold uppercase text-xs tracking-[0.2em] shadow-lg"
+                className="w-full bg-[#D4AF37] hover:bg-[#c29e2f] text-black py-4 rounded font-bold uppercase text-xs tracking-[0.2em] shadow-lg cursor-pointer"
               >
                 Add Customized Drop to Bag
               </button>
@@ -1484,7 +1546,7 @@ export default function Home_Page() {
                       onClick={() =>
                         setQuickViewProduct(item)
                       }
-                      className="py-2 border border-gray-300 text-gray-800 text-[11px] uppercase tracking-wider hover:bg-gray-50"
+                      className="py-2 border border-gray-300 text-gray-800 text-[11px] uppercase tracking-wider hover:bg-gray-50 cursor-pointer"
                     >
                       Quick View
                     </button>
@@ -1493,7 +1555,7 @@ export default function Home_Page() {
                       onClick={() =>
                         addProductToCart(item)
                       }
-                      className="py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900"
+                      className="py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer"
                     >
                       Add to Bag
                     </button>
@@ -1569,7 +1631,7 @@ export default function Home_Page() {
                     onClick={() =>
                       addProductToCart(item)
                     }
-                    className="mt-4 w-full py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900"
+                    className="mt-4 w-full py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer"
                   >
                     Add to Bag
                   </button>
@@ -1663,19 +1725,19 @@ export default function Home_Page() {
 
             <ul className="space-y-2 text-xs text-gray-600">
               <li>
-                <a href="#" className="hover:text-black">Sarees</a>
+                <Link to="/shop" className="hover:text-black">Sarees</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Lehengas</a>
+                <Link to="/shop" className="hover:text-black">Lehengas</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Dresses</a>
+                <Link to="/shop" className="hover:text-black">Dresses</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Kurtis</a>
+                <Link to="/shop" className="hover:text-black">Kurtis</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Co-Ord Sets</a>
+                <Link to="/shop" className="hover:text-black">Co-Ord Sets</Link>
               </li>
             </ul>
           </div>
@@ -1687,19 +1749,16 @@ export default function Home_Page() {
 
             <ul className="space-y-2 text-xs text-gray-600">
               <li>
-                <a href="#" className="hover:text-black">Help Center</a>
+                <Link to="/support" className="hover:text-black">Help Center</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Order Tracking</a>
+                <Link to="/orders" className="hover:text-black">Order Tracking</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Returns & Adjustments</a>
+                <Link to="/support" className="hover:text-black">Returns & Adjustments</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">Shipping Policy</a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-black">Fabric Quality Guide</a>
+                <Link to="/support" className="hover:text-black">Shipping Policy</Link>
               </li>
             </ul>
           </div>
@@ -1726,7 +1785,7 @@ export default function Home_Page() {
                 </Link>
               </li>
               <li>
-                <Link to="/profile" className="hover:text-black">
+                <Link to="/measurements" className="hover:text-black">
                   My Bespoke Fit
                 </Link>
               </li>
@@ -1792,7 +1851,7 @@ export default function Home_Page() {
                   onClick={() =>
                     setQuickViewProduct(null)
                   }
-                  className="absolute top-4 right-4 p-2 text-gray-500 hover:text-black"
+                  className="absolute top-4 right-4 p-2 text-gray-500 hover:text-black cursor-pointer"
                   aria-label="Close quick view"
                 >
                   <X className="w-5 h-5" />
@@ -1825,7 +1884,7 @@ export default function Home_Page() {
 
                     setQuickViewProduct(null);
                   }}
-                  className="w-full bg-black text-white py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-900"
+                  className="w-full bg-black text-white py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-900 cursor-pointer"
                 >
                   Add to Bag
                 </button>
@@ -1835,7 +1894,7 @@ export default function Home_Page() {
                     setQuickViewProduct(null);
                     navigate("/shop");
                   }}
-                  className="w-full mt-3 border border-gray-300 text-gray-800 py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-50"
+                  className="w-full mt-3 border border-gray-300 text-gray-800 py-3 text-xs uppercase tracking-[0.2em] font-semibold hover:bg-gray-50 cursor-pointer"
                 >
                   View Shop
                 </button>
