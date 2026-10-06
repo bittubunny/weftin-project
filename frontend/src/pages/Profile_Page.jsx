@@ -137,7 +137,7 @@ export default function Profile_Page() {
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          old_email: oldEmail, // Pass original email if backend needs lookup reference
+          old_email: oldEmail,
           name: profileData.name,
           email: profileData.email,
           phone: profileData.phone,
@@ -215,7 +215,7 @@ export default function Profile_Page() {
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
-      {/* UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE) */}
+      {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
@@ -286,9 +286,7 @@ export default function Profile_Page() {
         </nav>
       </header>
 
-      {/* =====================================================
-          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR)
-      ====================================================== */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -370,9 +368,9 @@ export default function Profile_Page() {
               <span className="flex items-center gap-3"><MapPin className="w-4 h-4 text-gray-700" />Delivery Addresses</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700 transition-colors group">
-              <span className="flex items-center gap-3"><User className="w-4 h-4 text-gray-700" />Member Profile</span>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
+              <span className="flex items-center gap-3"><User className="w-4 h-4 text-amber-700" />Member Profile</span>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
             </Link>
             <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><Bell className="w-4 h-4 text-gray-700" />Notifications</span>
@@ -400,7 +398,7 @@ export default function Profile_Page() {
 
       {/* =========================================================
           MAIN CONTENT
-      ======================================================== */}
+      ========================================================= */}
       <main className="flex-1 flex flex-col min-h-screen min-w-0 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 lg:space-y-10">
 
         <div>
@@ -512,12 +510,12 @@ export default function Profile_Page() {
 
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    Contact Phone Number
+                    Contact Phone Number (Include country code e.g., +91)
                   </label>
 
                   <input
                     type="text"
-                    placeholder="+91 XXXXX XXXXX"
+                    placeholder="+91 98765 43210"
                     value={profileData.phone}
                     onChange={(e) =>
                       setProfileData({
