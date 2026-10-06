@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
+
 import {
   LayoutDashboard,
   Package,
+  ShoppingBag,
   Scissors,
   Ruler,
   Heart,
