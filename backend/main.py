@@ -4537,6 +4537,9 @@ def update_limited_settings(data: dict):
 # ============================================================
 # SUPPORT ENDPOINTS (DATABASE LOGGING)
 # ============================================================
+# ============================================================
+# SUPPORT ENDPOINTS (DATABASE LOGGING)
+# ============================================================
 
 class SupportEmailRequest(BaseModel):
     recipient: Optional[str] = "chbharath0779@gmail.com"
@@ -4604,15 +4607,3 @@ def api_file_support_ticket(data: SupportTicketRequest):
     finally:
         if conn:
             conn.close()
-
-
-
-
-
-
-
-
-
-
-
-
