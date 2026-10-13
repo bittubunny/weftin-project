@@ -4521,7 +4521,18 @@ def update_limited_settings(data: dict):
         if conn:
             conn.close()
 
+class SupportEmailRequest(BaseModel):
+    recipient: Optional[str] = "chbharath0779@gmail.com"
+    subject: str
+    message: str
+    user_email: str
 
+class SupportTicketRequest(BaseModel):
+    recipient: Optional[str] = "chbharath0779@gmail.com"
+    subject: str
+    concerns: str
+    user_name: Optional[str] = "WEFTIN Member"
+    user_email: str
 
 
 
