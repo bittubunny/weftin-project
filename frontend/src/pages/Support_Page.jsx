@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, User, Bell, Headphones, LogOut, Mail, CheckCircle2, ChevronDown, ChevronUp, ShoppingCart, Menu, X } from "lucide-react";
+import { 
+  LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, 
+  User, Bell, Headphones, LogOut, Mail, CheckCircle2, 
+  ChevronDown, ChevronUp, ShoppingCart, Menu, X, Sparkles 
+} from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
-const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250";
 
 export default function Support_Page() {
   const navigate = useNavigate();
@@ -54,7 +57,7 @@ export default function Support_Page() {
     }
   };
 
-  const userEmail = savedUser?.email || "";
+  const userEmail = savedUser?.email || "customer@weftin.com";
   const userName = savedUser?.name || savedUser?.full_name || savedUser?.username || "WEFTIN Member";
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -65,13 +68,33 @@ export default function Support_Page() {
     navigate("/login");
   };
 
+  const handleEmailHelpdesk = () => {
+    const mailtoUrl = `mailto:chbharath0779@gmail.com?subject=${encodeURIComponent("Support Inquiry from WEFTIN Member: " + userName)}&body=${encodeURIComponent("User Email: " + userEmail + "\n\nPlease write your queries or feedback below:\n\n")}`;
+    window.location.href = mailtoUrl;
+    showToast('Opening mail client to chbharath0779@gmail.com');
+  };
+
   const handleFileTicket = (e) => {
     e.preventDefault();
     if (!concerns.trim()) {
       showToast('Please elaborate your concerns.');
       return;
     }
-    showToast('Ticket filed successfully! Master lookup initiated.');
+
+    // Trigger mail client pre-filled with ticket details directly to your inbox
+    const ticketBody = `--- WEFTIN SUPPORT TICKET ---
+Ticket Subject: ${subject}
+Customer Name: ${userName}
+Customer Email: ${userEmail}
+
+Concerns / Specifications:
+${concerns}
+-----------------------------`;
+
+    const mailtoTicketUrl = `mailto:chbharath0779@gmail.com?subject=${encodeURIComponent("[Support Ticket] " + subject)}&body=${encodeURIComponent(ticketBody)}`;
+    window.location.href = mailtoTicketUrl;
+
+    showToast('Ticket generated! Master lookup initiated & mail client opened.');
     setConcerns('');
   };
 
@@ -181,7 +204,7 @@ export default function Support_Page() {
         </div>
       </aside>
 
-      {/* SIDEBAR */}
+      {/* DESKTOP SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
         <div>
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
@@ -239,7 +262,7 @@ export default function Support_Page() {
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -278,8 +301,8 @@ export default function Support_Page() {
               MAILING SUPPORT
             </span>
             <h3 className="font-serif text-lg font-medium text-gray-900 mt-2 mb-1">Escalate Fits Concern</h3>
-            <p className="text-xs text-gray-500 mb-4">Mail master invoices or customized references files directly to our luxury headquarters at Nariman Point.</p>
-            <button onClick={() => showToast('Opening mail client to concierge@weftin.com')} className="border border-gray-300 hover:border-black text-gray-800 px-5 py-2.5 rounded text-xs uppercase tracking-wider font-semibold bg-white flex items-center gap-2">
+            <p className="text-xs text-gray-500 mb-4">Mail master invoices or customized references files directly to our helpdesk at <strong className="text-gray-800">chbharath0779@gmail.com</strong>.</p>
+            <button onClick={handleEmailHelpdesk} className="border border-gray-300 hover:border-black text-gray-800 px-5 py-2.5 rounded text-xs uppercase tracking-wider font-semibold bg-white flex items-center gap-2">
               <Mail className="w-3.5 h-3.5 text-amber-700" /> Email Helpdesk
             </button>
           </div>
@@ -315,7 +338,7 @@ export default function Support_Page() {
 
                 <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200/80 flex items-center gap-3 text-emerald-900">
                   <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
-                  <span>Ticket invokes dedicated Senior Master lookup within 2 working hours. Backed by WEFTIN Luxury Guarantee.</span>
+                  <span>Ticket sends directly to chbharath0779@gmail.com and invokes dedicated Senior Master lookup within 2 working hours. Backed by WEFTIN Luxury Guarantee.</span>
                 </div>
 
                 <button type="submit" className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded-lg text-xs uppercase tracking-[0.2em] font-semibold shadow-lg">
