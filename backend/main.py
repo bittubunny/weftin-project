@@ -13,7 +13,6 @@ from jose import JWTError, jwt
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import requests
 load_dotenv()  # Load environment variables from .env file
 
 # ============================================================
@@ -4526,66 +4525,32 @@ def update_limited_settings(data: dict):
 
 
 
+def send_ssl_smtp_email(to_email: str, subject: str, body_content: str):
+    gmail_user = os.getenv("GMAIL_USER", "chbharath0779@gmail.com")
+    gmail_password = os.getenv("GMAIL_APP_PASSWORD", "")
 
-
-
-
-
-
-
-# ============================================================
-# SUPPORT MODELS & EMAIL DISPATCH
-# ============================================================
-
-class SupportEmailRequest(BaseModel):
-    recipient: str
-    subject: str
-    message: str
-    user_email: str
-
-class SupportTicketRequest(BaseModel):
-    recipient: str
-    subject: str
-    concerns: str
-    user_name: str
-    user_email: str
-
-# Optional: Configure these in your Render Environment Variables (.env)
-# GMAIL_USER = os.getenv("GMAIL_USER", "chbharath0779@gmail.com")
-# GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "your_gmail_app_password")
-
-def send_http_email(to_email: str, subject: str, body_content: str):
-    RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-    
-    # Fallback to local simulation if API key is not configured
-    if not RESEND_API_KEY:
+    if not gmail_password:
         print(f"--- [SIMULATED EMAIL TO {to_email}] ---")
         print(f"Subject: {subject}\n\n{body_content}")
         print("---------------------------------------")
         return True
 
-    url = "https://api.resend.com/emails"
-    headers = {
-        "Authorization": f"Bearer {RESEND_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "from": "WEFTIN Support <onboarding@resend.dev>",
-        "to": [to_email],
-        "subject": subject,
-        "text": body_content
-    }
-
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        if response.status_code >= 400:
-            print("RESEND API ERROR:", response.text)
-            raise HTTPException(status_code=500, detail=f"Email dispatch failed: {response.text}")
+        msg = MIMEMultipart()
+        msg['From'] = gmail_user
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body_content, 'plain'))
+
+        # Use SSL port 465 which is allowed by Render outbound firewalls
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(gmail_user, gmail_password)
+        server.sendmail(gmail_user, to_email, msg.as_string())
+        server.quit()
         return True
     except Exception as e:
-        print("EMAIL DISPATCH ERROR:", repr(e))
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
-
+        print("SMTP SSL SEND ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail=f"Failed to send email via SMTP SSL: {str(e)}")
 
 @app.post("/api/support/send-email")
 def api_send_support_email(data: SupportEmailRequest):
@@ -4598,7 +4563,7 @@ Message:
 {data.message}
 ----------------------------------------
 """
-    send_http_email(data.recipient, data.subject, email_body)
+    send_ssl_smtp_email(data.recipient, data.subject, email_body)
     return {"status": "success", "message": "Email dispatched to helpdesk successfully."}
 
 @app.post("/api/support/ticket")
@@ -4616,7 +4581,7 @@ Concerns / Specifications:
 {data.concerns}
 -----------------------------
 """
-            send_http_email(data.recipient, f"[Support Ticket] {data.subject}", ticket_body)
+            send_ssl_smtp_email(data.recipient, f"[Support Ticket] {data.subject}", ticket_body)
             
             create_notification(
                 cur,
@@ -4638,3 +4603,15 @@ Concerns / Specifications:
     finally:
         if conn:
             conn.close()
+
+
+
+
+
+
+
+# ============================================================
+# SUPPORT MODELS & EMAIL DISPATCH
+# ============================================================
+
+lose()
