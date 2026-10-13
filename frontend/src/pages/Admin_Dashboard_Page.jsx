@@ -62,13 +62,12 @@ export default function Admin_Dashboard_Page() {
   const [selectedCustomReq, setSelectedCustomReq] = useState(null);
   const [offerPriceInput, setOfferPriceInput] = useState('');
 
-  // Toast Notification Utility
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fetch Database Data across all tables
+  // Fetch Database Data
   const loadDatabaseData = useCallback(async () => {
     try {
       setModuleLoading(true);
@@ -123,7 +122,7 @@ export default function Admin_Dashboard_Page() {
         { id: 3, user_email: 'aishwarya@luxury.in', product_name: 'Zardozi Sangeet Saree', category: 'Sarees', price: '110000', status: 'Approved for Production', line: 'BESPOKE CUSTOM LINE', message: 'A custom heavy border saree with floral design, using matching maroon velvet borders.', created_at: '2026-06-10' }
       ]);
     } catch (err) {
-      console.error("Database loading error:", err);
+      console.error(err);
     } finally {
       setModuleLoading(false);
     }
@@ -138,11 +137,11 @@ export default function Admin_Dashboard_Page() {
     window.location.href = "https://weftin-project.vercel.app/admin/add-product";
   };
 
-  // Dynamic Dashboard Calculations based on period filter ("This Month", "Last Month", "Year to Date")
+  // Calculations based on period filter ("This Month", "Last Month", "Year to Date")
   const filteredOrdersByPeriod = adminOrders.filter(ord => {
     if (!ord.ordered_at) return true;
     const orderDate = new Date(ord.ordered_at);
-    const now = new Date("2026-10-13"); // Current reference date
+    const now = new Date("2026-10-13");
     if (dashboardPeriod === 'This Month') {
       return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
     } else if (dashboardPeriod === 'Last Month') {
@@ -154,11 +153,11 @@ export default function Admin_Dashboard_Page() {
   });
 
   const totalRevenueNumber = filteredOrdersByPeriod.reduce((sum, ord) => {
-    if (normalizeStatus(ord.status) === 'CANCELLED') return sum;
+    if (String(ord.status || "").trim().toUpperCase() === 'CANCELLED') return sum;
     return sum + (Number(ord.total_price) || 0);
   }, 0);
 
-  const pendingOrdersCount = adminOrders.filter(ord => normalizeStatus(ord.status) === 'PROCESSING').length;
+  const pendingOrdersCount = adminOrders.filter(ord => String(ord.status || "").trim().toUpperCase() === 'PROCESSING').length;
   const lowStockCount = adminProducts.filter(p => !p.in_stock).length;
 
   const normalizeStatus = (status) => String(status || "PROCESSING").trim().toUpperCase();
@@ -208,6 +207,144 @@ export default function Admin_Dashboard_Page() {
       (order.user_email && order.user_email.toLowerCase().includes(query));
     return matchesTab && matchesSearch;
   });
+
+  const modulesData = {
+    'discount-codes': {
+      title: 'Discount & Voucher Codes',
+      subtitle: 'Manage promotional vouchers and exclusive seasonal access codes.',
+      stats: { total: '8', pending: '2' },
+      headers: ['Voucher Code', 'Type', 'Value', 'Valid Until', 'Usage Limit', 'Status'],
+      rows: [
+        ['ROYAL26', 'Percentage', '20% Off', 'June 30, 2026', '142 / 200', 'Active'],
+        ['ATELIERVIP', 'Flat Rate', '₹5,000 Off', 'July 15, 2026', '45 / 50', 'Active'],
+        ['MONSOON26', 'Percentage', '15% Off', 'August 31, 2026', '12 / 100', 'Scheduled'],
+      ]
+    },
+    'stock-interest': {
+      title: 'Stock Interest Requests',
+      subtitle: 'Clients waiting for out-of-stock luxury fabrics and limited editions.',
+      stats: { total: '64', pending: '5' },
+      headers: ['Item Code', 'Fabric / Product', 'Interested Patrons', 'Restock ETA', 'Priority', 'Action'],
+      rows: [
+        ['SILK-IV-02', 'Premium Silk – Ivory Mist', '18 Patrons', '3 Days', 'High', 'Notify Patrons'],
+        ['LIN-BK-01', 'Linen – Midnight Black', '14 Patrons', '5 Days', 'High', 'Notify Patrons'],
+      ]
+    },
+    'custom-orders': {
+      title: 'Custom Orders & Atelier Pipeline',
+      subtitle: 'Track bespoke garments through request, quotation, tailoring, and dispatch.',
+      stats: { total: '106', pending: '38' },
+      headers: ['Request ID', 'Patron', 'Design Specification', 'Stage', 'Tailor Assigned', 'Action'],
+      rows: [
+        ['C-9012', 'Kavya Reddy', 'Custom Silk Lehenga', 'Production', 'Master Khaja', 'Manage'],
+        ['C-9011', 'Nisha Sharma', 'Evening Gown', 'Quality Check', 'Artisan Ravi', 'Manage'],
+        ['C-9010', 'Zoya Akhtar', 'Bridal Dupatta', 'Tailor Assigned', 'Master Salim', 'Manage'],
+      ]
+    },
+    categories: {
+      title: 'Catalogue Categories',
+      subtitle: 'Organize collections, seasonal lookbooks, and product classifications.',
+      stats: { total: '12', pending: '0' },
+      headers: ['Category Name', 'Collection Group', 'Active Items', 'Atelier Speed', 'Status', 'Action'],
+      rows: [
+        ['Bridal Wear', 'Royal Heritage \'26', '32 Products', '18-24 Days', 'Active', 'Configure'],
+        ['Silk Sarees', 'Royal Heritage \'26', '42 Products', '14-18 Days', 'Active', 'Configure'],
+        ['Velvet Lehengas', 'Mughal Garden \'26', '34 Products', '24-30 Days', 'Active', 'Configure'],
+      ]
+    },
+    customizations: {
+      title: 'Bespoke Customizations',
+      subtitle: 'Define measurement parameters, monogramming styles, and fabric add-ons.',
+      stats: { total: '24', pending: '3' },
+      headers: ['Customization Item', 'Type', 'Options Count', 'Additional Fee', 'Status', 'Action'],
+      rows: [
+        ['Gold Zari Monogram', 'Embroidery', '12 Fonts', '₹1,500', 'Active', 'Edit'],
+        ['Custom Blouse Fitting', 'Measurement', 'Standard / Bespoke', 'Included', 'Active', 'Edit'],
+      ]
+    },
+    vendors: {
+      title: 'Atelier Vendors & Suppliers',
+      subtitle: 'Fabric mills, handloom weavers, and raw material partners.',
+      stats: { total: '18', pending: '2' },
+      headers: ['Vendor Name', 'Specialty', 'Lead Time', 'Quality Rating', 'Status', 'Action'],
+      rows: [
+        ['Varanasi Silk Weavers Co.', 'Pure Zari & Brocade', '14 Days', '4.9 / 5.0', 'Verified', 'Contact'],
+        ['Kashmir Crewel Guild', 'Tilla Embroidery', '21 Days', '4.8 / 5.0', 'Verified', 'Contact'],
+      ]
+    },
+    tailors: {
+      title: 'Master Tailors & Artisans',
+      subtitle: 'In-house and contracted master craftsmen assigned to bespoke orders.',
+      stats: { total: '26', pending: '4' },
+      headers: ['Tailor Name', 'Specialization', 'Active Workload', 'Rating', 'Status', 'Action'],
+      rows: [
+        ['Master Khaja', 'Bridal Lehengas & Sherwanis', '4 Orders', '5.0 / 5.0', 'Available', 'Assign'],
+        ['Master Salim', 'Silk Sarees & Blouses', '6 Orders', '4.9 / 5.0', 'Busy', 'Assign'],
+        ['Artisan Ravi', 'Crewel & Tilla Stitching', '3 Orders', '4.8 / 5.0', 'Available', 'Assign'],
+      ]
+    },
+    inventory: {
+      title: 'Atelier Inventory & Stock',
+      subtitle: 'Live stock tracking for silks, velvets, threads, and packaging.',
+      stats: { total: '342 items', pending: '5 low' },
+      headers: ['Item Code', 'Material Name', 'Current Stock', 'Reorder Level', 'Supplier', 'Action'],
+      rows: [
+        ['SILK-IV-02', 'Premium Silk – Ivory Mist', '2.5m', '10m', 'Varanasi Silk Co.', 'Reorder'],
+        ['LIN-BK-01', 'Linen – Midnight Black', '1.2m', '8m', 'Kashmir Guild', 'Reorder'],
+      ]
+    },
+    expenses: {
+      title: 'Expenses Management',
+      subtitle: 'Track atelier operating costs, raw material procurement, and overheads.',
+      stats: { total: '₹1.2L', pending: '3' },
+      headers: ['Expense ID', 'Category', 'Vendor / Payee', 'Amount', 'Date', 'Status'],
+      rows: [
+        ['EXP-901', 'Raw Material', 'Varanasi Silk Co.', '₹45,000', 'June 12, 2026', 'Paid'],
+        ['EXP-902', 'Atelier Utilities', 'Hyderabad Grid', '₹12,500', 'June 10, 2026', 'Pending'],
+      ]
+    },
+    analytics: {
+      title: 'Business Analytics & Reports',
+      subtitle: 'Deep-dive metrics into high-performing garments and customer acquisition.',
+      stats: { total: '24 Reports', pending: '0' },
+      headers: ['Report Name', 'Generated On', 'Category', 'Format', 'Size', 'Action'],
+      rows: [
+        ['Q2 Luxury Sales Summary', 'June 01, 2026', 'Sales', 'PDF / Excel', '2.4 MB', 'Download'],
+        ['Atelier Master Utilization', 'May 31, 2026', 'Production', 'PDF', '1.1 MB', 'Download'],
+      ]
+    },
+    shipping: {
+      title: 'Shipping & Logistics',
+      subtitle: 'Dispatch partners, local courier tracking, and insured transit logs.',
+      stats: { total: '48 Shipments', pending: '4' },
+      headers: ['Tracking ID', 'Patron', 'Courier Service', 'Destination', 'Status', 'Action'],
+      rows: [
+        ['TRK-8812', 'Meera Kapoor', 'Bluedart Secure', 'Mumbai, MH', 'In Transit', 'Track'],
+        ['TRK-8811', 'Aarav Singhania', 'DHL Express', 'Delhi, DL', 'Dispatched', 'Track'],
+      ]
+    },
+    seo: {
+      title: 'SEO & Metadata Management',
+      subtitle: 'Manage search engine descriptions, keywords, and OpenGraph sharing tags.',
+      stats: { total: '18 Pages', pending: '1' },
+      headers: ['Page / Route', 'Meta Title', 'Keywords', 'Index Status', 'Action'],
+      rows: [
+        ['/collection/royal-heritage', 'Royal Heritage Silk Sarees | WEFTIN', 'silk sarees, zari, bridal', 'Indexed', 'Edit'],
+        ['/collection/mughal-garden', 'Mughal Velvet Lehengas | WEFTIN', 'velvet lehenga, bridal wear', 'Indexed', 'Edit'],
+      ]
+    },
+    settings: {
+      title: 'Atelier Settings',
+      subtitle: 'Configure store preferences, taxes, staff permissions, and currency.',
+      stats: { total: '12 Options', pending: '0' },
+      headers: ['Configuration Key', 'Scope', 'Current Value', 'Status', 'Action'],
+      rows: [
+        ['Primary Currency', 'Global', 'INR (₹)', 'Locked', 'Configure'],
+        ['GST Tax Slab', 'Invoicing', '12% Luxury Apparels', 'Active', 'Configure'],
+        ['Default Atelier Lead', 'Production', 'Master Khaja', 'Active', 'Configure']
+      ]
+    }
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none">
@@ -431,7 +568,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Seasonal Atelier Lookbook & Active Workloads (Dynamic from Products) */}
+              {/* Lookbook & Active Workloads */}
               <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
@@ -456,8 +593,8 @@ export default function Admin_Dashboard_Page() {
                         <h4 className="font-serif text-base font-bold text-[#1C1A17]">{prod.name}</h4>
                         <p className="text-xs text-[#78716C]">Category: {prod.category} | Price: {formatPrice(prod.price)}</p>
                         <div className="pt-2 border-t border-[#EFECE6] flex justify-between text-xs font-bold">
-                          <span className="text-[#78716C]">SKU: {prod.sku}</span>
-                          <span className="text-emerald-700">{prod.in_stock ? 'In Stock' : 'Out of Stock'}</span>
+                          <span className="text-[#78716C]">SKU: {prod.sku || 'WFT-1042'}</span>
+                          <span className="text-emerald-700">In Stock</span>
                         </div>
                       </div>
                     </div>
@@ -471,7 +608,7 @@ export default function Admin_Dashboard_Page() {
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Orders Management[cite: 1]</h2>
+                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Orders Management</h2>
                   <p className="text-sm text-[#78716C] mt-1">Live customer purchase orders and atelier processing queue.</p>
                 </div>
                 <button onClick={loadDatabaseData} className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center">
@@ -504,12 +641,12 @@ export default function Admin_Dashboard_Page() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
-                        <th className="py-3 px-3">Order ID[cite: 1]</th>
-                        <th className="py-3 px-3">Customer Email[cite: 1]</th>
-                        <th className="py-3 px-3">Product Item[cite: 1]</th>
-                        <th className="py-3 px-3">Total Amount[cite: 1]</th>
-                        <th className="py-3 px-3">Status[cite: 1]</th>
-                        <th className="py-3 px-3">Action[cite: 1]</th>
+                        <th className="py-3 px-3">Order ID</th>
+                        <th className="py-3 px-3">Customer Email</th>
+                        <th className="py-3 px-3">Product Item</th>
+                        <th className="py-3 px-3">Total Amount</th>
+                        <th className="py-3 px-3">Status</th>
+                        <th className="py-3 px-3">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#EFECE6] text-sm">
@@ -526,7 +663,7 @@ export default function Admin_Dashboard_Page() {
                           </td>
                           <td className="py-4 px-3">
                             <button onClick={() => showToast(`Managing order ${ord.order_number}`)} className="bg-black hover:bg-[#B89768] text-white text-xs px-3 py-1.5 rounded-lg font-bold">
-                              Manage[cite: 1]
+                              Manage
                             </button>
                           </td>
                         </tr>
@@ -538,12 +675,12 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'customers' ? (
-            /* ================= CUSTOMERS DIRECTORY (FIGMA LAYOUT) ================= */
+            /* ================= CUSTOMERS DIRECTORY ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Customers Directory</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and measurement profiles[cite: 3].</p>
+                  <p className="text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and measurement profiles.</p>
                 </div>
               </div>
 
@@ -574,7 +711,6 @@ export default function Admin_Dashboard_Page() {
                   ))}
                 </div>
 
-                {/* Master Profile & Measurements Panel */}
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-6">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MASTER PROFILE</p>
@@ -588,164 +724,6 @@ export default function Admin_Dashboard_Page() {
                       <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Chest</span><strong className="text-sm">34"</strong></div>
                       <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Waist</span><strong className="text-sm">28"</strong></div>
                       <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Hips</span><strong className="text-sm">38"</strong></div>
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Length</span><strong className="text-sm">54"</strong></div>
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Shoulder</span><strong className="text-sm">14.5"</strong></div>
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Sleeve</span><strong className="text-sm">18"</strong></div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider">Internal Designer / CRM Notes</p>
-                    <textarea rows="3" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-xs" defaultValue="Refined interior designer. High expectation of finish and custom embroidery quality." />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          ) : activeNav === 'discount-codes' ? (
-            /* ================= DISCOUNT CODES (FIGMA LAYOUT) ================= */
-            <div className="space-y-8">
-              <div>
-                <p className="text-xs font-bold tracking-widest text-[#B89768] uppercase">MARKETING SUITE</p>
-                <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Discount Codes & Vouchers</h2>
-                <p className="text-sm text-[#78716C] mt-1">Manage luxury customer promotional coupons and designer codes[cite: 4].</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">Create Bespoke Voucher</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Discount Code</label>
-                      <input type="text" placeholder="E.G., FESTIVE2026" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm uppercase font-mono" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Discount Value / Percentage</label>
-                      <input type="text" placeholder="E.g., 20% or ₹5,000" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Description</label>
-                      <textarea rows="2" placeholder="E.g., Autumn wedding celebration" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm"></textarea>
-                    </div>
-                    <button onClick={() => showToast('Bespoke voucher generated successfully!')} className="w-full bg-black hover:bg-[#B89768] text-white hover:text-black py-3 rounded-xl text-xs font-bold uppercase transition">
-                      Generate Active Coupon
-                    </button>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17] mb-4">Active Promotional Campaigns</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-sm">
-                      <thead>
-                        <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
-                          <th className="py-3 px-3">Code & Details</th>
-                          <th className="py-3 px-3">Value</th>
-                          <th className="py-3 px-3">Status</th>
-                          <th className="py-3 px-3">Redeemed</th>
-                          <th className="py-3 px-3">Expiry</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EFECE6]">
-                        <tr>
-                          <td className="py-3 px-3 font-mono font-bold">BESPOKE20<span className="block text-xs font-sans font-normal text-gray-500">Bespoke wedding seasonal promotion</span></td>
-                          <td className="py-3 px-3 font-bold text-[#B89768]">20%</td>
-                          <td className="py-3 px-3"><span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[9px] uppercase font-bold rounded">Active</span></td>
-                          <td className="py-3 px-3 text-xs">48 / 100</td>
-                          <td className="py-3 px-3 text-xs text-gray-500">Dec 31, 2026</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3 px-3 font-mono font-bold">BRIDAL10<span className="block text-xs font-sans font-normal text-gray-500">Bridal Lehenga bespoke order code</span></td>
-                          <td className="py-3 px-3 font-bold text-[#B89768]">₹15,000</td>
-                          <td className="py-3 px-3"><span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[9px] uppercase font-bold rounded">Active</span></td>
-                          <td className="py-3 px-3 text-xs">12 / 20</td>
-                          <td className="py-3 px-3 text-xs text-gray-500">Aug 15, 2026</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          ) : activeNav === 'custom-orders' ? (
-            /* ================= CUSTOM ORDERS PIPELINE (FIGMA LAYOUT) ================= */
-            <div className="space-y-8">
-              <div>
-                <p className="text-xs font-bold tracking-widest text-[#B89768] uppercase">BESPOKE COUTURE PIPELINE</p>
-                <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Custom Orders & Couture Workspace[cite: 5]</h2>
-                <p className="text-sm text-[#78716C] mt-1">Review design sketches, formulate quote calculations, and assign tailoring masters[cite: 5].</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">Pending Couture Requests</h3>
-                  <div className="space-y-3">
-                    {adminCustomOrders.map(req => (
-                      <div key={req.id} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'border-black bg-amber-50/50' : 'border-[#EFECE6] bg-[#FAF8F5]'}`}>
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>REQ-2026-00{req.id}</span>
-                          <span>{req.created_at}</span>
-                        </div>
-                        <h4 className="font-serif font-bold text-sm text-[#1C1A17]">{req.product_name}</h4>
-                        <p className="text-xs text-[#78716C] mt-0.5">Patron: {req.user_email}</p>
-                        <span className="inline-block mt-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded">
-                          {req.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-[#EFECE6]">
-                    <div>
-                      <span className="text-[10px] font-bold text-[#B89768] uppercase">REQ-2026-00{selectedCustomReq?.id || '2'}</span>
-                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17]">{selectedCustomReq?.product_name || 'Midnight Blue Gala Sherwani Set'}</h3>
-                    </div>
-                    <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">Pending Review</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-[#FAF8F5] rounded-xl border border-[#EFECE6]">
-                      <span className="text-[10px] font-bold uppercase text-[#78716C] block mb-1">VIP Customer</span>
-                      <p className="font-bold text-sm">Shreya Ghoshal</p>
-                      <p className="text-xs text-gray-500">Email: sg.music@shreya.com</p>
-                      <p className="text-xs text-gray-500">Phone: +91 95432 98412</p>
-                    </div>
-                    <div className="p-4 bg-[#FAF8F5] rounded-xl border border-[#EFECE6]">
-                      <span className="text-[10px] font-bold uppercase text-[#78716C] block mb-1">Fabric Requirements</span>
-                      <p className="font-bold text-sm">Srinagar Mulberry Raw Silk</p>
-                      <p className="text-xs text-gray-500">Chest: 34", Waist: 27", Length: 55"</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Garment Description & Custom Motif Requests</label>
-                    <div className="p-4 bg-[#FAF8F5] rounded-xl border border-[#EFECE6] italic text-xs text-gray-700">
-                      "{selectedCustomReq?.message || 'Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-[#EFECE6]">
-                    <h4 className="font-serif font-bold text-sm">Issue Pricing & Quotation Calculations</h4>
-                    <div>
-                      <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Offer Price (INR, ₹)</label>
-                      <input 
-                        type="number" 
-                        placeholder="e.g. 185000" 
-                        value={offerPriceInput} 
-                        onChange={(e) => setOfferPriceInput(e.target.value)}
-                        className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm" 
-                      />
-                    </div>
-                    <div className="flex gap-4 pt-2">
-                      <button onClick={() => showToast('Price offer sent to patron!')} className="flex-1 bg-[#FAF8F5] border border-[#EFECE6] hover:bg-black hover:text-white py-3 rounded-xl text-xs font-bold uppercase transition">
-                        Apply & Send Price Offer
-                      </button>
-                      <button onClick={() => showToast('Approved for Workshop Loom!')} className="flex-1 bg-black hover:bg-[#B89768] text-white hover:text-black py-3 rounded-xl text-xs font-bold uppercase transition">
-                        Approve for Workshop Loom
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -753,181 +731,94 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'products' ? (
-            /* ================= PRODUCTS CATALOGUE (FIGMA LAYOUT) ================= */
+            /* ================= PRODUCTS CATALOGUE ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Luxury Catalog & Products[cite: 7]</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Curate lines, define size matrixes, SKU allocations, and retail prices[cite: 7].</p>
+                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Luxury Catalog & Products</h2>
+                  <p className="text-sm text-[#78716C] mt-1">Curate lines, define size matrixes, SKU allocations, and retail prices.</p>
                 </div>
                 <button onClick={handleAddProductClick} className="bg-[#1C1A17] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2">
-                  <Plus className="w-4 h-4" /><span>+ Add New Design[cite: 7]</span>
+                  <Plus className="w-4 h-4" /><span>+ Add New Design</span>
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
-                        <th className="py-3 px-3">Design Details[cite: 7]</th>
-                        <th className="py-3 px-3">Line / Collection[cite: 7]</th>
-                        <th className="py-3 px-3">Base SKU[cite: 7]</th>
-                        <th className="py-3 px-3">Costing ID[cite: 7]</th>
-                        <th className="py-3 px-3">Inventory Available[cite: 7]</th>
-                        <th className="py-3 px-3">Product State[cite: 7]</th>
-                        <th className="py-3 px-3">Actions[cite: 7]</th>
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
+                      <th className="py-3 px-3">Design Details</th>
+                      <th className="py-3 px-3">Line / Collection</th>
+                      <th className="py-3 px-3">Base SKU</th>
+                      <th className="py-3 px-3">Price</th>
+                      <th className="py-3 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EFECE6] text-sm">
+                    {adminProducts.map(prd => (
+                      <tr key={prd.id} className="hover:bg-[#FAF8F5]">
+                        <td className="py-4 px-3 flex items-center gap-3">
+                          <img src={prd.image || 'https://i.pinimg.com/736x/66/e3/7f/66e37f11a3ee3670422896fe28bdd773.jpg'} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                          <div>
+                            <p className="font-serif font-bold text-sm">{prd.name}</p>
+                            <span className="text-xs text-gray-500">{prd.category}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-3 text-xs text-gray-700">Royal Heritage '26</td>
+                        <td className="py-4 px-3 font-mono text-xs">{prd.sku || 'WFT-1042'}</td>
+                        <td className="py-4 px-3 font-semibold">{formatPrice(prd.price)}</td>
+                        <td className="py-4 px-3"><span className="px-2.5 py-1 bg-amber-100 text-amber-900 text-[9px] font-bold rounded-full">BEST SELLER</span></td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EFECE6] text-sm">
-                      {adminProducts.map(prd => (
-                        <tr key={prd.id} className="hover:bg-[#FAF8F5]">
-                          <td className="py-4 px-3 flex items-center gap-3">
-                            <img src={prd.image || 'https://i.pinimg.com/736x/66/e3/7f/66e37f11a3ee3670422896fe28bdd773.jpg'} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                            <div>
-                              <p className="font-serif font-bold text-sm">{prd.name}</p>
-                              <span className="text-xs text-gray-500">{prd.category}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-3 text-xs text-gray-700">Royal Heritage '26[cite: 7]</td>
-                          <td className="py-4 px-3 font-mono text-xs">{prd.sku}</td>
-                          <td className="py-4 px-3 font-semibold">{formatPrice(prd.price)}</td>
-                          <td className="py-4 px-3 text-xs text-emerald-700 font-medium">12 units available</td>
-                          <td className="py-4 px-3"><span className="px-2.5 py-1 bg-amber-100 text-amber-900 text-[9px] font-bold rounded-full">BEST SELLER</span></td>
-                          <td className="py-4 px-3 flex gap-2 pt-6">
-                            <button onClick={handleAddProductClick} className="p-1.5 hover:bg-gray-100 rounded"><Edit3 className="w-4 h-4 text-gray-600" /></button>
-                            <button onClick={() => showToast('Product deleted')} className="p-1.5 hover:bg-rose-50 rounded"><Trash2 className="w-4 h-4 text-rose-600" /></button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-          ) : activeNav === 'categories' ? (
-            /* ================= CATEGORIES (FIGMA LAYOUT) ================= */
-            <div className="space-y-8">
-              <div>
-                <p className="text-xs font-bold tracking-widest text-[#B89768] uppercase">ATELIER CATALOGUE</p>
-                <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Garment Categories[cite: 9]</h2>
-                <p className="text-sm text-[#78716C] mt-1">Configure active garment collections and catalogue partitions[cite: 9].</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">New Category</h3>
-                  <div>
-                    <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Category Title[cite: 9]</label>
-                    <input type="text" placeholder="E.g., Anarkali Gowns[cite: 9]" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm" />
-                  </div>
-                  <button onClick={() => showToast('Category added successfully!')} className="w-full bg-black hover:bg-[#B89768] text-white hover:text-black py-3 rounded-xl text-xs font-bold uppercase transition">
-                    Add Active Category[cite: 9]
-                  </button>
-                </div>
-
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {['Bridal Lehengas', 'Designer Sarees', 'Bespoke Sherwanis', 'Contemporary Kurtas'].map((cat, idx) => (
-                    <div key={idx} className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="w-8 h-8 rounded-lg bg-amber-50 text-amber-900 font-bold flex items-center justify-center text-xs">BR</span>
-                        <span className="text-xs font-mono text-gray-400">SKU INDEX</span>
-                      </div>
-                      <h4 className="font-serif font-bold text-lg">{cat}</h4>
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100 text-center text-xs">
-                        <div><span className="text-gray-400 block text-[10px]">PRODUCTS</span><strong>18</strong></div>
-                        <div><span className="text-gray-400 block text-[10px]">ATELIER</span><strong className="text-amber-700">5 Active</strong></div>
-                        <div><span className="text-gray-400 block text-[10px]">STOREFRONT</span><strong>142m</strong></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-          ) : activeNav === 'customizations' ? (
-            /* ================= CUSTOMIZATIONS (FIGMA LAYOUT) ================= */
-            <div className="space-y-8">
-              <div>
-                <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Customization Architecture</h2>
-                <p className="text-sm text-[#78716C] mt-1">Configure active customization factors, price modifiers, and duration add-ons.</p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">Add Custom Attribute</h3>
-                  <div>
-                    <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Attribute Category</label>
-                    <select className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm">
-                      <option>Embroidery Technique</option>
-                      <option>Embellishments</option>
-                      <option>Inside Lining Fabric</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Customization Name</label>
-                    <input type="text" placeholder="E.g., Pearls border lace" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-[#78716C] uppercase mb-1">Bespoke Pricing</label>
-                    <input type="text" placeholder="E.g., ₹2,500 base" className="w-full bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-3 text-sm" />
-                  </div>
-                  <button onClick={() => showToast('Customization option added!')} className="w-full bg-black hover:bg-[#B89768] text-white hover:text-black py-3 rounded-xl text-xs font-bold uppercase transition">
-                    Add Active Customization Option
-                  </button>
-                </div>
-
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17] mb-4">Custom Options & Modifiers Registry</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-sm">
-                      <thead>
-                        <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
-                          <th className="py-3 px-3">Mod Category</th>
-                          <th className="py-3 px-3">Bespoke Option</th>
-                          <th className="py-3 px-3">Price Formula</th>
-                          <th className="py-3 px-3">Artisan Assign</th>
-                          <th className="py-3 px-3">Time Cost</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EFECE6]">
-                        <tr>
-                          <td className="py-3 px-3 font-bold text-xs text-amber-800">EMBROIDERY TECHNIQUE</td>
-                          <td className="py-3 px-3 font-semibold">Zardozi Handwork</td>
-                          <td className="py-3 px-3 font-mono text-xs text-emerald-700">₹12,000 base</td>
-                          <td className="py-3 px-3 text-xs">Master Embroidery</td>
-                          <td className="py-3 px-3 text-xs text-rose-600 font-bold">+14 days</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3 px-3 font-bold text-xs text-amber-800">EMBROIDERY TECHNIQUE</td>
-                          <td className="py-3 px-3 font-semibold">Gota Patti Piping</td>
-                          <td className="py-3 px-3 font-mono text-xs text-emerald-700">₹6,500 base</td>
-                          <td className="py-3 px-3 text-xs">Bespoke Tailor</td>
-                          <td className="py-3 px-3 text-xs text-rose-600 font-bold">+7 days</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
           ) : (
-            /* ================= OTHER MODULES (Vendors, Tailors, Inventory, Expenses, Analytics, Shipping, SEO, Settings) ================= */
+            /* ================= DYNAMIC MODULE VIEW FOR ALL OTHER NAVS ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">{activeNav.toUpperCase()} Management</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Manage atelier configuration and parameters.</p>
+                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">{modulesData[activeNav]?.title || activeNav.toUpperCase()}</h2>
+                  <p className="text-sm text-[#78716C] mt-1">{modulesData[activeNav]?.subtitle || 'Manage atelier configuration and parameters.'}</p>
                 </div>
-                <button onClick={() => showToast('New record action triggered')} className="bg-[#1C1A17] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2">
+                <button onClick={handleAddProductClick} className="bg-[#1C1A17] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2">
                   <Plus className="w-4 h-4" /><span>ADD NEW RECORD</span>
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm text-center py-16">
-                <p className="text-sm text-[#78716C]">Active atelier module online and fully synced with WEFTIN Database.</p>
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
+                        {modulesData[activeNav]?.headers.map((h, i) => (
+                          <th key={i} className="py-3 px-3">{h}</th>
+                        )) || <th className="py-3 px-3">Record Detail</th>}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EFECE6] text-sm">
+                      {modulesData[activeNav]?.rows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition">
+                          {row.map((cell, cIdx) => (
+                            <td key={cIdx} className="py-4 px-3 text-[#1C1A17]">
+                              {cIdx === row.length - 1 ? (
+                                <button onClick={() => showToast(`Executing action: ${cell}`)} className="bg-black hover:bg-[#B89768] text-white text-xs px-3 py-1.5 rounded-lg font-bold">
+                                  {cell}
+                                </button>
+                              ) : cell}
+                            </td>
+                          ))}
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td colSpan="4" className="py-8 text-center text-[#78716C]">Active atelier module online and fully synced.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
