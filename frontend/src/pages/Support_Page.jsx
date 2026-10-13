@@ -26,22 +26,29 @@ export default function Support_Page() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  // Sync user profile & unread count on mount / storage changes
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("weftin_user");
-      if (!storedUser) {
+    const handleStorageSync = () => {
+      try {
+        const storedUser = localStorage.getItem("weftin_user");
+        if (!storedUser) {
+          navigate("/login");
+          return;
+        }
+        const user = JSON.parse(storedUser);
+        setSavedUser(user);
+        if (user?.email) {
+          loadUnreadCount(user.email);
+        }
+      } catch (error) {
+        console.error("Unable to load user:", error);
         navigate("/login");
-        return;
       }
-      const user = JSON.parse(storedUser);
-      setSavedUser(user);
-      if (user?.email) {
-        loadUnreadCount(user.email);
-      }
-    } catch (error) {
-      console.error("Unable to load user:", error);
-      navigate("/login");
-    }
+    };
+
+    handleStorageSync();
+    window.addEventListener("storage", handleStorageSync);
+    return () => window.removeEventListener("storage", handleStorageSync);
   }, [navigate]);
 
   const loadUnreadCount = async (email) => {
@@ -81,7 +88,6 @@ export default function Support_Page() {
       return;
     }
 
-    // Trigger mail client pre-filled with ticket details directly to your inbox
     const ticketBody = `--- WEFTIN SUPPORT TICKET ---
 Ticket Subject: ${subject}
 Customer Name: ${userName}
@@ -155,14 +161,22 @@ ${concerns}
       <aside className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3">
               <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
               <div>
                 <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
               </div>
-            </div>
+            </Link>
             <button onClick={closeMobileMenu} className="p-2 rounded-lg hover:bg-gray-100"><X className="w-5 h-5 text-gray-600" /></button>
+          </div>
+
+          <div className="m-4 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-center gap-3">
+            <UserAvatar size="w-9 h-9" />
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-gray-900 truncate">{userName}</h4>
+              <span className="text-[9px] uppercase font-bold tracking-widest text-amber-800">ATELIER MEMBER</span>
+            </div>
           </div>
 
           <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
@@ -208,11 +222,13 @@ ${concerns}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
         <div>
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
-            <div>
-              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
-              <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
-            </div>
+            <Link to="/dashboard" className="flex items-center gap-3">
+              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
+              <div>
+                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
+              </div>
+            </Link>
           </div>
 
           <div className="m-4 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-center gap-3">
@@ -264,7 +280,7 @@ ${concerns}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-100" aria-label="Open menu">
               <Menu className="w-5 h-5 text-gray-700" />
@@ -279,10 +295,10 @@ ${concerns}
               <Bell className="w-5 h-5" />
               <NotificationBadge />
             </Link>
-            <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
+            <Link to="/profile" className="flex items-center gap-2 border-l pl-4 border-gray-200 hover:opacity-80 transition-opacity">
               <UserAvatar />
               <span className="text-xs font-semibold text-gray-800">{userName}</span>
-            </div>
+            </Link>
           </div>
         </header>
 
