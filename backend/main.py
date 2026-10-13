@@ -4521,6 +4521,23 @@ def update_limited_settings(data: dict):
         if conn:
             conn.close()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================
+# SUPPORT ENDPOINTS (DATABASE LOGGING)
+# ============================================================
+
 class SupportEmailRequest(BaseModel):
     recipient: Optional[str] = "chbharath0779@gmail.com"
     subject: str
@@ -4534,48 +4551,30 @@ class SupportTicketRequest(BaseModel):
     user_name: Optional[str] = "WEFTIN Member"
     user_email: str
 
-
-
-def send_ssl_smtp_email(to_email: str, subject: str, body_content: str):
-    gmail_user = os.getenv("GMAIL_USER", "chbharath0779@gmail.com")
-    gmail_password = os.getenv("GMAIL_APP_PASSWORD", "")
-
-    if not gmail_password:
-        print(f"--- [SIMULATED EMAIL TO {to_email}] ---")
-        print(f"Subject: {subject}\n\n{body_content}")
-        print("---------------------------------------")
-        return True
-
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = gmail_user
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body_content, 'plain'))
-
-        # Use SSL port 465 which is allowed by Render outbound firewalls
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.login(gmail_user, gmail_password)
-        server.sendmail(gmail_user, to_email, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        print("SMTP SSL SEND ERROR:", repr(e))
-        raise HTTPException(status_code=500, detail=f"Failed to send email via SMTP SSL: {str(e)}")
-
 @app.post("/api/support/send-email")
 def api_send_support_email(data: SupportEmailRequest):
-    email_body = f"""WEFTIN HELP DESK INQUIRY
-----------------------------------------
-Member Name: {data.user_email}
-User Email: {data.user_email}
-
-Message:
-{data.message}
-----------------------------------------
-"""
-    send_ssl_smtp_email(data.recipient, data.subject, email_body)
-    return {"status": "success", "message": "Email dispatched to helpdesk successfully."}
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            create_notification(
+                cur,
+                data.user_email,
+                "support",
+                f"Helpdesk Inquiry: {data.subject}",
+                data.message,
+                "support",
+                None
+            )
+            conn.commit()
+        return {"status": "success", "message": "Email inquiry logged successfully."}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
 
 @app.post("/api/support/ticket")
 def api_file_support_ticket(data: SupportTicketRequest):
@@ -4583,29 +4582,20 @@ def api_file_support_ticket(data: SupportTicketRequest):
     try:
         conn = get_db_connection()
         with conn.cursor() as cur:
-            ticket_body = f"""--- WEFTIN SUPPORT TICKET ---
-Ticket Subject: {data.subject}
-Customer Name: {data.user_name}
-Customer Email: {data.user_email}
-
-Concerns / Specifications:
-{data.concerns}
------------------------------
-"""
-            send_ssl_smtp_email(data.recipient, f"[Support Ticket] {data.subject}", ticket_body)
+            ticket_description = f"Subject: {data.subject}\nConcerns: {data.concerns}\nFrom: {data.user_name} ({data.user_email})"
             
             create_notification(
                 cur,
                 data.user_email,
                 "support",
-                "Support Ticket Filed",
-                f"Your ticket '{data.subject}' was submitted successfully to our master tailors.",
+                f"Tailoring Ticket: {data.subject}",
+                ticket_description,
                 "support",
                 None
             )
             conn.commit()
 
-        return {"status": "success", "message": "Tailoring ticket filed and sent successfully!"}
+        return {"status": "success", "message": "Tailoring ticket filed successfully!"}
     except Exception as e:
         if conn:
             conn.rollback()
@@ -4614,5 +4604,15 @@ Concerns / Specifications:
     finally:
         if conn:
             conn.close()
+
+
+
+
+
+
+
+
+
+
 
 
