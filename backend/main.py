@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -4516,5 +4519,121 @@ def update_limited_settings(data: dict):
 
     finally:
 
+        if conn:
+            conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================
+# SUPPORT MODELS & EMAIL DISPATCH
+# ============================================================
+
+class SupportEmailRequest(BaseModel):
+    recipient: str
+    subject: str
+    message: str
+    user_email: str
+
+class SupportTicketRequest(BaseModel):
+    recipient: str
+    subject: str
+    concerns: str
+    user_name: str
+    user_email: str
+
+# Optional: Configure these in your Render Environment Variables (.env)
+# GMAIL_USER = os.getenv("GMAIL_USER", "chbharath0779@gmail.com")
+# GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "your_gmail_app_password")
+
+def send_smtp_email(to_email: str, subject: str, body_content: str):
+    gmail_user = os.getenv("GMAIL_USER", "chbharath0779@gmail.com")
+    gmail_password = os.getenv("GMAIL_APP_PASSWORD", "")
+
+    # If no app password is provided in environment variables, log it as a simulation/fallback
+    if not gmail_password:
+        print(f"--- [SIMULATED EMAIL TO {to_email}] ---")
+        print(f"Subject: {subject}\n\n{body_content}")
+        print("---------------------------------------")
+        return True
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = gmail_user
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(body_content, 'plain'))
+
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(gmail_user, gmail_password)
+        server.sendmail(gmail_user, to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print("SMTP SEND ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail=f"Failed to send email via SMTP: {str(e)}")
+
+@app.post("/api/support/send-email")
+def api_send_support_email(data: SupportEmailRequest):
+    email_body = f"""WEFTIN HELP DESK INQUIRY
+----------------------------------------
+Member Name: {data.user_email}
+User Email: {data.user_email}
+
+Message:
+{data.message}
+----------------------------------------
+"""
+    send_smtp_email(data.recipient, data.subject, email_body)
+    return {"status": "success", "message": "Email dispatched to helpdesk successfully."}
+
+@app.post("/api/support/ticket")
+def api_file_support_ticket(data: SupportTicketRequest):
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            # Optionally record the ticket in a database table if you have one, 
+            # otherwise it dispatches directly to your email inbox:
+            ticket_body = f"""--- WEFTIN SUPPORT TICKET ---
+Ticket Subject: {data.subject}
+Customer Name: {data.user_name}
+Customer Email: {data.user_email}
+
+Concerns / Specifications:
+{data.concerns}
+-----------------------------
+"""
+            send_smtp_email(data.recipient, f"[Support Ticket] {data.subject}", ticket_body)
+            
+            # Create an in-app notification for the user confirming their ticket was filed
+            create_notification(
+                cur,
+                data.user_email,
+                "support",
+                "Support Ticket Filed",
+                f"Your ticket '{data.subject}' was submitted successfully to our master tailors.",
+                "support",
+                None
+            )
+            conn.commit()
+
+        return {"status": "success", "message": "Tailoring ticket filed and sent successfully!"}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("TICKET ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
         if conn:
             conn.close()
