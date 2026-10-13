@@ -49,7 +49,7 @@ export default function Support_Page() {
     setToastMessage(msg);
     window.setTimeout(() => {
       setToastMessage("");
-    }, 3000);
+    }, 4000);
   }, []);
 
   // ==================================================
@@ -89,7 +89,7 @@ export default function Support_Page() {
     }
   }, [navigate]);
 
-  const userEmail = currentUser?.email || "";
+  const userEmail = currentUser?.email || "customer@weftin.com";
   const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "WEFTIN Member";
   const userInitial = userName.charAt(0).toUpperCase() || "W";
 
@@ -166,7 +166,7 @@ export default function Support_Page() {
       showToast("Email dispatched successfully to chbharath0779@gmail.com!");
     } catch (error) {
       console.error("Helpdesk email error:", error);
-      showToast(error?.message || "Failed to dispatch email. Please use the ticket form below.");
+      showToast(error?.message || "Failed to dispatch email.");
     } finally {
       setIsSendingHelpdesk(false);
     }
@@ -184,30 +184,41 @@ export default function Support_Page() {
     const token = localStorage.getItem("weftin_token");
 
     try {
+      const payload = {
+        recipient: "chbharath0779@gmail.com",
+        subject: subject,
+        concerns: concerns,
+        user_name: userName,
+        user_email: userEmail
+      };
+
+      console.log("Submitting tailoring ticket payload:", payload);
+
       const response = await fetch(`${API_BASE_URL}/api/support/ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          recipient: "chbharath0779@gmail.com",
-          subject: subject,
-          concerns: concerns,
-          user_name: userName,
-          user_email: userEmail
-        })
+        body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.detail || "Failed to file tailoring ticket.");
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error("Failed to parse backend response as JSON:", jsonErr);
+        throw new Error("Server returned an invalid response format.");
       }
 
-      showToast('Ticket filed successfully and sent to chbharath0779@gmail.com!');
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to file tailoring ticket on server.");
+      }
+
+      showToast('Ticket filed successfully & email sent to chbharath0779@gmail.com!');
       setConcerns('');
     } catch (error) {
-      console.error("Tailoring ticket error:", error);
+      console.error("Tailoring ticket submission error:", error);
       showToast(error?.message || "Unable to submit ticket right now.");
     } finally {
       setIsSubmitting(false);
