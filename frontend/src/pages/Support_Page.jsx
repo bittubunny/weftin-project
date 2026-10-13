@@ -144,23 +144,28 @@ export default function Support_Page() {
     const token = localStorage.getItem("weftin_token");
 
     try {
+      const payload = {
+        recipient: "chbharath0779@gmail.com",
+        subject: `Support Inquiry from WEFTIN Member: ${userName}`,
+        message: `User Name: ${userName}\nUser Email: ${userEmail}\n\nUser requested direct helpdesk assistance.`,
+        user_email: userEmail
+      };
+
       const response = await fetch(`${API_BASE_URL}/api/support/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          recipient: "chbharath0779@gmail.com",
-          subject: `Support Inquiry from WEFTIN Member: ${userName}`,
-          message: `User Name: ${userName}\nUser Email: ${userEmail}\n\nUser requested direct helpdesk assistance.`,
-          user_email: userEmail
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.detail || "Failed to send email to helpdesk.");
+        const errorMsg = typeof data?.detail === 'string' 
+          ? data.detail 
+          : JSON.stringify(data?.detail) || "Failed to send email to helpdesk.";
+        throw new Error(errorMsg);
       }
 
       showToast("Email dispatched successfully to chbharath0779@gmail.com!");
@@ -203,16 +208,13 @@ export default function Support_Page() {
         body: JSON.stringify(payload)
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonErr) {
-        console.error("Failed to parse backend response as JSON:", jsonErr);
-        throw new Error("Server returned an invalid response format.");
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.detail || "Failed to file tailoring ticket on server.");
+        const errorMsg = typeof data?.detail === 'string' 
+          ? data.detail 
+          : JSON.stringify(data?.detail) || "Failed to file tailoring ticket on server.";
+        throw new Error(errorMsg);
       }
 
       showToast('Ticket filed successfully & email sent to chbharath0779@gmail.com!');
