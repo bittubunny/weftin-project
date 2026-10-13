@@ -25,7 +25,11 @@ import {
   Filter, 
   Download, 
   X, 
-  Calendar
+  Calendar,
+  DollarSign,
+  BarChart2,
+  Globe,
+  Settings
 } from 'lucide-react';
 
 export default function Admin_Dashboard_Page() {
@@ -164,30 +168,83 @@ export default function Admin_Dashboard_Page() {
         ['WOL-NV-03', 'Wool – Navy Blue', '3.0m', '12m', 'Bikaner Weavers', 'Reorder'],
         ['CASH-BX-01', 'Cashmere – Bordeaux', '1.8m', '6m', 'Himalayan Mills', 'Reorder'],
       ]
+    },
+    expenses: {
+      title: 'Expenses Management',
+      subtitle: 'Track atelier operating costs, raw material procurement, and overheads.',
+      stats: { total: '₹1.2L', pending: '3' },
+      headers: ['Expense ID', 'Category', 'Vendor / Payee', 'Amount', 'Date', 'Status'],
+      rows: [
+        ['EXP-901', 'Raw Material', 'Varanasi Silk Co.', '₹45,000', 'June 12, 2026', 'Paid'],
+        ['EXP-902', 'Atelier Utilities', 'Hyderabad Grid', '₹12,500', 'June 10, 2026', 'Pending'],
+      ]
+    },
+    analytics: {
+      title: 'Business Analytics & Reports',
+      subtitle: 'Deep-dive metrics into high-performing garments and customer acquisition.',
+      stats: { total: '24 Reports', pending: '0' },
+      headers: ['Report Name', 'Generated On', 'Category', 'Format', 'Size', 'Action'],
+      rows: [
+        ['Q2 Luxury Sales Summary', 'June 01, 2026', 'Sales', 'PDF / Excel', '2.4 MB', 'Download'],
+        ['Atelier Master Utilization', 'May 31, 2026', 'Production', 'PDF', '1.1 MB', 'Download'],
+      ]
+    },
+    shipping: {
+      title: 'Shipping & Logistics',
+      subtitle: 'Dispatch partners, local courier tracking, and insured transit logs.',
+      stats: { total: '48 Shipments', pending: '4' },
+      headers: ['Tracking ID', 'Patron', 'Courier Service', 'Destination', 'Status', 'Action'],
+      rows: [
+        ['TRK-8812', 'Meera Kapoor', 'Bluedart Secure', 'Mumbai, MH', 'In Transit', 'Track'],
+        ['TRK-8811', 'Aarav Singhania', 'DHL Express', 'Delhi, DL', 'Dispatched', 'Track'],
+      ]
+    },
+    seo: {
+      title: 'SEO & Metadata Management',
+      subtitle: 'Manage search engine descriptions, keywords, and OpenGraph sharing tags.',
+      stats: { total: '18 Pages', pending: '1' },
+      headers: ['Page / Route', 'Meta Title', 'Keywords', 'Index Status', 'Action'],
+      rows: [
+        ['/collection/royal-heritage', 'Royal Heritage Silk Sarees | WEFTIN', 'silk sarees, zari, bridal', 'Indexed', 'Edit'],
+        ['/collection/mughal-garden', 'Mughal Velvet Lehengas | WEFTIN', 'velvet lehenga, bridal wear', 'Indexed', 'Edit'],
+      ]
+    },
+    settings: {
+      title: 'Atelier Settings',
+      subtitle: 'Configure store preferences, taxes, staff permissions, and currency.',
+      stats: { total: '12 Options', pending: '0' },
+      headers: ['Configuration Key', 'Scope', 'Current Value', 'Status', 'Action'],
+      rows: [
+        ['Primary Currency', 'Global', 'INR (₹)', 'Locked', 'Configure'],
+        ['GST Tax Slab', 'Invoicing', '12% Luxury Apparels', 'Active', 'Configure'],
+        ['Default Atelier Lead', 'Production', 'Master Khaja', 'Active', 'Configure']
+      ]
     }
   };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none">
       
-      {/* SIDEBAR */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#141311] text-white flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0`}>
+      {/* LIGHT SIDEBAR (Matches Figma design) */}
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#FAF8F5] border-r border-[#EFECE6] text-[#1C1A17] flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0`}>
         <div>
-          <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
+          {/* Logo Header */}
+          <div className="h-20 flex items-center justify-between px-6 border-b border-[#EFECE6]">
             <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveNav('dashboard')}>
-              <div className="w-9 h-9 rounded-full bg-[#B89768] flex items-center justify-center font-bold text-black text-lg tracking-widest shadow-md font-serif">W</div>
-              {!isSidebarCollapsed && <span className="font-serif tracking-widest text-xl font-bold">WEFT IN</span>}
+              <div className="w-9 h-9 rounded-full bg-[#1C1A17] flex items-center justify-center font-bold text-white text-lg tracking-widest shadow-md font-serif">W</div>
+              {!isSidebarCollapsed && <span className="font-serif tracking-widest text-xl font-bold text-[#1C1A17]">WEFT IN</span>}
             </div>
-            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="text-white/60 hover:text-white transition">
+            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="text-[#78716C] hover:text-[#1C1A17] transition">
               <ChevronLeft className={`w-4 h-4 transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
-          <div className="px-4 py-6 space-y-6 overflow-y-auto max-h-[calc(100vh-160px)]">
+          {/* Navigation Links */}
+          <div className="px-4 py-6 space-y-6 overflow-y-auto max-h-[calc(100vh-280px)]">
             <div>
               <div 
                 onClick={() => setActiveNav('dashboard')}
-                className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition ${activeNav === 'dashboard' ? 'bg-[#B89768] text-black font-semibold shadow-sm' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition ${activeNav === 'dashboard' ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
               >
                 <LayoutDashboard className="w-5 h-5 mr-3 flex-shrink-0" />
                 {!isSidebarCollapsed && <span className="text-sm">Dashboard</span>}
@@ -211,14 +268,14 @@ export default function Admin_Dashboard_Page() {
                     <div 
                       key={item.id}
                       onClick={() => setActiveNav(item.id)}
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#B89768] text-black font-semibold shadow-sm' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
                     >
                       <div className="flex items-center">
                         <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
                         {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
                       </div>
                       {!isSidebarCollapsed && item.badge && (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-black text-white' : 'bg-[#B89768] text-black'}`}>{item.badge}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#B89768] text-black' : 'bg-amber-100 text-amber-800'}`}>{item.badge}</span>
                       )}
                     </div>
                   );
@@ -241,7 +298,7 @@ export default function Admin_Dashboard_Page() {
                     <div 
                       key={item.id}
                       onClick={() => setActiveNav(item.id)}
-                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#B89768] text-black font-semibold shadow-sm' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
                     >
                       <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
                       {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
@@ -266,7 +323,7 @@ export default function Admin_Dashboard_Page() {
                     <div 
                       key={item.id}
                       onClick={() => setActiveNav(item.id)}
-                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#B89768] text-black font-semibold shadow-sm' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
                     >
                       <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
                       {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
@@ -275,20 +332,101 @@ export default function Admin_Dashboard_Page() {
                 })}
               </div>
             </div>
+
+            {/* Finance Group */}
+            <div>
+              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Finance</p>}
+              <div className="space-y-1">
+                {[
+                  { id: 'expenses', label: 'Expenses', icon: DollarSign },
+                  { id: 'analytics', label: 'Analytics', icon: BarChart2 }
+                ].map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeNav === item.id;
+                  return (
+                    <div 
+                      key={item.id}
+                      onClick={() => setActiveNav(item.id)}
+                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
+                    >
+                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Config Group */}
+            <div>
+              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Config</p>}
+              <div className="space-y-1">
+                {[
+                  { id: 'shipping', label: 'Shipping', icon: Truck },
+                  { id: 'seo', label: 'SEO', icon: Globe },
+                  { id: 'settings', label: 'Settings', icon: Settings }
+                ].map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeNav === item.id;
+                  return (
+                    <div 
+                      key={item.id}
+                      onClick={() => setActiveNav(item.id)}
+                      className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA] hover:text-[#1C1A17]'}`}
+                    >
+                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Atelier Hub Card Widget */}
+            {!isSidebarCollapsed && (
+              <div className="mx-2 bg-white rounded-2xl border border-[#EFECE6] p-4 shadow-sm space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-md bg-[#B89768]/20 flex items-center justify-center text-[#B89768] font-bold text-xs">O</div>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#B89768] tracking-wider uppercase">ATELIER HUB</p>
+                    <h5 className="font-serif font-bold text-xs text-[#1C1A17]">Command Center V2</h5>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1 text-[11px] border-t border-[#EFECE6]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#78716C]">🚨 TODAY URGENT Orders</span>
+                    <span className="font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">3 Pending</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#78716C]">📈 REVENUE Performance</span>
+                    <span className="font-bold text-emerald-600">₹1.84L Today</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#78716C]">✂️ CUSTOM Tailor Work</span>
+                    <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">5 Pending</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#78716C]">📦 LOW Stock items</span>
+                    <span className="font-bold text-orange-600">2 products</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="p-4 border-t border-white/10 space-y-3 bg-[#0E0D0C]">
+        {/* View Storefront Footer */}
+        <div className="p-4 border-t border-[#EFECE6] space-y-3 bg-[#F3EFEA]">
           <button 
             onClick={() => setStorefrontOpen(true)}
-            className="w-full bg-[#1C1A17] hover:bg-white/10 text-[#B89768] text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#B89768]/30 transition flex items-center justify-center space-x-2"
+            className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             {!isSidebarCollapsed && <span>VIEW STOREFRONT</span>}
           </button>
           {!isSidebarCollapsed && (
             <div className="text-center">
-              <p className="text-[9px] text-white/40 tracking-widest font-mono">WEFT IN ATELIER SUITE</p>
+              <p className="text-[9px] text-[#78716C] tracking-widest font-mono">WEFT IN ATELIER SUITE</p>
             </div>
           )}
         </div>
@@ -545,285 +683,6 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Sales Overview & Custom Order Progress */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* Sales Overview */}
-                <div className="lg:col-span-8 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Sales Overview</h3>
-                        <p className="text-xs text-[#78716C] mt-0.5">Revenue and orders performance overview</p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="inline-flex bg-[#FAF8F5] p-1 rounded-xl border border-[#EFECE6]">
-                          <button onClick={() => setSalesPeriod('weekly')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${salesPeriod === 'weekly' ? 'bg-white text-[#1C1A17] shadow-sm' : 'text-[#78716C]'}`}>WEEKLY</button>
-                          <button onClick={() => setSalesPeriod('monthly')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${salesPeriod === 'monthly' ? 'bg-white text-[#1C1A17] shadow-sm' : 'text-[#78716C]'}`}>MONTHLY</button>
-                        </div>
-                        <div className="relative">
-                          <select className="bg-[#FAF8F5] border border-[#EFECE6] px-3 py-1.5 rounded-xl text-xs font-medium text-[#1C1A17] focus:outline-none focus:border-[#B89768] appearance-none pr-8">
-                            <option>All Channels</option>
-                            <option>Bespoke Online</option>
-                            <option>Atelier Boutique</option>
-                          </select>
-                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#78716C] pointer-events-none" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-[#FAF8F5] rounded-2xl p-6 border border-[#EFECE6] relative">
-                      <div className="flex justify-between text-[11px] text-[#78716C] font-bold mb-4">
-                        <span>REVENUE (₹)</span>
-                        <span>ORDERS (Qty)</span>
-                      </div>
-                      <div className="h-48 w-full relative flex items-end">
-                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-2">
-                          <div className="border-b border-dashed border-[#1C1A17] w-full"></div>
-                          <div className="border-b border-dashed border-[#1C1A17] w-full"></div>
-                          <div className="border-b border-dashed border-[#1C1A17] w-full"></div>
-                        </div>
-                        <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 600 160">
-                          <path d="M 30 130 L 130 90 L 230 115 L 330 75 L 430 95 L 530 40" fill="none" stroke="#B89768" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M 30 140 L 130 105 L 230 125 L 330 90 L 430 105 L 530 55" fill="none" stroke="#1C1A17" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round"/>
-                          <circle cx="30" cy="130" r="5" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                          <circle cx="130" cy="90" r="5" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                          <circle cx="230" cy="115" r="5" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                          <circle cx="330" cy="75" r="5" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                          <circle cx="430" cy="95" r="5" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                          <circle cx="530" cy="40" r="6" fill="#B89768" stroke="#fff" strokeWidth="2"/>
-                        </svg>
-                      </div>
-                      <div className="flex justify-between text-xs text-[#78716C] font-medium mt-4 pt-3 border-t border-[#EFECE6]/60">
-                        <span>May 10</span><span>May 17</span><span>May 24</span><span>May 31</span><span>Jun 07</span><span>Jun 14</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 pt-6 mt-6 border-t border-[#EFECE6]">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#78716C]">TOTAL REVENUE</p>
-                      <div className="flex items-baseline space-x-2 mt-1">
-                        <span className="font-serif text-xl font-bold text-[#1C1A17]">₹4,82,310</span>
-                        <span className="text-xs text-emerald-600 font-semibold">+18%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#78716C]">TOTAL ORDERS</p>
-                      <div className="flex items-baseline space-x-2 mt-1">
-                        <span className="font-serif text-xl font-bold text-[#1C1A17]">3,284</span>
-                        <span className="text-xs text-emerald-600 font-semibold">+12%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#78716C]">AVG ORDER VALUE</p>
-                      <div className="flex items-baseline space-x-2 mt-1">
-                        <span className="font-serif text-xl font-bold text-[#1C1A17]">₹1,468</span>
-                        <span className="text-xs text-emerald-600 font-semibold">+6%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Custom Order Progress */}
-                <div className="lg:col-span-4 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Custom Order Progress</h3>
-                      <button onClick={() => setActiveNav('custom-orders')} className="text-xs font-bold text-[#B89768] hover:text-[#A38255] transition flex items-center">VIEW ALL <ChevronRight className="w-3 h-3 ml-0.5" /></button>
-                    </div>
-                    <p className="text-xs text-[#78716C] mb-6">Track live atelier orders from request to dispatch.</p>
-
-                    <div className="flex items-center space-x-2 mb-6">
-                      <span className="bg-[#FAF8F5] border border-[#EFECE6] text-[#1C1A17] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-1.5">
-                        <Scissors className="w-3.5 h-3.5 text-[#B89768]" />
-                        <span>Active Custom Orders: <strong>106</strong></span>
-                      </span>
-                      <span className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-1.5">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Delayed: <strong>4</strong></span>
-                      </span>
-                    </div>
-
-                    <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFECE6] mb-6">
-                      <div className="flex items-center space-x-2 text-emerald-700 text-xs font-semibold mb-3">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Ready for Dispatch: <strong>7 orders</strong></span>
-                      </div>
-
-                      <div className="grid grid-cols-6 gap-2 text-center pt-2">
-                        {[
-                          { step: '01', title: 'Requests Received', val: '38', pct: '100%' },
-                          { step: '02', title: 'Quotation', val: '26', pct: '68%' },
-                          { step: '03', title: 'Tailor Assigned', val: '19', pct: '50%' },
-                          { step: '04', title: 'Production', val: '12', pct: '32%' },
-                          { step: '05', title: 'Quality Check', val: '7', pct: '19%' },
-                          { step: '06', title: 'Dispatch', val: '4', pct: '11%' }
-                        ].map((s, idx) => (
-                          <div key={idx}>
-                            <div className={`w-8 h-8 rounded-full bg-white border ${idx === 0 ? 'border-[#B89768] text-[#B89768]' : 'border-[#EFECE6] text-[#1C1A17]'} flex items-center justify-center mx-auto text-xs font-bold shadow-sm`}>{s.step}</div>
-                            <span className="text-[9px] font-bold text-[#78716C] block mt-1.5 leading-tight">{s.title}</span>
-                            <span className="text-xs font-bold text-[#1C1A17] block mt-1">{s.val}</span>
-                            <span className="text-[9px] text-[#78716C] block">{s.pct}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0" />
-                      <span className="text-xs font-medium text-[#1C1A17]">4 custom orders are delayed and need review.</span>
-                    </div>
-                    <button onClick={() => setActiveNav('custom-orders')} className="bg-white hover:bg-amber-100 text-[#1C1A17] text-xs font-bold px-3 py-2 rounded-lg border border-amber-300 transition shadow-sm whitespace-nowrap">
-                      VIEW PRODUCTION BOARD
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Orders Requiring Attention & Low Stock Alerts */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* Orders Requiring Attention */}
-                <div className="lg:col-span-7 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Orders Requiring Attention</h3>
-                      <p className="text-xs text-[#78716C] mt-0.5">High priority orders that need immediate action</p>
-                    </div>
-                    <button onClick={() => setActiveNav('orders')} className="text-xs font-bold text-[#B89768] hover:text-[#A38255] transition flex items-center">View All <ChevronRight className="w-3 h-3 ml-0.5" /></button>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
-                          <th className="py-3 px-2">Order ID</th>
-                          <th className="py-3 px-2">Customer</th>
-                          <th className="py-3 px-2">Issue</th>
-                          <th className="py-3 px-2">Status</th>
-                          <th className="py-3 px-2 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EFECE6] text-sm">
-                        {[
-                          { id: 'C0-2026-1842', cust: 'Aarav S.', issue: 'Artisan allocation pending', status: 'HIGH', badge: 'bg-red-50 text-red-700 border-red-200', btn: 'REVIEW' },
-                          { id: 'C0-2026-1841', cust: 'Meera K.', issue: 'Bounds verification', status: 'HIGH', badge: 'bg-red-50 text-red-700 border-red-200', btn: 'VERIFY' },
-                          { id: 'C0-2026-1839', cust: 'Rohan M.', issue: 'Fabric approval pending', status: 'MEDIUM', badge: 'bg-amber-50 text-amber-800 border-amber-200', btn: 'FOLLOW UP' },
-                          { id: 'C0-2026-1837', cust: 'Diya M.', issue: 'Tailor assign pending', status: 'MEDIUM', badge: 'bg-amber-50 text-amber-800 border-amber-200', btn: 'ASSIGN' },
-                          { id: 'C0-2026-1835', cust: 'Kunal B.', issue: 'Delivery confirm', status: 'LOW', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', btn: 'CONFIRM' }
-                        ].map((row, idx) => (
-                          <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition">
-                            <td className="py-3.5 px-2 font-mono font-bold text-xs text-[#1C1A17]">{row.id}</td>
-                            <td className="py-3.5 px-2 font-semibold text-[#1C1A17]">{row.cust}</td>
-                            <td className="py-3.5 px-2 text-xs text-[#78716C]">{row.issue}</td>
-                            <td className="py-3.5 px-2"><span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${row.badge}`}>{row.status}</span></td>
-                            <td className="py-3.5 px-2 text-right">
-                              <button onClick={() => setModalState({ isOpen: true, type: 'action', data: row })} className="bg-black hover:bg-[#B89768] text-white hover:text-black text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm">{row.btn}</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Low Stock Alerts */}
-                <div className="lg:col-span-5 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Low Stock Alerts</h3>
-                        <p className="text-xs text-[#78716C] mt-0.5">Items below recommended stock level</p>
-                      </div>
-                      <button onClick={() => setActiveNav('inventory')} className="text-xs font-bold text-[#B89768] hover:text-[#A38255] transition flex items-center">View All <ChevronRight className="w-3 h-3 ml-0.5" /></button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {[
-                        { title: 'Premium Silk – Ivory Mist', code: 'SILK-IV-02', stock: '2.5m', reorder: '10m', color: 'bg-[#FAF0E6]', textCol: 'text-red-600' },
-                        { title: 'Linen – Midnight Black', code: 'LIN-BK-01', stock: '1.2m', reorder: '8m', color: 'bg-[#24221F]', textCol: 'text-red-600' },
-                        { title: 'Wool – Navy Blue', code: 'WOL-NV-03', stock: '3.0m', reorder: '12m', color: 'bg-[#1B263B]', textCol: 'text-amber-600' },
-                        { title: 'Cashmere – Bordeaux', code: 'CASH-BX-01', stock: '1.8m', reorder: '6m', color: 'bg-[#4A1525]', textCol: 'text-red-600' }
-                      ].map((item, idx) => (
-                        <div key={idx} className="bg-[#FAF8F5] rounded-xl p-3.5 border border-[#EFECE6] flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-10 h-10 rounded-lg ${item.color} border border-[#EFECE6] flex items-center justify-center flex-shrink-0 text-white font-bold text-xs`}>
-                              {item.code.slice(0,2)}
-                            </div>
-                            <div>
-                              <h4 className="text-xs font-bold text-[#1C1A17]">{item.title}</h4>
-                              <p className="text-[10px] text-[#78716C] font-mono">{item.code}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                              <p className="text-[9px] font-bold text-[#78716C] uppercase">STOCK</p>
-                              <p className={`text-xs font-bold ${item.textCol}`}>{item.stock}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[9px] font-bold text-[#78716C] uppercase">REORDER</p>
-                              <p className="text-xs font-bold text-[#1C1A17]">{item.reorder}</p>
-                            </div>
-                            <button onClick={() => showToast(`Reorder placed for ${item.title}`)} className="w-8 h-8 rounded-lg bg-white border border-[#EFECE6] flex items-center justify-center hover:bg-[#B89768] hover:text-white transition shadow-sm">
-                              <ShoppingCart className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Recent Customer Enquiries */}
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Recent Customer Enquiries</h3>
-                    <p className="text-xs text-[#78716C] mt-0.5">Latest customer requests that may need follow-up or review.</p>
-                  </div>
-                  <button onClick={() => setActiveNav('customers')} className="text-xs font-bold text-[#B89768] hover:text-[#A38255] transition flex items-center">View All Enquiries <ChevronRight className="w-3 h-3 ml-0.5" /></button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
-                        <th className="py-3 px-3">Customer Name</th>
-                        <th className="py-3 px-3">Request Type</th>
-                        <th className="py-3 px-3">Preferred Category</th>
-                        <th className="py-3 px-3">Status</th>
-                        <th className="py-3 px-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EFECE6] text-sm">
-                      {[
-                        { name: 'Meera Kapoor', req: 'Custom Lehenga', cat: 'Bridal Wear', status: 'Quotation Pending', badge: 'bg-amber-50 text-amber-800 border-amber-200', btn: 'REVIEW' },
-                        { name: 'Aarav Singhania', req: 'Saree Enquiry', cat: 'Silk Saree', status: 'Follow-up Needed', badge: 'bg-red-50 text-red-700 border-red-200', btn: 'CALL' },
-                        { name: 'Diya Malhotra', req: 'Measurement Update', cat: 'Custom Kurti', status: 'Pending', badge: 'bg-blue-50 text-blue-700 border-blue-200', btn: 'UPDATE' },
-                        { name: 'Kavya Reddy', req: 'Fabric Selection', cat: 'Festival Collection', status: 'Awaiting Response', badge: 'bg-purple-50 text-purple-700 border-purple-200', btn: 'FOLLOW UP' },
-                        { name: 'Nisha Sharma', req: 'Custom Gown', cat: 'Evening Wear', status: 'Design Review', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', btn: 'VIEW' }
-                      ].map((row, idx) => (
-                        <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition">
-                          <td className="py-4 px-3 font-semibold text-[#1C1A17]">{row.name}</td>
-                          <td className="py-4 px-3 text-[#78716C]">{row.req}</td>
-                          <td className="py-4 px-3 text-[#1C1A17] font-medium">{row.cat}</td>
-                          <td className="py-4 px-3"><span className={`text-xs font-bold px-3 py-1 rounded-md border ${row.badge}`}>{row.status}</span></td>
-                          <td className="py-4 px-3 text-right">
-                            <button onClick={() => setModalState({ isOpen: true, type: 'enquiry', data: row })} className="bg-[#FAF8F5] hover:bg-black hover:text-white text-[#1C1A17] text-xs font-bold px-4 py-2 rounded-xl border border-[#EFECE6] transition shadow-sm">{row.btn}</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
             </div>
           ) : (
             /* ================= DYNAMIC MODULE VIEW ================= */
@@ -907,44 +766,6 @@ export default function Admin_Dashboard_Page() {
       </main>
 
       {/* ================= MODALS ================= */}
-
-      {/* Action / Review Modal */}
-      {modalState.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 border border-[#EFECE6] shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 rounded-2xl bg-[#FAF8F5] flex items-center justify-center text-[#B89768] text-xl border border-[#EFECE6]">
-                <Scissors className="w-6 h-6" />
-              </div>
-              <button onClick={() => setModalState({ isOpen: false, type: '', data: null })} className="w-8 h-8 rounded-full bg-[#FAF8F5] hover:bg-[#F3EFEA] text-[#78716C] flex items-center justify-center transition">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-[#1C1A17]">Review Request</h3>
-              <p className="text-sm text-[#78716C] mt-1">Secure processing under WEFTIN Atelier protocols.</p>
-            </div>
-            <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFECE6] space-y-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-[#78716C]">Assigned Lead:</span>
-                <span className="font-bold text-[#1C1A17]">Master Artisan Khaja</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-[#78716C]">Security Clearance:</span>
-                <span className="font-bold text-emerald-600">Level 4 Verified</span>
-              </div>
-              <div className="pt-2 border-t border-[#EFECE6]">
-                <label className="block text-[11px] font-bold text-[#78716C] uppercase mb-1">Atelier Audit Log Notes</label>
-                <textarea rows="2" className="w-full bg-white border border-[#EFECE6] rounded-xl p-3 text-xs focus:outline-none focus:border-[#B89768]" placeholder="Type instructions..."></textarea>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button onClick={() => setModalState({ isOpen: false, type: '', data: null })} className="flex-1 bg-[#FAF8F5] hover:bg-[#F3EFEA] text-[#1C1A17] py-3 rounded-xl text-xs font-bold transition border border-[#EFECE6]">CANCEL</button>
-              <button onClick={() => { setModalState({ isOpen: false, type: '', data: null }); showToast('Action logged and secured.'); }} className="flex-1 bg-[#1C1A17] hover:bg-black text-white py-3 rounded-xl text-xs font-bold transition shadow-md">CONFIRM ACTION</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Product Modal */}
       {addProductOpen && (
