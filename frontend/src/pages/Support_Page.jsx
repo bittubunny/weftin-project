@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, 
   User, Bell, Headphones, LogOut, Mail, CheckCircle2, 
-  ChevronDown, ChevronUp, ShoppingCart, Menu, X, Sparkles 
+  ChevronDown, ChevronUp, ShoppingCart, Menu, X 
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -157,60 +157,64 @@ ${concerns}
         <div className="md:hidden fixed inset-0 bg-black/40 z-40" onClick={closeMobileMenu} />
       )}
 
-      {/* MOBILE SLIDE-IN NAVIGATION */}
+      {/* MOBILE SLIDE-IN NAVIGATION PANEL */}
       <aside className={`md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="h-full flex flex-col">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3">
-              <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
-              <div>
-                <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
-                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
-              </div>
-            </Link>
-            <button onClick={closeMobileMenu} className="p-2 rounded-lg hover:bg-gray-100"><X className="w-5 h-5 text-gray-600" /></button>
-          </div>
-
-          <div className="m-4 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-center gap-3">
-            <UserAvatar size="w-9 h-9" />
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-gray-900 truncate">{userName}</h4>
-              <span className="text-[9px] uppercase font-bold tracking-widest text-amber-800">ATELIER MEMBER</span>
+        <div className="h-full flex flex-col justify-between">
+          <div>
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3">
+                <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold">W</div>
+                <div>
+                  <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">WEFTIN</h1>
+                  <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 block">ATELIER TAILORS</span>
+                </div>
+              </Link>
+              <button onClick={closeMobileMenu} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close menu">
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
+
+            <div className="m-4 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-center gap-3">
+              <UserAvatar size="w-9 h-9" />
+              <div className="min-w-0">
+                <h4 className="text-xs font-bold text-gray-900 truncate">{userName}</h4>
+                <span className="text-[9px] uppercase font-bold tracking-widest text-amber-800">ATELIER MEMBER</span>
+              </div>
+            </div>
+
+            <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
+              <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <LayoutDashboard className="w-4 h-4 shrink-0" /> Dashboard
+              </Link>
+              <Link to="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <Package className="w-4 h-4 shrink-0" /> My Orders
+              </Link>
+              <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <Scissors className="w-4 h-4 shrink-0" /> Custom Designs
+              </Link>
+              <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <Ruler className="w-4 h-4 shrink-0" /> Measurements
+              </Link>
+              <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <Heart className="w-4 h-4 shrink-0" /> Wishlist
+              </Link>
+              <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <MapPin className="w-4 h-4 shrink-0" /> Addresses
+              </Link>
+              <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
+                <User className="w-4 h-4 shrink-0" /> Profile
+              </Link>
+              <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between">
+                <span className="flex items-center gap-3"><Bell className="w-4 h-4 shrink-0" /> Notifications</span>
+                <NotificationBadge sidebar />
+              </Link>
+              <Link to="/support" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700">
+                <Headphones className="w-4 h-4 shrink-0" /> Support
+              </Link>
+            </nav>
           </div>
 
-          <nav className="p-4 space-y-1 text-xs font-medium text-gray-600 overflow-y-auto">
-            <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <LayoutDashboard className="w-4 h-4 shrink-0" /> Dashboard
-            </Link>
-            <Link to="/orders" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <Package className="w-4 h-4 shrink-0" /> My Orders
-            </Link>
-            <Link to="/custom-designs" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <Scissors className="w-4 h-4 shrink-0" /> Custom Designs
-            </Link>
-            <Link to="/measurements" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <Ruler className="w-4 h-4 shrink-0" /> Measurements
-            </Link>
-            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <Heart className="w-4 h-4 shrink-0" /> Wishlist
-            </Link>
-            <Link to="/addresses" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <MapPin className="w-4 h-4 shrink-0" /> Addresses
-            </Link>
-            <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700">
-              <User className="w-4 h-4 shrink-0" /> Profile
-            </Link>
-            <Link to="/notifications" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 justify-between">
-              <span className="flex items-center gap-3"><Bell className="w-4 h-4 shrink-0" /> Notifications</span>
-              <NotificationBadge sidebar />
-            </Link>
-            <Link to="/support" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-100/60 text-amber-900 font-semibold border-l-4 border-amber-700">
-              <Headphones className="w-4 h-4 shrink-0" /> Support
-            </Link>
-          </nav>
-
-          <div className="mt-auto p-4 border-t border-gray-100">
+          <div className="p-4 border-t border-gray-100">
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg">
               <LogOut className="w-4 h-4" /> Log out
             </button>
@@ -218,7 +222,7 @@ ${concerns}
         </div>
       </aside>
 
-      {/* DESKTOP SIDEBAR */}
+      {/* DESKTOP SIDEBAR NAVIGATION */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex sticky top-0 h-screen">
         <div>
           <div className="p-6 border-b border-gray-100 flex items-center gap-3">
@@ -278,7 +282,7 @@ ${concerns}
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-3">
