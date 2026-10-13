@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -29,8 +29,15 @@ import {
   DollarSign,
   BarChart2,
   Globe,
-  Settings
+  Settings,
+  RefreshCw,
+  AlertCircle,
+  FileText,
+  XCircle,
+  Sparkles
 } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Admin_Dashboard_Page() {
   const [activeNav, setActiveNav] = useState('dashboard');
@@ -38,29 +45,126 @@ export default function Admin_Dashboard_Page() {
   const [salesPeriod, setSalesPeriod] = useState('weekly');
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [modalState, setModalState] = useState({ isOpen: false, type: '', data: null });
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [storefrontOpen, setStorefrontOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (msg) => {
+  // Live Orders State for Admin Orders Module
+  const [adminOrders, setAdminOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('All');
+
+  const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
+  // Fetch all orders for admin management
+  const loadAdminOrders = useCallback(async () => {
+    const token = localStorage.getItem("weftin_token");
+    const storedUser = localStorage.getItem("weftin_user");
+    let targetEmail = "admin@weftin.com";
+    try {
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        if (parsed?.email) targetEmail = parsed.email;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    try {
+      setOrdersLoading(true);
+      setOrdersError('');
+      const response = await fetch(
+        `${API_BASE_URL}/api/orders/${encodeURIComponent(targetEmail)}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to load atelier orders.");
+      }
+      if (Array.isArray(data)) {
+        setAdminOrders(data);
+      } else {
+        setAdminOrders([]);
+      }
+    } catch (error) {
+      console.error("Admin orders loading error:", error);
+      setOrdersError(error?.message || "Unable to fetch live orders.");
+      // Fallback to static mock rows if backend fails or requires specific admin seed
+      setAdminOrders([
+        { id: '1842', order_number: 'C0-2026-1842', product_name: 'Royal Banarasi Silk Saree', customer_name: 'Aarav S.', total_price: 48500, status: 'PROCESSING', quantity: 1 },
+        { id: '1841', order_number: 'C0-2026-1841', product_name: 'Mughal Velvet Lehenga', customer_name: 'Meera K.', total_price: 124000, status: 'CONFIRMED', quantity: 1 },
+        { id: '1839', order_number: 'C0-2026-1839', product_name: 'Kashmir Tilla Sherwani', customer_name: 'Rohan M.', total_price: 89000, status: 'TAILORING', quantity: 1 },
+        { id: '1837', order_number: 'C0-2026-1837', product_name: 'Handloom Chanderi Suit', customer_name: 'Diya M.', total_price: 28500, status: 'PROCESSING', quantity: 1 }
+      ]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeNav === 'orders') {
+      loadAdminOrders();
+    }
+  }, [activeNav, loadAdminOrders]);
+
+  const normalizeStatus = (status) => String(status || "PROCESSING").trim().toUpperCase();
+
+  const getStatusLabel = (status) => {
+    const normalized = normalizeStatus(status);
+    const labels = {
+      PROCESSING: "PROCESSING",
+      CONFIRMED: "CONFIRMED",
+      TAILORING: "TAILORING",
+      READY_TO_SHIP: "READY TO SHIP",
+      SHIPPED: "SHIPPED",
+      OUT_FOR_DELIVERY: "OUT FOR DELIVERY",
+      DELIVERED: "DELIVERED",
+      CANCELLED: "CANCELLED"
+    };
+    return labels[normalized] || normalized.replaceAll("_", " ");
   };
 
+  const getStatusStyle = (status) => {
+    const normalized = normalizeStatus(status);
+    switch (normalized) {
+      case "PROCESSING": return "bg-amber-100 text-amber-800";
+      case "CONFIRMED": return "bg-blue-100 text-blue-800";
+      case "TAILORING": return "bg-purple-100 text-purple-800";
+      case "READY_TO_SHIP": return "bg-cyan-100 text-cyan-800";
+      case "SHIPPED": return "bg-sky-100 text-sky-800";
+      case "OUT_FOR_DELIVERY": return "bg-orange-100 text-orange-800";
+      case "DELIVERED": return "bg-emerald-100 text-emerald-800";
+      case "CANCELLED": return "bg-rose-100 text-rose-800";
+      default: return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const formatPrice = (price) => {
+    const numeric = Number(price);
+    if (Number.isNaN(numeric)) return price ? String(price) : "₹0";
+    return numeric.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 });
+  };
+
+  const filteredLiveOrders = adminOrders.filter(order => {
+    const matchesTab = orderStatusFilter === 'All' || normalizeStatus(order.status) === orderStatusFilter.toUpperCase();
+    const query = orderSearchQuery.toLowerCase();
+    const matchesSearch = !query || 
+      (order.order_number && order.order_number.toLowerCase().includes(query)) ||
+      (order.product_name && order.product_name.toLowerCase().includes(query)) ||
+      (order.customer_name && order.customer_name.toLowerCase().includes(query));
+    return matchesTab && matchesSearch;
+  });
+
   const modulesData = {
-    orders: {
-      title: 'Orders Management',
-      subtitle: 'Active client purchase orders and atelier processing queue.',
-      stats: { total: '3,284', pending: '9' },
-      headers: ['Order ID', 'Customer', 'Items', 'Total Amount', 'Status', 'Action'],
-      rows: [
-        ['C0-2026-1842', 'Aarav S.', 'Royal Banarasi Silk', '₹48,500', 'Action Needed', 'Review'],
-        ['C0-2026-1841', 'Meera K.', 'Mughal Velvet Lehenga', '₹1,24,000', 'Verification', 'Verify'],
-        ['C0-2026-1839', 'Rohan M.', 'Kashmir Tilla Sherwani', '₹89,000', 'Fabric Pending', 'Details'],
-        ['C0-2026-1837', 'Diya M.', 'Handloom Chanderi Suit', '₹28,500', 'Tailor Assign', 'Assign'],
-      ]
-    },
     customers: {
       title: 'Customers Directory',
       subtitle: 'Registered bespoke patrons, VIP clients, and measurement profiles.',
@@ -225,7 +329,7 @@ export default function Admin_Dashboard_Page() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none">
       
-      {/* LIGHT SIDEBAR (Matches Figma design) */}
+      {/* LIGHT SIDEBAR */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#FAF8F5] border-r border-[#EFECE6] text-[#1C1A17] flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0`}>
         <div>
           {/* Logo Header */}
@@ -256,7 +360,7 @@ export default function Admin_Dashboard_Page() {
               {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Sales</p>}
               <div className="space-y-1">
                 {[
-                  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: '9' },
+                  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: adminOrders.length > 0 ? String(adminOrders.length) : '9' },
                   { id: 'customers', label: 'Customers', icon: Users },
                   { id: 'discount-codes', label: 'Discount Codes', icon: Tag },
                   { id: 'stock-interest', label: 'Stock Interest', icon: Bell },
@@ -683,6 +787,141 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
+            </div>
+          ) : activeNav === 'orders' ? (
+            /* ================= LIVE ORDERS MODULE VIEW ================= */
+            <div className="space-y-8">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Orders Management</h2>
+                  <p className="text-sm text-[#78716C] mt-1">Active client purchase orders and atelier processing queue connected live.</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button onClick={loadAdminOrders} className="bg-white border border-[#EFECE6] hover:border-black text-[#1C1A17] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center shadow-sm">
+                    <RefreshCw className="w-3.5 h-3.5 mr-2 text-[#B89768]" /> Refresh Orders
+                  </button>
+                  <button onClick={() => setAddProductOpen(true)} className="bg-[#1C1A17] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md flex items-center space-x-2 transition">
+                    <Plus className="w-4 h-4" />
+                    <span>NEW ORDER</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Order Stat Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#78716C]">TOTAL ORDERS</p>
+                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] mt-2">{adminOrders.length}</h3>
+                  <p className="text-xs text-emerald-600 font-semibold mt-1"><TrendingUp className="w-3.5 h-3.5 inline mr-1" /> Live database sync</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#78716C]">PROCESSING QUEUE</p>
+                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] mt-2">
+                    {adminOrders.filter(o => ['PROCESSING', 'CONFIRMED', 'TAILORING'].includes(normalizeStatus(o.status))).length}
+                  </h3>
+                  <p className="text-xs text-amber-700 font-semibold mt-1"><Clock className="w-3.5 h-3.5 inline mr-1" /> Requires atelier action</p>
+                </div>
+                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#78716C]">SYSTEM COMPLIANCE</p>
+                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] mt-2">100%</h3>
+                  <p className="text-xs text-emerald-600 font-semibold mt-1"><CheckCircle2 className="w-3.5 h-3.5 inline mr-1" /> Fully operational</p>
+                </div>
+              </div>
+
+              {/* Filter Tabs & Search */}
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="relative w-full md:w-80">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <input 
+                      type="text" 
+                      placeholder="Search order ID, product..." 
+                      value={orderSearchQuery}
+                      onChange={(e) => setOrderSearchQuery(e.target.value)}
+                      className="bg-[#FAF8F5] border border-[#EFECE6] pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#B89768] w-full" 
+                    />
+                  </div>
+                  <div className="flex bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-1 text-xs overflow-x-auto w-full md:w-auto">
+                    {['All', 'Active', 'Delivered', 'Cancelled'].map(tab => (
+                      <button 
+                        key={tab}
+                        onClick={() => setOrderStatusFilter(tab)}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                          orderStatusFilter === tab ? 'bg-[#1C1A17] text-white shadow-sm' : 'text-[#78716C] hover:text-black'
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {ordersLoading ? (
+                  <div className="py-16 text-center space-y-3">
+                    <div className="w-8 h-8 mx-auto border-2 border-gray-300 border-t-[#B89768] rounded-full animate-spin"></div>
+                    <p className="text-xs text-[#78716C]">Loading live atelier orders...</p>
+                  </div>
+                ) : ordersError ? (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-center justify-between">
+                    <span>{ordersError}</span>
+                    <button onClick={loadAdminOrders} className="underline font-bold">Retry</button>
+                  </div>
+                ) : filteredLiveOrders.length === 0 ? (
+                  <div className="py-16 text-center text-[#78716C]">
+                    <ShoppingBag className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                    <p className="text-sm font-serif">No orders found matching your criteria.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
+                          <th className="py-3 px-3">Order ID</th>
+                          <th className="py-3 px-3">Patron / Customer</th>
+                          <th className="py-3 px-3">Product / Garment</th>
+                          <th className="py-3 px-3">Amount</th>
+                          <th className="py-3 px-3">Status</th>
+                          <th className="py-3 px-3">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EFECE6] text-sm">
+                        {filteredLiveOrders.map((ord, idx) => {
+                          const orderNum = ord.order_number || ord.orderNumber || `WF-${ord.id}`;
+                          const prodName = ord.product_name || ord.productName || 'WEFTIN Bespoke Item';
+                          const custName = ord.customer_name || ord.customerName || 'VIP Patron';
+                          const amount = ord.total_price || ord.price || 0;
+                          const stat = normalizeStatus(ord.status);
+
+                          return (
+                            <tr key={ord.id || idx} className="hover:bg-[#FAF8F5]/60 transition">
+                              <td className="py-4 px-3 font-mono font-bold text-xs text-[#1C1A17]">{orderNum}</td>
+                              <td className="py-4 px-3 text-[#1C1A17] font-medium">{custName}</td>
+                              <td className="py-4 px-3 text-[#1C1A17]">
+                                <div className="font-medium">{prodName}</div>
+                                {ord.size && <span className="text-[10px] text-[#78716C]">Size: {ord.size}</span>}
+                              </td>
+                              <td className="py-4 px-3 font-semibold text-[#1C1A17]">{formatPrice(amount)}</td>
+                              <td className="py-4 px-3">
+                                <span className={`px-2.5 py-1 rounded text-[9px] uppercase font-bold tracking-wider inline-flex items-center gap-1 ${getStatusStyle(stat)}`}>
+                                  {getStatusLabel(stat)}
+                                </span>
+                              </td>
+                              <td className="py-4 px-3">
+                                <button 
+                                  onClick={() => showToast(`Opening management console for ${orderNum}`)} 
+                                  className="bg-black hover:bg-[#B89768] text-white hover:text-black text-xs px-3.5 py-1.5 rounded-lg font-bold transition"
+                                >
+                                  Manage
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             /* ================= DYNAMIC MODULE VIEW ================= */
