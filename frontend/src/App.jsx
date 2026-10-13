@@ -8,7 +8,7 @@ import Profile_Page from './pages/Profile_Page';
 import Dashboard from './pages/Dashboard';
 import Cart_Page from './pages/Cart_Page';
 import Product_Overview from './pages/Product_Overview';
-import AddProduct_Page from './pages/AddProduct_Page'; // If you created the admin form
+import AddProduct_Page from './pages/AddProduct_Page'; 
 import CustomDesigns_Page from './pages/CustomDesigns_Page';
 import CustomWorkspace_Page from './pages/CustomWorkspace_Page';
 import Measurements_Page from './pages/Measurements_Page';
@@ -23,8 +23,9 @@ import Register_Page from './pages/Register_Page';
 import Admin_HomeCMS_Page from './pages/Admin_HomeCMS_Page';
 import Admin_Lookbook_Page from "./pages/Admin_Lookbook_Page";
 import Admin_Limitededition_Page from "./pages/Admin_Limitededition_Page";
-import Collections_Page from "./pages/Collections_Page"; // Adjust path based on your folder structure
+import Collections_Page from "./pages/Collections_Page"; 
 import Admin_Dashboard_Page from './pages/Admin_Dashboard_Page';
+
 export default function App() {
   return (
     <Router>
@@ -38,7 +39,6 @@ export default function App() {
         <Route path="/cart" element={<Cart_Page />} />
         <Route path="/custom-designs" element={<CustomDesigns_Page />} />
         <Route path="/custom-workspace/:id" element={<CustomWorkspace_Page />} />
-        {/* Update this line to include /:id */}
         <Route path="/product/:id" element={<Product_Overview />} />
         <Route path="/measurements" element={<Measurements_Page />} />
         <Route path="/admin/add-product" element={<AddProduct_Page />} />
@@ -51,19 +51,11 @@ export default function App() {
         <Route path="/login" element={<Login_Page />} />
         <Route path="/register" element={<Register_Page />} />
         <Route path="/collections" element={<Collections_Page />} />
-<Route path="/admin/home-cms" element={<Admin_HomeCMS_Page />} /> 
+        <Route path="/admin/home-cms" element={<Admin_HomeCMS_Page />} />
         <Route path="/admin/dashboard" element={<Admin_Dashboard_Page />} />
-<Route
-  path="/admin/lookbook"
-  element={<Admin_Lookbook_Page />}
-/>
-<Route
-  path="/admin/limited-edition"
-  element={
-    <Admin_Limitededition_Page />
-  }
-/>
-     </Routes>
+        <Route path="/admin/lookbook" element={<Admin_Lookbook_Page />} />
+        <Route path="/admin/limited-edition" element={<Admin_Limitededition_Page />} />
+      </Routes>
     </Router>
   );
 }
