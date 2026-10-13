@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, Scissors, Ruler, Heart, MapPin, 
   User, Bell, Headphones, LogOut, ShoppingBag, Sparkles, 
   X, Menu, ChevronRight, Settings, Search, Mail, CheckCircle2, 
-  ChevronDown, ChevronUp 
+  ChevronDown, ChevronUp, Loader2 
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -24,6 +24,8 @@ export default function Support_Page() {
   const [subject, setSubject] = useState('Size alteration support request');
   const [concerns, setConcerns] = useState('');
   const [openFaq, setOpenFaq] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingHelpdesk, setIsSendingHelpdesk] = useState(false);
 
   // ==================================================
   // NOTIFICATIONS
@@ -88,6 +90,8 @@ export default function Support_Page() {
   }, [navigate]);
 
   const userEmail = currentUser?.email || "";
+  const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "WEFTIN Member";
+  const userInitial = userName.charAt(0).toUpperCase() || "W";
 
   // ==================================================
   // LOAD UNREAD NOTIFICATION COUNT
@@ -134,36 +138,80 @@ export default function Support_Page() {
     navigate(`/shop?search=${encodeURIComponent(query)}`);
   };
 
-  const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "WEFTIN Member";
-  const userInitial = userName.charAt(0).toUpperCase() || "W";
+  // Direct backend dispatch for Helpdesk Email
+  const handleEmailHelpdesk = async () => {
+    setIsSendingHelpdesk(true);
+    const token = localStorage.getItem("weftin_token");
 
-  const handleEmailHelpdesk = () => {
-    const mailtoUrl = `mailto:chbharath0779@gmail.com?subject=${encodeURIComponent("Support Inquiry from WEFTIN Member: " + userName)}&body=${encodeURIComponent("User Email: " + userEmail + "\n\nPlease write your queries or feedback below:\n\n")}`;
-    window.location.href = mailtoUrl;
-    showToast('Opening mail client to chbharath0779@gmail.com');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/support/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          recipient: "chbharath0779@gmail.com",
+          subject: `Support Inquiry from WEFTIN Member: ${userName}`,
+          message: `User Name: ${userName}\nUser Email: ${userEmail}\n\nUser requested direct helpdesk assistance.`,
+          user_email: userEmail
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to send email to helpdesk.");
+      }
+
+      showToast("Email dispatched successfully to chbharath0779@gmail.com!");
+    } catch (error) {
+      console.error("Helpdesk email error:", error);
+      showToast(error?.message || "Failed to dispatch email. Please use the ticket form below.");
+    } finally {
+      setIsSendingHelpdesk(false);
+    }
   };
 
-  const handleFileTicket = (e) => {
+  // Direct backend dispatch for Tailoring Ticket
+  const handleFileTicket = async (e) => {
     e.preventDefault();
     if (!concerns.trim()) {
       showToast('Please elaborate your concerns.');
       return;
     }
 
-    const ticketBody = `--- WEFTIN SUPPORT TICKET ---
-Ticket Subject: ${subject}
-Customer Name: ${userName}
-Customer Email: ${userEmail}
+    setIsSubmitting(true);
+    const token = localStorage.getItem("weftin_token");
 
-Concerns / Specifications:
-${concerns}
------------------------------`;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/support/ticket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          recipient: "chbharath0779@gmail.com",
+          subject: subject,
+          concerns: concerns,
+          user_name: userName,
+          user_email: userEmail
+        })
+      });
 
-    const mailtoTicketUrl = `mailto:chbharath0779@gmail.com?subject=${encodeURIComponent("[Support Ticket] " + subject)}&body=${encodeURIComponent(ticketBody)}`;
-    window.location.href = mailtoTicketUrl;
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || "Failed to file tailoring ticket.");
+      }
 
-    showToast('Ticket generated! Master lookup initiated & mail client opened.');
-    setConcerns('');
+      showToast('Ticket filed successfully and sent to chbharath0779@gmail.com!');
+      setConcerns('');
+    } catch (error) {
+      console.error("Tailoring ticket error:", error);
+      showToast(error?.message || "Unable to submit ticket right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const NotificationBadge = () => {
@@ -404,7 +452,7 @@ ${concerns}
             </h2>
           </div>
           <p className="text-xs text-gray-500">
-            Contact senior atelier designers directly via secured email lines or structured support tickets.
+            Contact senior atelier designers directly via backend secure dispatch or structured support tickets.
           </p>
         </div>
 
@@ -415,13 +463,15 @@ ${concerns}
           </span>
           <h3 className="font-serif text-lg font-medium text-gray-900 mt-2 mb-1">Escalate Fits Concern</h3>
           <p className="text-xs text-gray-500 mb-4">
-            Mail master invoices or customized reference files directly to our helpdesk at <strong className="text-gray-800">chbharath0779@gmail.com</strong>.
+            Directly dispatch inquiries to our helpdesk at <strong className="text-gray-800">chbharath0779@gmail.com</strong> with one click.
           </p>
           <button 
             onClick={handleEmailHelpdesk} 
-            className="border border-gray-300 hover:border-black text-gray-800 px-5 py-2.5 rounded text-xs uppercase tracking-wider font-semibold bg-white flex items-center gap-2 cursor-pointer transition-colors"
+            disabled={isSendingHelpdesk}
+            className="border border-gray-300 hover:border-black text-gray-800 px-5 py-2.5 rounded text-xs uppercase tracking-wider font-semibold bg-white flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
           >
-            <Mail className="w-3.5 h-3.5 text-amber-700" /> Email Helpdesk
+            {isSendingHelpdesk ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" /> : <Mail className="w-3.5 h-3.5 text-amber-700" />}
+            {isSendingHelpdesk ? "Dispatching..." : "Email Helpdesk"}
           </button>
         </div>
 
@@ -456,11 +506,16 @@ ${concerns}
 
               <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200/80 flex items-center gap-3 text-emerald-900">
                 <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
-                <span>Ticket sends directly to chbharath0779@gmail.com and invokes dedicated Senior Master lookup within 2 working hours. Backed by WEFTIN Luxury Guarantee.</span>
+                <span>Ticket is transmitted securely to chbharath0779@gmail.com and invokes dedicated Senior Master lookup within 2 working hours.</span>
               </div>
 
-              <button type="submit" className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded-lg text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer transition-colors">
-                File Secure Ticket
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full bg-[#1C1816] hover:bg-black text-white py-4 rounded-lg text-xs uppercase tracking-[0.2em] font-semibold shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isSubmitting ? "Filing Ticket..." : "File Secure Ticket"}
               </button>
             </form>
           </div>
@@ -475,6 +530,7 @@ ${concerns}
               {faqs.map((faq, idx) => (
                 <div key={idx} className="border-b border-gray-100 pb-4">
                   <button 
+                    type="button"
                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)} 
                     className="flex justify-between items-center w-full font-serif font-semibold text-sm text-gray-900 text-left py-1 cursor-pointer"
                   >
