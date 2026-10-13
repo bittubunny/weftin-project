@@ -24,7 +24,7 @@ import Admin_HomeCMS_Page from './pages/Admin_HomeCMS_Page';
 import Admin_Lookbook_Page from "./pages/Admin_Lookbook_Page";
 import Admin_Limitededition_Page from "./pages/Admin_Limitededition_Page";
 import Collections_Page from "./pages/Collections_Page"; // Adjust path based on your folder structure
-
+import Admin_Dashboard_Page from './pages/Admin_Dashboard_Page';
 export default function App() {
   return (
     <Router>
@@ -52,6 +52,7 @@ export default function App() {
         <Route path="/register" element={<Register_Page />} />
         <Route path="/collections" element={<Collections_Page />} />
 <Route path="/admin/home-cms" element={<Admin_HomeCMS_Page />} /> 
+        <Route path="/admin/dashboard" element={<Admin_Dashboard_Page />} />
 <Route
   path="/admin/lookbook"
   element={<Admin_Lookbook_Page />}
