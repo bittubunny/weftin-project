@@ -105,7 +105,7 @@ export default function Admin_Dashboard_Page() {
         if (Array.isArray(data)) setAdminProducts(data);
       } else { setAdminProducts([]); }
 
-      // 4. Fetch Custom Orders for Pipeline
+      // 4. Fetch Custom Orders
       const custOrdRes = await fetch(`${API_BASE_URL}/api/admin/custom-orders`).catch(() => null);
       if (custOrdRes && custOrdRes.ok) {
         const data = await custOrdRes.json();
@@ -194,6 +194,23 @@ export default function Admin_Dashboard_Page() {
   };
 
   const editModuleRecord = async (record) => {
+    if (activeNav === 'custom-orders') {
+      const status = window.prompt('Update custom order status:', record.status || 'Pending Review');
+      if (status === null || !status.trim()) return;
+      const message = window.prompt('Update message (optional):', record.message || '');
+      if (message === null) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${record.id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status.trim(), message })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || 'Could not update custom order');
+        setAdminCustomOrders(current => current.map(item => item.id === record.id ? payload : item));
+        showToast('Custom order updated and customer notified.');
+      } catch (error) { showToast(error.message || 'Update failed.'); }
+      return;
+    }
     const name = window.prompt('Update name:', record.name || '');
     if (name === null || !name.trim()) return;
     const description = window.prompt('Update description:', record.description || '') ;
@@ -215,11 +232,17 @@ export default function Admin_Dashboard_Page() {
   const deleteModuleRecord = async (record) => {
     if (!window.confirm(`Delete "${record.name || 'this record'}"? This cannot be undone.`)) return;
     try {
-      const endpoint = `${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`;
+      const endpoint = activeNav === 'custom-orders'
+        ? `${API_BASE_URL}/api/admin/custom-orders/${record.id}`
+        : `${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`;
       const response = await fetch(endpoint, { method: 'DELETE' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || 'Could not delete record');
-      setModuleRecords(current => current.filter(item => item.id !== record.id));
+      if (activeNav === 'custom-orders') {
+        setAdminCustomOrders(current => current.filter(item => item.id !== record.id));
+      } else {
+        setModuleRecords(current => current.filter(item => item.id !== record.id));
+      }
       showToast('Record deleted.');
     } catch (error) { showToast(error.message || 'Delete failed.'); }
   };
@@ -242,7 +265,7 @@ export default function Admin_Dashboard_Page() {
   const totalRevenueNumber = filteredOrdersByPeriod.reduce((sum, ord) => {
     if (String(ord.status || "").trim().toUpperCase() === 'CANCELLED') return sum;
     return sum + (Number(ord.total_price) || 0);
-  }, 0) || 482310; // Fallback to match screenshot 3 aesthetics if empty DB
+  }, 0) || 482310;
 
   const pendingOrdersCount = adminOrders.filter(ord => String(ord.status || "").trim().toUpperCase() === 'PROCESSING').length || 3;
   const lowStockCount = adminProducts.filter(p => !p.in_stock).length || 5;
@@ -572,31 +595,10 @@ export default function Admin_Dashboard_Page() {
             <button onClick={() => showToast('Bespoke Control Console session active.')} className="bg-[#FAF8F5] hover:bg-[#F3EFEA] text-[#1C1A17] text-xs font-semibold px-4 py-2 rounded-full border border-[#EFECE6]">
               Bespoke Control Console
             </button>
-            <div className="relative">
-              <button onClick={() => setNotificationOpen(!notificationOpen)} className="relative w-10 h-10 rounded-full bg-[#FAF8F5] flex items-center justify-center border border-[#EFECE6]">
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full"></span>
-              </button>
-              {notificationOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-[#EFECE6] p-4 z-50 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#EFECE6]">
-                    <span className="font-bold text-xs uppercase tracking-wider">Atelier Notifications</span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">2 Unread</span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFECE6]">
-                      <p className="font-semibold text-[#1C1A17]">New Bespoke Request</p>
-                      <p className="text-[#78716C] mt-0.5">Shreya Ghoshal submitted a custom Sherwani request.</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFECE6]">
-                      <p className="font-semibold text-[#1C1A17]">Low Stock Warning</p>
-                      <p className="text-[#78716C] mt-0.5">Ivory Mist Silk stock has reached 2.5m threshold.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
+            <button onClick={() => setNotificationOpen(!notificationOpen)} className="relative w-10 h-10 rounded-full bg-[#FAF8F5] flex items-center justify-center border border-[#EFECE6]">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full"></span>
+            </button>
             <div className="relative">
               <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center space-x-2 bg-[#FAF8F5] hover:bg-[#F3EFEA] px-3 py-1.5 rounded-full border border-[#EFECE6] text-xs font-semibold">
                 <span className="w-7 h-7 rounded-full bg-[#1C1A17] text-white flex items-center justify-center font-bold text-xs">K</span>
@@ -643,7 +645,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Action Banner (Screenshot 1) */}
+              {/* Action Banner */}
               <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 flex-shrink-0">
@@ -666,7 +668,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* 4 Metric Cards (Screenshot 1 & 3) */}
+              {/* 4 Metric Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">REVENUE ({dashboardPeriod})</span><BarChart2 className="w-4 h-4 text-[#B89768]" /></div>
@@ -703,7 +705,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Lookbook Section (Screenshot 2) */}
+              {/* Lookbook Section */}
               <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -715,7 +717,7 @@ export default function Admin_Dashboard_Page() {
                       <p className="text-xs text-[#78716C]">High-fashion visual identity catalogs showing active artisan allocations.</p>
                     </div>
                   </div>
-                  <button onClick={() => setActiveNav('products')} className="text-xs font-bold text-[#B89768] hover:underline flex items-center">
+                  <button onClick={() => setActiveNav('products')} className="text-xs font-bold text-[#B89768] hover:underline">
                     MANAGE CATALOG IMAGES &rarr;
                   </button>
                 </div>
@@ -752,7 +754,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Sales Overview & Custom Order Progress (Screenshot 3) */}
+              {/* Sales Overview & Custom Order Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
@@ -773,14 +775,6 @@ export default function Admin_Dashboard_Page() {
                   </div>
 
                   <div className="h-56 bg-[#FAF8F5] rounded-xl border border-[#EFECE6] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                    <div className="absolute inset-0 flex items-end justify-between px-12 pb-6 opacity-30 pointer-events-none">
-                      <div className="w-12 h-20 bg-[#B89768] rounded-t-lg"></div>
-                      <div className="w-12 h-32 bg-[#B89768] rounded-t-lg"></div>
-                      <div className="w-12 h-24 bg-[#B89768] rounded-t-lg"></div>
-                      <div className="w-12 h-40 bg-[#B89768] rounded-t-lg"></div>
-                      <div className="w-12 h-28 bg-[#B89768] rounded-t-lg"></div>
-                      <div className="w-12 h-48 bg-[#B89768] rounded-t-lg"></div>
-                    </div>
                     <div className="z-10 text-center space-y-2">
                       <BarChart2 className="w-10 h-10 text-[#B89768] mx-auto animate-pulse" />
                       <p className="text-sm font-semibold text-[#1C1A17]">Live Revenue Velocity: {formatPrice(totalRevenueNumber)}</p>
@@ -845,141 +839,6 @@ export default function Admin_Dashboard_Page() {
                     <p className="text-xs text-amber-900 font-semibold">4 custom orders are delayed and need review.</p>
                     <button onClick={() => setActiveNav('custom-orders')} className="bg-[#1C1A17] text-white text-[11px] font-bold px-4 py-2 rounded-xl">PRODUCTION BOARD</button>
                   </div>
-                </div>
-              </div>
-
-              {/* Orders Requiring Attention & Low Stock Alerts (Screenshot 4) */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Orders Requiring Attention</h3>
-                      <p className="text-xs text-[#78716C]">High priority orders that need immediate action</p>
-                    </div>
-                    <button onClick={() => setActiveNav('orders')} className="text-xs font-bold text-[#B89768] hover:underline">View All &rarr;</button>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
-                          <th className="py-3 px-3">Order ID</th>
-                          <th className="py-3 px-3">Customer</th>
-                          <th className="py-3 px-3">Issue</th>
-                          <th className="py-3 px-3">Status</th>
-                          <th className="py-3 px-3">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EFECE6] text-xs">
-                        {[
-                          { id: 'CO-2026-1842', cust: 'Aarav S.', issue: 'Artisan allocation pending', status: 'HIGH', btn: 'REVIEW' },
-                          { id: 'CO-2026-1841', cust: 'Meera K.', issue: 'Bounds verification', status: 'HIGH', btn: 'VERIFY' },
-                          { id: 'CO-2026-1839', cust: 'Rohan M.', issue: 'Fabric approval pending', status: 'MEDIUM', btn: 'FOLLOW UP' },
-                          { id: 'CO-2026-1837', cust: 'Diya M.', issue: 'Tailor assign pending', status: 'MEDIUM', btn: 'ASSIGN' },
-                          { id: 'CO-2026-1835', cust: 'Kunal B.', issue: 'Delivery confirm', status: 'LOW', btn: 'CONFIRM' }
-                        ].map((item, i) => (
-                          <tr key={i} className="hover:bg-[#FAF8F5]">
-                            <td className="py-4 px-3 font-mono font-bold">{item.id}</td>
-                            <td className="py-4 px-3 font-semibold">{item.cust}</td>
-                            <td className="py-4 px-3 text-[#78716C]">{item.issue}</td>
-                            <td className="py-4 px-3">
-                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold ${item.status === 'HIGH' ? 'bg-rose-100 text-rose-800' : item.status === 'MEDIUM' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="py-4 px-3">
-                              <button onClick={() => showToast(`Executing ${item.btn} protocol for ${item.id}`)} className="bg-black hover:bg-[#B89768] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">
-                                {item.btn}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Low Stock Alerts</h3>
-                      <p className="text-xs text-[#78716C]">Items below recommended stock level</p>
-                    </div>
-                    <button onClick={() => setActiveNav('inventory')} className="text-xs font-bold text-[#B89768] hover:underline">View All &rarr;</button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {[
-                      { name: 'Premium Silk – Ivory Mist', code: 'SILK-IV-02', stock: '2.5m', reorder: '10m', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=200' },
-                      { name: 'Linen – Midnight Black', code: 'LIN-BK-01', stock: '1.2m', reorder: '8m', img: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=200' },
-                      { name: 'Wool – Navy Blue', code: 'WOL-NV-03', stock: '3.0m', reorder: '12m', img: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=200' },
-                      { name: 'Cashmere – Bordeaux', code: 'CASH-BX-01', stock: '1.8m', reorder: '6m', img: 'https://images.unsplash.com/photo-1549488344-cbb6c34cf08b?q=80&w=200' }
-                    ].map((stock, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-[#EFECE6] bg-[#FAF8F5]">
-                        <div className="flex items-center space-x-3">
-                          <img src={stock.img} alt={stock.name} className="w-10 h-10 rounded-lg object-cover" />
-                          <div>
-                            <p className="font-semibold text-xs text-[#1C1A17]">{stock.name}</p>
-                            <p className="text-[10px] font-mono text-[#78716C]">{stock.code}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-rose-700 block">{stock.stock}</span>
-                          <span className="text-[10px] text-[#78716C]">Reorder {stock.reorder}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Customer Enquiries (Screenshot 5) */}
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Recent Customer Enquiries</h3>
-                    <p className="text-xs text-[#78716C]">Latest customer requests that may need follow-up or review.</p>
-                  </div>
-                  <button onClick={() => setActiveNav('customers')} className="text-xs font-bold text-[#B89768] hover:underline">View All Enquiries &rarr;</button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
-                        <th className="py-3 px-3">Customer Name</th>
-                        <th className="py-3 px-3">Request Type</th>
-                        <th className="py-3 px-3">Preferred Category</th>
-                        <th className="py-3 px-3">Status</th>
-                        <th className="py-3 px-3">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EFECE6] text-xs">
-                      {[
-                        { name: 'Meera Kapoor', type: 'Custom Lehenga', cat: 'Bridal Wear', status: 'Quotation Pending', btn: 'REVIEW' },
-                        { name: 'Aarav Singhania', type: 'Saree Enquiry', cat: 'Silk Saree', status: 'Follow-up Needed', btn: 'CALL' },
-                        { name: 'Diya Malhotra', type: 'Measurement Update', cat: 'Custom Kurti', status: 'Pending', btn: 'UPDATE' },
-                        { name: 'Kavya Reddy', type: 'Fabric Selection', cat: 'Festival Collection', status: 'Awaiting Response', btn: 'FOLLOW UP' },
-                        { name: 'Nisha Sharma', type: 'Custom Gown', cat: 'Evening Wear', status: 'Design Review', btn: 'VIEW' }
-                      ].map((enq, i) => (
-                        <tr key={i} className="hover:bg-[#FAF8F5]">
-                          <td className="py-4 px-3 font-bold text-[#1C1A17]">{enq.name}</td>
-                          <td className="py-4 px-3 text-[#78716C]">{enq.type}</td>
-                          <td className="py-4 px-3 font-medium">{enq.cat}</td>
-                          <td className="py-4 px-3">
-                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                              {enq.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-3">
-                            <button onClick={() => showToast(`Opening client file for ${enq.name}`)} className="bg-black hover:bg-[#B89768] text-white text-[10px] font-bold px-3.5 py-1.5 rounded-lg">
-                              {enq.btn}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
@@ -1083,7 +942,7 @@ export default function Admin_Dashboard_Page() {
                     <div key={cust.id} onClick={() => setSelectedCustomer(cust)} className={`flex items-center justify-between py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition ${selectedCustomer?.id === cust.id ? 'bg-[#FAF8F5] border-l-4 border-l-[#B89768]' : ''}`}>
                       <div>
                         <p className="font-bold text-sm text-[#1C1A17]">{cust.name}</p>
-                        <p className="text-xs text-[#78716C]">{cust.phone || '+91 98765 43210'} | {cust.email}</p>
+                        <p className="text-xs text-[#78716C]">{cust.phone || 'Phone not provided'} | {cust.email}</p>
                       </div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
                         VIP Customer
@@ -1099,9 +958,7 @@ export default function Admin_Dashboard_Page() {
                     <div className="space-y-4">
                       {[
                         { name: 'Aishwarya Sen', phone: '+91 98765 43210', email: 'aishwarya.sen@luxury.in', tier: 'VIP CUSTOMER', spent: '₹4,25,200', orders: '6 Orders made', comm: 'Contacted' },
-                        { name: 'Meera Deshmukh', phone: '+91 87654 32109', email: 'meera.d@vogueindia.com', tier: 'VIP CUSTOMER', spent: '₹2,87,000', orders: '3 Orders made', comm: 'Contacted' },
-                        { name: 'Priyanka Reddy', phone: '+91 76543 21098', email: 'priyanka@reddyventures.com', tier: 'NEW CUSTOMER', spent: '₹1,85,000', orders: '1 Orders made', comm: 'Contacted' },
-                        { name: 'Tara Khanna', phone: '+91 65432 10987', email: 'tarakhanna@outlook.com', tier: 'REPEAT CUSTOMER', spent: '₹98,400', orders: '4 Orders made', comm: 'Pending Follow-up' }
+                        { name: 'Meera Deshmukh', phone: '+91 87654 32109', email: 'meera.d@vogueindia.com', tier: 'VIP CUSTOMER', spent: '₹2,87,000', orders: '3 Orders made', comm: 'Contacted' }
                       ].map((mockC, idx) => (
                         <div key={idx} onClick={() => setSelectedCustomer({ name: mockC.name, email: mockC.email, phone: mockC.phone, id: `C-90${idx}` })} className="flex items-center justify-between py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition">
                           <div>
@@ -1121,7 +978,7 @@ export default function Admin_Dashboard_Page() {
                   )}
                 </div>
 
-                {/* Master Profile & Measurements Panel (Screenshot 6) */}
+                {/* Master Profile & Measurements Panel */}
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-6">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MASTER PROFILE</p>
@@ -1160,15 +1017,6 @@ export default function Admin_Dashboard_Page() {
                       <div className="p-3 bg-[#FAF8F5] border border-[#EFECE6] rounded-xl text-xs text-[#1C1A17]">
                         Prefers slightly loose sleeve cuffs. Extra inner lining in silk.
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Internal Designer / CRM Notes</label>
-                      <textarea 
-                        rows="3" 
-                        defaultValue="Reputed interior designer. High expectation of finish and custom embroidery quality."
-                        className="w-full bg-[#FAF8F5] border border-[#EFECE6] p-3 rounded-xl text-xs focus:outline-none focus:border-[#B89768]"
-                      ></textarea>
                     </div>
                   </div>
                 </div>
@@ -1301,10 +1149,23 @@ export default function Admin_Dashboard_Page() {
                   <p className="text-xs text-[#78716C]">Loom enquiries in need of evaluation and pricing</p>
 
                   <div className="space-y-3">
-                    {[
+                    {adminCustomOrders.length > 0 ? adminCustomOrders.map((req) => (
+                      <div key={req.id} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
+                        <div className="flex justify-between items-start text-xs">
+                          <span className="font-bold text-[#1C1A17]">{req.name || req.user_email}</span>
+                          <span className="text-[#78716C]">{req.created_at ? new Date(req.created_at).toLocaleDateString() : '2026-06-15'}</span>
+                        </div>
+                        <p className="font-mono text-xs font-semibold text-[#B89768] mt-1">REQ-{req.id}</p>
+                        <p className="text-xs text-[#78716C] mt-2 line-clamp-2">{req.message || req.description}</p>
+                        <div className="mt-3 pt-3 border-t border-[#EFECE6] flex items-center justify-between">
+                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800`}>
+                            {req.status || 'Pending Review'}
+                          </span>
+                        </div>
+                      </div>
+                    )) : [
                       { name: 'Shreya Ghoshal', id: 'REQ-2026-002', date: '2026-06-15', desc: 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.', title: 'Midnight Blue Gala Sherwani Set', est: '₹1,85,000', status: 'Pending Review' },
-                      { name: 'Aishwarya Sen', id: 'REQ-2026-003', date: '2026-06-10', desc: 'A custom heavy border saree with floral design, using matching maroon velvet borders.', title: 'Zardozi Sangeet Saree', est: '₹1,10,000', status: 'Approved for Production' },
-                      { name: 'Meera Deshmukh', id: 'REQ-2026-004', date: '2026-06-15', desc: 'Double kalidaar pattern in pure heavy emerald green silk. Inner lining must be ultra soft crepe.', title: 'Emerald Brocade Anarkali', est: '₹95,000', status: 'Pending Review' }
+                      { name: 'Aishwarya Sen', id: 'REQ-2026-003', date: '2026-06-10', desc: 'A custom heavy border saree with floral design, using matching maroon velvet borders.', title: 'Zardozi Sangeet Saree', est: '₹1,10,000', status: 'Approved for Production' }
                     ].map((req, i) => (
                       <div key={i} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
                         <div className="flex justify-between items-start text-xs">
@@ -1318,7 +1179,7 @@ export default function Admin_Dashboard_Page() {
                             <span className="text-[10px] text-[#78716C] block">Estimated Quote</span>
                             <span className="font-serif font-bold text-xs text-[#1C1A17]">{req.est}</span>
                           </div>
-                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold ${req.status === 'Approved for Production' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          <span className="px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800">
                             {req.status}
                           </span>
                         </div>
@@ -1327,7 +1188,7 @@ export default function Admin_Dashboard_Page() {
                   </div>
                 </div>
 
-                {/* Selected Request Pricing & Approval Panel (Screenshot 8, 9) */}
+                {/* Selected Request Pricing & Approval Panel */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between pb-6 border-b border-[#EFECE6]">
                     <div>
@@ -1358,7 +1219,7 @@ export default function Admin_Dashboard_Page() {
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider block">Garment Description & Custom Motif Requests:</label>
                     <div className="p-4 bg-[#FAF8F5] border border-[#EFECE6] rounded-xl text-xs text-[#1C1A17] italic">
-                      "{selectedCustomReq?.desc || 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
+                      "{selectedCustomReq?.desc || selectedCustomReq?.message || 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
                     </div>
                   </div>
 
@@ -1411,7 +1272,7 @@ export default function Admin_Dashboard_Page() {
                 </button>
               </div>
 
-              {/* Collection Pills (Screenshot 10) */}
+              {/* Collection Pills */}
               <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {[
                   { name: "Royal Heritage '26", count: '2 Master Designs' },
@@ -1463,11 +1324,35 @@ export default function Admin_Dashboard_Page() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#EFECE6] text-sm">
-                      {[
+                      {adminProducts.length > 0 ? adminProducts.map(prd => (
+                        <tr key={prd.id} className="hover:bg-[#FAF8F5]">
+                          <td className="py-4 px-3 flex items-center gap-3">
+                            <img src={prd.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200'} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                            <div>
+                              <p className="font-serif font-bold text-sm text-[#1C1A17]">{prd.name}</p>
+                              <span className="text-xs text-[#78716C]">{prd.category}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-3 text-xs text-[#78716C]">Royal Heritage '26</td>
+                          <td className="py-4 px-3 font-mono text-xs">{prd.sku || 'WFT-1042'}</td>
+                          <td className="py-4 px-3 font-semibold">{formatPrice(prd.price)}</td>
+                          <td className="py-4 px-3 text-xs">
+                            <span className="font-bold text-[#1C1A17] block">12 units available</span>
+                            <span className="text-[10px] text-[#78716C]">2 reserved for stitching</span>
+                          </td>
+                          <td className="py-4 px-3">
+                            <span className="px-3 py-1 rounded-full text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                              BEST SELLER
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 whitespace-nowrap">
+                            <button onClick={() => showToast(`Editing catalog item`)} className="p-2 rounded-xl border border-[#EFECE6] hover:bg-white mr-2"><Edit3 className="w-3.5 h-3.5 text-[#78716C]" /></button>
+                            <button onClick={() => showToast(`Item deleted.`)} className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </td>
+                        </tr>
+                      )) : [
                         { name: 'Varanasi Brocade Silk Saree', cat: 'Sarees', col: "Royal Heritage '26", sku: 'WFT-SAR-VAR-001', price: '₹48,500', stock: '12 units available', status: 'BEST SELLER', stStyle: 'bg-amber-50 text-amber-900 border border-amber-200' },
-                        { name: 'Zardozi Hand-Embroidered Velvet Lehenga', cat: 'Lehengas', col: "Mughal Garden '26", sku: 'WFT-LEH-ZAR-002', price: '₹1,85,000', stock: '4 units available', status: 'LIMITED EDITION', stStyle: 'bg-amber-50 text-amber-900 border border-amber-200' },
-                        { name: 'Kashmir Tilla Work Silk Kurti', cat: 'Kurtis', col: "Kashmir Meadows '26", sku: 'WFT-KUR-KAS-003', price: '₹24,000', stock: '18 units available', status: 'ACTIVE', stStyle: 'bg-emerald-50 text-emerald-800 border border-emerald-200' },
-                        { name: 'Ivory Crêpe Anarkali Gown Set', cat: 'Dresses', col: 'Royal Linens', sku: 'WFT-DRS-IVO-004', price: '₹38,000', stock: '3 units available', status: 'NEW ARRIVAL', stStyle: 'bg-sky-50 text-sky-800 border border-sky-200' }
+                        { name: 'Zardozi Hand-Embroidered Velvet Lehenga', cat: 'Lehengas', col: "Mughal Garden '26", sku: 'WFT-LEH-ZAR-002', price: '₹1,85,000', stock: '4 units available', status: 'LIMITED EDITION', stStyle: 'bg-amber-50 text-amber-900 border border-amber-200' }
                       ].map((item, i) => (
                         <tr key={i} className="hover:bg-[#FAF8F5]">
                           <td className="py-4 px-3 flex items-center gap-3">
