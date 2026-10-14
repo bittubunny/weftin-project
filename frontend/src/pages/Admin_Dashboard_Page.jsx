@@ -61,6 +61,10 @@ export default function Admin_Dashboard_Page() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedCustomReq, setSelectedCustomReq] = useState(null);
   const [offerPriceInput, setOfferPriceInput] = useState('');
+  const [moduleRecords, setModuleRecords] = useState([]);
+  const [moduleSearch, setModuleSearch] = useState('');
+  const [moduleError, setModuleError] = useState('');
+  const [recordSaving, setRecordSaving] = useState(false);
 
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
@@ -77,50 +81,24 @@ export default function Admin_Dashboard_Page() {
       if (ordRes && ordRes.ok) {
         const data = await ordRes.json();
         if (Array.isArray(data)) setAdminOrders(data);
-      } else {
-        setAdminOrders([
-          { id: 1, order_number: 'WF-2026-000001', user_email: 'chbharath0779@gmail.com', product_name: 'Trendy Outfit 2026 | Chic, Casual & Aesthetic', total_price: '1599.00', status: 'PROCESSING', quantity: 1, ordered_at: '2026-10-03 08:15:50' },
-          { id: 6, order_number: 'WF-2026-000006', user_email: 'chbharath0779@gmail.com', product_name: 'Creamy Pink and White Long Gown🌸', total_price: '1200.00', status: 'PROCESSING', quantity: 1, ordered_at: '2026-10-05 11:39:21' },
-          { id: 10, order_number: 'WF-2026-000010', user_email: 'riteesh@gmail.com', product_name: 'Creamy Pink and White Long Gown🌸', total_price: '1200.00', status: 'PROCESSING', quantity: 1, ordered_at: '2026-10-06 11:36:23' },
-          { id: 11, order_number: 'WF-2026-000011', user_email: 'riteesh@gmail.com', product_name: 'Rose Reverie', total_price: '1500.00', status: 'CANCELLED', quantity: 1, ordered_at: '2026-10-06 16:30:14' },
-          { id: 17, order_number: 'WF-2026-000017', user_email: 'chelimalla@gmail.com', product_name: 'Maroon Heritage Banarasi Saree', total_price: '18500.00', status: 'PROCESSING', quantity: 1, ordered_at: '2026-10-10 09:41:35' }
-        ]);
-      }
+      } else { setAdminOrders([]); }
 
       // 2. Fetch Users / Customers
       const usrRes = await fetch(`${API_BASE_URL}/api/admin/users`).catch(() => null);
       if (usrRes && usrRes.ok) {
         const data = await usrRes.json();
         if (Array.isArray(data)) setAdminCustomers(data);
-      } else {
-        setAdminCustomers([
-          { id: 1, name: 'Bharath Chelimalla', email: 'chbharath0779@gmail.com', phone: '8309281410', created_at: '2026-10-02 18:15:58', tier: 'VIP Bespoke', spent: '₹4,25,200' },
-          { id: 2, name: 'Rahul', email: 'rahul@gmail.com', phone: 'N/A', created_at: '2026-10-05 11:23:45', tier: 'Standard', spent: '₹95,000' },
-          { id: 7, name: 'abhi', email: 'visdlabs@gmail.com', phone: '6302982417', created_at: '2026-10-06 06:57:47', tier: 'Atelier Club', spent: '₹1,85,000' },
-          { id: 8, name: 'Riteesh', email: 'riteesh@gmail.com', phone: 'N/A', created_at: '2026-10-06 10:28:49', tier: 'VIP Bespoke', spent: '₹8,40,000' }
-        ]);
-      }
+      } else { setAdminCustomers([]); }
 
       // 3. Fetch Products
       const prdRes = await fetch(`${API_BASE_URL}/api/products`).catch(() => null);
       if (prdRes && prdRes.ok) {
         const data = await prdRes.json();
         if (Array.isArray(data)) setAdminProducts(data);
-      } else {
-        setAdminProducts([
-          { id: 6, sku: 'WFT-SR-1042', name: 'White Saree with Authentic Floral Design', category: 'Sarees', price: '999', in_stock: true, image: 'https://i.pinimg.com/736x/66/e3/7f/66e37f11a3ee3670422896fe28bdd773.jpg' },
-          { id: 9, sku: 'WFT-SR-1042', name: 'Trendy Outfit 2026 | Chic, Casual & Aesthetic', category: 'Dresses & Gowns', price: '1599', in_stock: true, image: 'https://i.pinimg.com/736x/32/22/79/32227990887dcd4fef1c61bd1a9ce0a2.jpg' },
-          { id: 15, sku: 'WFT-SR-1042', name: 'Rose Reverie', category: 'Lehengas', price: '1500', in_stock: true, image: 'https://i.pinimg.com/736x/3a/ad/45/3aad45d6ca1cee8d7920fd9b817955ed.jpg' },
-          { id: 17, sku: 'WFT-SR-1042', name: 'Creamy Pink and White Long Gown🌸', category: 'Dresses & Gowns', price: '1200', in_stock: true, image: 'https://i.pinimg.com/736x/4a/77/a7/4a77a751ae2a1f3d4a8a1a7e68b36f06.jpg' }
-        ]);
-      }
+      } else { setAdminProducts([]); }
 
-      // 4. Custom Design Requests
-      setAdminCustomOrders([
-        { id: 1, user_email: 'chbharath0779@gmail.com', product_name: 'Pink & White Floral Anarkali', category: 'Dresses & Gowns', price: '1299', status: 'Pending Review', line: 'BESPOKE CUSTOM LINE', message: 'Master tailor received your bespoke request for this piece. Needs hand-stitched Kashmiri white silk tilla lines.', created_at: '2026-10-03' },
-        { id: 2, user_email: 'shry@gmail.com', product_name: 'Midnight Blue Gala Sherwani Set', category: 'Sherwanis', price: '185000', status: 'Pending Review', line: 'BESPOKE CUSTOM LINE', message: 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.', created_at: '2026-06-15' },
-        { id: 3, user_email: 'aishwarya@luxury.in', product_name: 'Zardozi Sangeet Saree', category: 'Sarees', price: '110000', status: 'Approved for Production', line: 'BESPOKE CUSTOM LINE', message: 'A custom heavy border saree with floral design, using matching maroon velvet borders.', created_at: '2026-06-10' }
-      ]);
+      // Custom design requests are loaded from the admin API when the module is opened.
+      setAdminCustomOrders([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -137,11 +115,125 @@ export default function Admin_Dashboard_Page() {
     window.location.href = "https://weftin-project.vercel.app/admin/add-product";
   };
 
+  const updateOrderStatus = async (order) => {
+    const current = normalizeStatus(order.status);
+    const next = window.prompt(
+      `Set status for ${order.order_number}. Valid values: PROCESSING, CONFIRMED, TAILORING, READY_TO_SHIP, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED`,
+      current
+    );
+    if (next === null || !next.trim()) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}/status`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next.trim().toUpperCase() })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || 'Could not update order');
+      setAdminOrders(currentOrders => currentOrders.map(item => item.id === order.id ? payload.order : item));
+      showToast('Order status updated and customer notified.');
+    } catch (error) { showToast(error.message || 'Order update failed.'); }
+  };
+
+  const loadModuleRecords = useCallback(async (moduleKey = activeNav) => {
+    if (['dashboard', 'orders', 'customers', 'products'].includes(moduleKey)) return;
+    setModuleLoading(true);
+    setModuleError('');
+    try {
+      const endpoint = moduleKey === 'custom-orders'
+        ? `${API_BASE_URL}/api/admin/custom-orders`
+        : `${API_BASE_URL}/api/admin/records/${encodeURIComponent(moduleKey)}`;
+      const response = await fetch(endpoint);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || `Could not load ${moduleKey}`);
+      setModuleRecords(Array.isArray(payload) ? payload : []);
+    } catch (error) {
+      setModuleRecords([]);
+      setModuleError(error.message || 'Could not load this module.');
+    } finally {
+      setModuleLoading(false);
+    }
+  }, [activeNav]);
+
+  useEffect(() => {
+    if (!['dashboard', 'orders', 'customers', 'products'].includes(activeNav)) {
+      loadModuleRecords(activeNav);
+    }
+  }, [activeNav, loadModuleRecords]);
+
+  const createModuleRecord = async () => {
+    const name = window.prompt(`Enter a name for this ${modulesData[activeNav]?.title || activeNav}:`);
+    if (!name?.trim()) return;
+    const description = window.prompt('Description (optional):') || '';
+    const status = window.prompt('Status (default: Active):', 'Active') || 'Active';
+    setRecordSaving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), description, status })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || 'Could not create record');
+      setModuleRecords(current => [payload, ...current]);
+      showToast('Record saved to the database.');
+    } catch (error) { showToast(error.message || 'Save failed.'); }
+    finally { setRecordSaving(false); }
+  };
+
+  const editModuleRecord = async (record) => {
+    if (activeNav === 'custom-orders') {
+      const status = window.prompt('Update custom order status:', record.status || 'Pending Review');
+      if (status === null || !status.trim()) return;
+      const message = window.prompt('Update message (optional):', record.message || '');
+      if (message === null) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${record.id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status.trim(), message })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || 'Could not update custom order');
+        setModuleRecords(current => current.map(item => item.id === record.id ? payload : item));
+        showToast('Custom order updated and customer notified.');
+      } catch (error) { showToast(error.message || 'Update failed.'); }
+      return;
+    }
+    const name = window.prompt('Update name:', record.name || '');
+    if (name === null || !name.trim()) return;
+    const description = window.prompt('Update description:', record.description || '') ;
+    if (description === null) return;
+    const status = window.prompt('Update status:', record.status || 'Active');
+    if (status === null) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), description, status })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || 'Could not update record');
+      setModuleRecords(current => current.map(item => item.id === record.id ? payload : item));
+      showToast('Record updated.');
+    } catch (error) { showToast(error.message || 'Update failed.'); }
+  };
+
+  const deleteModuleRecord = async (record) => {
+    if (!window.confirm(`Delete "${record.name || 'this record'}"? This cannot be undone.`)) return;
+    try {
+      const endpoint = activeNav === 'custom-orders'
+        ? `${API_BASE_URL}/api/admin/custom-orders/${record.id}`
+        : `${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`;
+      const response = await fetch(endpoint, { method: 'DELETE' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || 'Could not delete record');
+      setModuleRecords(current => current.filter(item => item.id !== record.id));
+      showToast('Record deleted.');
+    } catch (error) { showToast(error.message || 'Delete failed.'); }
+  };
+
   // Calculations based on period filter ("This Month", "Last Month", "Year to Date")
   const filteredOrdersByPeriod = adminOrders.filter(ord => {
     if (!ord.ordered_at) return true;
     const orderDate = new Date(ord.ordered_at);
-    const now = new Date("2026-10-13");
+    const now = new Date();
     if (dashboardPeriod === 'This Month') {
       return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
     } else if (dashboardPeriod === 'Last Month') {
@@ -662,7 +754,7 @@ export default function Admin_Dashboard_Page() {
                             </span>
                           </td>
                           <td className="py-4 px-3">
-                            <button onClick={() => showToast(`Managing order ${ord.order_number}`)} className="bg-black hover:bg-[#B89768] text-white text-xs px-3 py-1.5 rounded-lg font-bold">
+                            <button onClick={() => updateOrderStatus(ord)} className="bg-black hover:bg-[#B89768] text-white text-xs px-3 py-1.5 rounded-lg font-bold">
                               Manage
                             </button>
                           </td>
@@ -697,13 +789,13 @@ export default function Admin_Dashboard_Page() {
                     <div key={cust.id} className="flex items-center justify-between py-3 border-b border-gray-100 hover:bg-[#FAF8F5] px-2 rounded-xl transition">
                       <div>
                         <p className="font-bold text-sm text-[#1C1A17]">{cust.name}</p>
-                        <p className="text-xs text-[#78716C]">{cust.phone || '+91 98765 XXXXX'} | {cust.email}</p>
+                        <p className="text-xs text-[#78716C]">{cust.phone || 'Phone not provided'} | {cust.email}</p>
                       </div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                        {cust.tier || 'VIP Customer'}
+                        {'Registered'}
                       </span>
-                      <span className="font-serif font-bold text-sm text-[#1C1A17]">{cust.spent || '₹4,25,200'}</span>
-                      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded text-xs font-medium">Contacted</span>
+                      <span className="font-serif font-bold text-sm text-[#1C1A17]">{'—'}</span>
+                      <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">Customer</span>
                       <button onClick={() => setSelectedCustomer(cust)} className="text-xs font-bold text-[#B89768] hover:underline flex items-center">
                         Select Client &rarr;
                       </button>
@@ -714,17 +806,18 @@ export default function Admin_Dashboard_Page() {
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-6">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MASTER PROFILE</p>
-                    <h3 className="font-serif text-xl font-bold text-[#1C1A17] mt-1">{selectedCustomer?.name || 'Aishwarya Sen'}</h3>
-                    <p className="text-xs text-[#78716C]">ID: C-901 | Active since April 2026</p>
+                    <h3 className="font-serif text-xl font-bold text-[#1C1A17] mt-1">{selectedCustomer?.name || 'Select a customer'}</h3>
+                    <p className="text-xs text-[#78716C]">{selectedCustomer ? `Customer ID: ${selectedCustomer.id} · Joined ${selectedCustomer.created_at ? new Date(selectedCustomer.created_at).toLocaleDateString() : 'date unavailable'}` : 'Choose a customer from the directory to inspect their details.'}</p>
                   </div>
 
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider">Saved Measurement Record</p>
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Chest</span><strong className="text-sm">34"</strong></div>
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Waist</span><strong className="text-sm">28"</strong></div>
-                      <div className="bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFECE6]"><span className="text-[#78716C] block text-[10px]">Hips</span><strong className="text-sm">38"</strong></div>
+                  <div className="space-y-3 text-sm">
+                    <p className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider">Customer Details</p>
+                    <div className="rounded-xl bg-[#FAF8F5] border border-[#EFECE6] p-4 space-y-2">
+                      <p><span className="text-[#78716C]">Email:</span> {selectedCustomer?.email || '—'}</p>
+                      <p><span className="text-[#78716C]">Phone:</span> {selectedCustomer?.phone || 'Not provided'}</p>
+                      <p><span className="text-[#78716C]">Registered:</span> {selectedCustomer?.created_at ? new Date(selectedCustomer.created_at).toLocaleString() : '—'}</p>
                     </div>
+                    <p className="text-xs text-[#78716C]">Measurement records are not exposed by the current admin API, so no sample measurements are shown here.</p>
                   </div>
                 </div>
               </div>
@@ -776,45 +869,62 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : (
-            /* ================= DYNAMIC MODULE VIEW FOR ALL OTHER NAVS ================= */
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
+            /* ================= DATABASE-BACKED MODULE VIEW ================= */
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">{modulesData[activeNav]?.title || activeNav.toUpperCase()}</h2>
-                  <p className="text-sm text-[#78716C] mt-1">{modulesData[activeNav]?.subtitle || 'Manage atelier configuration and parameters.'}</p>
+                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">{modulesData[activeNav]?.title || activeNav.replaceAll('-', ' ').toUpperCase()}</h2>
+                  <p className="text-sm text-[#78716C] mt-1">{modulesData[activeNav]?.subtitle || 'Manage this WEFTIN workspace module.'}</p>
                 </div>
-                <button onClick={handleAddProductClick} className="bg-[#1C1A17] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2">
-                  <Plus className="w-4 h-4" /><span>ADD NEW RECORD</span>
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => loadModuleRecords(activeNav)} className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center">
+                    <RefreshCw className="w-3.5 h-3.5 mr-2" /> Refresh
+                  </button>
+                  {activeNav !== 'custom-orders' && <button disabled={recordSaving} onClick={createModuleRecord} className="bg-[#1C1A17] disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <Plus className="w-4 h-4" /> {recordSaving ? 'SAVING…' : 'ADD RECORD'}
+                  </button>}
+                </div>
               </div>
-
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white border border-[#EFECE6] rounded-2xl p-5">
+                  <p className="text-xs uppercase tracking-wider text-[#78716C]">Records</p>
+                  <p className="font-serif text-3xl mt-2">{moduleRecords.length}</p>
+                </div>
+                <div className="bg-white border border-[#EFECE6] rounded-2xl p-5">
+                  <p className="text-xs uppercase tracking-wider text-[#78716C]">Active</p>
+                  <p className="font-serif text-3xl mt-2">{moduleRecords.filter(r => String(r.status || '').toLowerCase() === 'active').length}</p>
+                </div>
+                <div className="bg-white border border-[#EFECE6] rounded-2xl p-5">
+                  <p className="text-xs uppercase tracking-wider text-[#78716C]">Last refreshed</p>
+                  <p className="text-sm font-semibold mt-3">{moduleLoading ? 'Loading…' : 'Connected to API'}</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                  <input value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Search records…" className="w-full bg-[#FAF8F5] border border-[#EFECE6] pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#B89768]" />
+                </div>
+                {moduleError && <div className="rounded-xl bg-rose-50 text-rose-800 p-4 text-sm">{moduleError}. Check that the updated backend is deployed and reachable.</div>}
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
-                        {modulesData[activeNav]?.headers.map((h, i) => (
-                          <th key={i} className="py-3 px-3">{h}</th>
-                        )) || <th className="py-3 px-3">Record Detail</th>}
-                      </tr>
-                    </thead>
+                    <thead><tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
+                      <th className="py-3 px-3">Name</th><th className="py-3 px-3">Description</th><th className="py-3 px-3">Status</th><th className="py-3 px-3">Updated</th><th className="py-3 px-3">Actions</th>
+                    </tr></thead>
                     <tbody className="divide-y divide-[#EFECE6] text-sm">
-                      {modulesData[activeNav]?.rows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-[#FAF8F5]/60 transition">
-                          {row.map((cell, cIdx) => (
-                            <td key={cIdx} className="py-4 px-3 text-[#1C1A17]">
-                              {cIdx === row.length - 1 ? (
-                                <button onClick={() => showToast(`Executing action: ${cell}`)} className="bg-black hover:bg-[#B89768] text-white text-xs px-3 py-1.5 rounded-lg font-bold">
-                                  {cell}
-                                </button>
-                              ) : cell}
-                            </td>
-                          ))}
+                      {moduleRecords.filter(r => JSON.stringify(r).toLowerCase().includes(moduleSearch.toLowerCase())).map(record => (
+                        <tr key={record.id} className="hover:bg-[#FAF8F5]/70">
+                          <td className="py-4 px-3 font-semibold">{record.name || record.product_name || 'Untitled'}</td>
+                          <td className="py-4 px-3 text-[#78716C] max-w-md">{record.description || record.message || record.user_email || '—'}</td>
+                          <td className="py-4 px-3"><span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs">{record.status || '—'}</span></td>
+                          <td className="py-4 px-3 text-[#78716C]">{record.updated_at ? new Date(record.updated_at).toLocaleString() : '—'}</td>
+                          <td className="py-4 px-3 whitespace-nowrap">
+                            <button onClick={() => editModuleRecord(record)} className="mr-2 px-3 py-1.5 rounded-lg border border-[#EFECE6] hover:bg-[#FAF8F5] text-xs font-semibold">Edit</button>
+                            <button onClick={() => deleteModuleRecord(record)} className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold">Delete</button>
+                          </td>
                         </tr>
-                      )) || (
-                        <tr>
-                          <td colSpan="4" className="py-8 text-center text-[#78716C]">Active atelier module online and fully synced.</td>
-                        </tr>
+                      ))}
+                      {!moduleLoading && !moduleError && moduleRecords.filter(r => JSON.stringify(r).toLowerCase().includes(moduleSearch.toLowerCase())).length === 0 && (
+                        <tr><td colSpan="5" className="py-12 text-center text-[#78716C]">{moduleSearch ? 'No records match your search.' : 'No records yet. Select “Add Record” to create the first database record.'}</td></tr>
                       )}
                     </tbody>
                   </table>
