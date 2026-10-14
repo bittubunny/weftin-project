@@ -135,6 +135,21 @@ export default function TrackOrder_Page() {
     navigate(`/shop?search=${encodeURIComponent(query)}`);
   };
 
+  const formatPrice = (price) => {
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice)) {
+      return price ? String(price) : "₹0";
+    }
+    return numericPrice.toLocaleString("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2
+    });
+  };
+
+  const rawPrice = orderData.total_price ?? orderData.totalPrice ?? orderData.price ?? "₹0";
+  const formattedOrderPrice = typeof rawPrice === "number" || !isNaN(Number(rawPrice)) ? formatPrice(rawPrice) : rawPrice;
+
   const handleCancelOrder = async () => {
     const orderNum = orderData.order_number || orderData.orderNumber || orderData.id;
     if (!userEmail || !orderNum) return;
@@ -176,7 +191,6 @@ export default function TrackOrder_Page() {
     const orderNum = orderData.order_number || orderData.orderNumber || orderData.id;
     const productName = orderData.product_name || orderData.productName || "WEFTIN Product";
     const orderDate = orderData.ordered_at || orderData.created_at || orderData.date || "Recent";
-    const orderPrice = orderData.total_price || orderData.totalPrice || orderData.price || "₹0";
     const paymentStat = orderData.payment_status || "Paid";
 
     const invoiceHTML = `
@@ -226,12 +240,12 @@ export default function TrackOrder_Page() {
                 <td><strong>${productName}</strong><br><span style="font-size:10px; color:#666;">Bespoke Atelier Creation</span></td>
                 <td>${currentOrderStatus}</td>
                 <td>${paymentStat}</td>
-                <td><strong>${orderPrice}</strong></td>
+                <td><strong>${formattedOrderPrice}</strong></td>
               </tr>
             </tbody>
           </table>
           <div class="total">
-            Grand Total: ${orderPrice}
+            Grand Total: ${formattedOrderPrice}
           </div>
         </div>
         <div class="footer">
@@ -526,7 +540,7 @@ export default function TrackOrder_Page() {
                 </div>
                 <div className="flex justify-between text-gray-600 pt-2 border-t border-gray-100">
                   <span>Product Price</span>
-                  <span className="font-semibold text-gray-900">{orderData.total_price || orderData.price}</span>
+                  <span className="font-semibold text-gray-900">{formattedOrderPrice}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Premium Wrapping</span>
@@ -540,7 +554,7 @@ export default function TrackOrder_Page() {
 
               <div className="border-t border-gray-200 pt-4 flex justify-between items-baseline">
                 <span className="font-serif font-bold text-base">Grand Total</span>
-                <span className="text-2xl font-serif font-bold text-gray-950">{orderData.total_price || orderData.price}</span>
+                <span className="text-2xl font-serif font-bold text-gray-950">{formattedOrderPrice}</span>
               </div>
             </div>
 
