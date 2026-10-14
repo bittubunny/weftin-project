@@ -15,7 +15,12 @@ import {
   MapPin,
   Headphones,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  RefreshCw,
+  Plus,
+  Trash2,
+  MessageSquare
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
