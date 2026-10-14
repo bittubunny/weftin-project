@@ -4607,3 +4607,384 @@ def api_file_support_ticket(data: SupportTicketRequest):
     finally:
         if conn:
             conn.close()
+
+
+# ============================================================
+# ADMIN DASHBOARD API
+# These endpoints support the WEFTIN admin dashboard modules.
+# ============================================================
+
+from psycopg2.extras import Json
+
+ADMIN_RECORD_MODULES = {
+    "discount-codes", "stock-interest", "custom-orders", "categories",
+    "customizations", "vendors", "tailors", "inventory", "expenses",
+    "analytics", "shipping", "seo", "settings"
+}
+
+def ensure_admin_records_table(cur):
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS admin_dashboard_records (
+            id BIGSERIAL PRIMARY KEY,
+            module_key TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'Active',
+            extra JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_admin_dashboard_records_module
+        ON admin_dashboard_records(module_key, id DESC)
+    """)
+
+def admin_record_dict(row):
+    result = dict(row)
+    extra = result.pop("extra", {}) or {}
+    if isinstance(extra, str):
+        import json
+        try:
+            extra = json.loads(extra)
+        except Exception:
+            extra = {}
+    result.update(extra)
+    return result
+
+class AdminRecordPayload(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    status: Optional[str] = "Active"
+
+def validate_admin_module(module_key: str):
+    if module_key not in ADMIN_RECORD_MODULES:
+        raise HTTPException(status_code=404, detail="Unknown admin module")
+
+@app.get("/api/admin/records/{module_key}")
+def get_admin_records(module_key: str):
+    validate_admin_module(module_key)
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        ensure_admin_records_table(cur)
+        cur.execute("""
+            SELECT id, module_key, name, description, status, extra,
+                   created_at, updated_at
+            FROM admin_dashboard_records
+            WHERE module_key = %s
+            ORDER BY id DESC
+        """, (module_key,))
+        rows = cur.fetchall()
+        conn.commit()
+        return [admin_record_dict(row) for row in rows]
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN RECORD LIST ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to load admin records")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.post("/api/admin/records/{module_key}")
+def create_admin_record(module_key: str, payload: AdminRecordPayload):
+    validate_admin_module(module_key)
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Name is required")
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        ensure_admin_records_table(cur)
+        cur.execute("""
+            INSERT INTO admin_dashboard_records
+                (module_key, name, description, status)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, module_key, name, description, status, extra,
+                      created_at, updated_at
+        """, (module_key, name, payload.description or "", payload.status or "Active"))
+        row = cur.fetchone()
+        conn.commit()
+        return admin_record_dict(row)
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN RECORD CREATE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to create admin record")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.put("/api/admin/records/{module_key}/{record_id}")
+def update_admin_record(module_key: str, record_id: int, payload: AdminRecordPayload):
+    validate_admin_module(module_key)
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Name is required")
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        ensure_admin_records_table(cur)
+        cur.execute("""
+            UPDATE admin_dashboard_records
+            SET name = %s, description = %s, status = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s AND module_key = %s
+            RETURNING id, module_key, name, description, status, extra,
+                      created_at, updated_at
+        """, (name, payload.description or "", payload.status or "Active", record_id, module_key))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Admin record not found")
+        conn.commit()
+        return admin_record_dict(row)
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN RECORD UPDATE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to update admin record")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.delete("/api/admin/records/{module_key}/{record_id}")
+def delete_admin_record(module_key: str, record_id: int):
+    validate_admin_module(module_key)
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        ensure_admin_records_table(cur)
+        cur.execute("""
+            DELETE FROM admin_dashboard_records
+            WHERE id = %s AND module_key = %s
+            RETURNING id
+        """, (record_id, module_key))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Admin record not found")
+        conn.commit()
+        return {"status": "success", "deleted_id": row["id"]}
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN RECORD DELETE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to delete admin record")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.get("/api/admin/orders")
+def get_admin_orders():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM orders ORDER BY ordered_at DESC NULLS LAST, id DESC")
+        return cur.fetchall()
+    except Exception as e:
+        print("ADMIN ORDERS ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to load orders")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.get("/api/admin/users")
+def get_admin_users():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, name, email, phone, created_at
+            FROM users
+            ORDER BY created_at DESC NULLS LAST, id DESC
+        """)
+        return cur.fetchall()
+    except Exception as e:
+        print("ADMIN USERS ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to load customers")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.get("/api/admin/custom-orders")
+def get_admin_custom_orders():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, user_email, product_name, product_category, product_price,
+                   status, line, message, created_at
+            FROM custom_design_requests
+            ORDER BY created_at DESC NULLS LAST, id DESC
+        """)
+        return cur.fetchall()
+    except Exception as e:
+        print("ADMIN CUSTOM ORDERS ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to load custom orders")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+class AdminOrderStatusUpdate(BaseModel):
+    status: str
+
+VALID_ORDER_STATUSES = {
+    "PROCESSING", "CONFIRMED", "TAILORING", "READY_TO_SHIP",
+    "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"
+}
+
+@app.patch("/api/admin/orders/{order_id}/status")
+def update_admin_order_status(order_id: int, payload: AdminOrderStatusUpdate):
+    new_status = payload.status.strip().upper()
+    if new_status not in VALID_ORDER_STATUSES:
+        raise HTTPException(status_code=400, detail="Invalid order status")
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE orders
+            SET status = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+            RETURNING *
+        """, (new_status, order_id))
+        order = cur.fetchone()
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        create_notification(
+            cur, order["user_email"], "ORDER", "Order Status Updated",
+            f"Your order {order.get('order_number', order_id)} status is now {new_status.replace('_', ' ').title()}.",
+            "ORDER", order.get("order_number", order_id)
+        )
+        conn.commit()
+        return {"status": "success", "order": order}
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN ORDER STATUS ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to update order status")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+class AdminCustomOrderStatusUpdate(BaseModel):
+    status: str
+    message: Optional[str] = None
+
+@app.patch("/api/admin/custom-orders/{request_id}")
+def update_admin_custom_order(request_id: int, payload: AdminCustomOrderStatusUpdate):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE custom_design_requests
+            SET status = %s, message = COALESCE(%s, message)
+            WHERE id = %s
+            RETURNING id, user_email, product_name, product_category, product_price,
+                      status, line, message, created_at
+        """, (payload.status.strip(), payload.message, request_id))
+        request_row = cur.fetchone()
+        if not request_row:
+            raise HTTPException(status_code=404, detail="Custom order not found")
+        create_notification(
+            cur, request_row["user_email"], "custom_design",
+            "Custom design status updated",
+            f"Your request for {request_row['product_name']} is now: {request_row['status']}.",
+            "custom_design", request_id
+        )
+        conn.commit()
+        return request_row
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN CUSTOM ORDER UPDATE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to update custom order")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+@app.delete("/api/admin/custom-orders/{request_id}")
+def delete_admin_custom_order(request_id: int):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            DELETE FROM custom_design_requests WHERE id = %s RETURNING id
+        """, (request_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Custom order not found")
+        conn.commit()
+        return {"status": "success", "deleted_id": row["id"]}
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("ADMIN CUSTOM ORDER DELETE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to delete custom order")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
