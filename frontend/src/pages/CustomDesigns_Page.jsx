@@ -1,26 +1,21 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  Search,
+  ShoppingBag,
+  Heart,
+  User,
+  Bell,
+  Menu,
+  X,
   LayoutDashboard,
   Package,
   Scissors,
   Ruler,
-  Heart,
   MapPin,
-  User,
-  Bell,
   Headphones,
   LogOut,
-  Plus,
-  MessageSquare,
-  Trash2,
-  RefreshCw,
-  ShoppingBag,
-  Menu,
-  X,
-  ChevronRight,
-  Search,
-  Settings
+  ChevronRight
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -565,7 +560,7 @@ export default function CustomDesigns_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR) */}
+      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
@@ -688,13 +683,13 @@ export default function CustomDesigns_Page() {
             <Link
               to="/custom-designs"
               onClick={closeMobileMenu}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group"
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-50 text-amber-900 font-semibold group"
             >
               <span className="flex items-center gap-3">
                 <Scissors className="w-4 h-4 text-amber-700" />
                 Custom Designs & Workspace
               </span>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
             </Link>
 
             <Link
@@ -823,22 +818,6 @@ export default function CustomDesigns_Page() {
                 Concierge Support
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">
-              Administration
-            </div>
-
-            <Link
-              to="/admin/home-cms"
-              onClick={closeMobileMenu}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors"
-            >
-              <span className="flex items-center gap-3 font-semibold text-amber-300">
-                <Settings className="w-4 h-4" />
-                Admin Product CMS
-              </span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
             </Link>
           </nav>
         </div>
@@ -1065,7 +1044,7 @@ export default function CustomDesigns_Page() {
                 </div>
 
                 <div className="bg-[#FAF8F5] border border-gray-200/80 p-4 rounded-xl text-xs text-gray-700 flex items-start gap-3 mb-6">
-                  <MessageSquare className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                  <Scissors className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
                   <p className="italic">
                     {req.message ||
                       "Your bespoke request has been received by our atelier."}
