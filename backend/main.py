@@ -4988,3 +4988,53 @@ def delete_admin_custom_order(request_id: int):
             cur.close()
         if conn:
             conn.close()
+
+
+@app.get("/api/coupons/verify/{code}")
+def verify_coupon(code: str):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        # Look for the code in the admin_dashboard_records table under module_key 'discount-codes'
+        cur.execute("""
+            SELECT * FROM admin_dashboard_records
+            WHERE module_key = 'discount-codes'
+              AND UPPER(name) = UPPER(%s)
+              AND UPPER(status) = 'ACTIVE'
+            LIMIT 1;
+        """, (code.strip(),))
+        record = cur.fetchone()
+        
+        if not record:
+            raise HTTPException(status_code=404, detail="Invalid or inactive coupon code.")
+            
+        # Parse description or extra values to determine discount percentage or flat amount
+        # For example, if description says "20% Off" or "20", we parse it.
+        desc = str(record.get("description", ""))
+        discount_value = 0.10 # default 10%
+        
+        if "%" in desc:
+            import re
+            numbers = re.findall(r'\d+', desc)
+            if numbers:
+                discount_value = float(numbers[0]) / 100.0
+        elif "₹" in desc:
+            # Handle flat rate if desired, or return flat value
+            pass
+
+        return {
+            "status": "success",
+            "code": record["name"],
+            "description": desc,
+            "discount_rate": discount_value
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("COUPON VERIFY ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to verify coupon.")
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
