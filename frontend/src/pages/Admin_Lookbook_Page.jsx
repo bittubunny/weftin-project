@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Mail, KeyRound, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, Mail, KeyRound, Loader2, ShieldCheck, Layers, PlusCircle, BookOpen, Star } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -35,13 +35,13 @@ export default function Admin_Lookbook_Page() {
   };
 
   // ---------------------------------------------------------
-  // ADMIN AUTHENTICATION GUARD (ID 10 Check)
+  // ADMIN AUTHENTICATION GUARD (ID 10 Check via localStorage)
   // ---------------------------------------------------------
   useEffect(() => {
-    const sessionAuth = sessionStorage.getItem("weftin_admin_auth");
+    const adminAuth = localStorage.getItem("weftin_admin_auth");
     const storedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
 
-    if (sessionAuth === "true" && storedUser?.id === 10) {
+    if (adminAuth === "true" && storedUser?.id === 10) {
       setIsAdminAuthenticated(true);
       loadLookbook();
     } else {
@@ -76,7 +76,7 @@ export default function Admin_Lookbook_Page() {
         const userEmail = String(data.user.email || "").trim().toLowerCase();
 
         if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
-          sessionStorage.setItem("weftin_admin_auth", "true");
+          localStorage.setItem("weftin_admin_auth", "true");
           if (data.access_token) {
             localStorage.setItem("weftin_token", data.access_token);
           }
@@ -467,7 +467,7 @@ export default function Admin_Lookbook_Page() {
   // MAIN ADMIN INTERFACE
   // ---------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-10 relative">
+    <div className="min-h-screen bg-gray-50 font-sans pb-16 relative">
 
       {/* TOAST */}
       {toast && (
@@ -476,24 +476,44 @@ export default function Admin_Lookbook_Page() {
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="max-w-7xl mx-auto mb-8 space-y-4">
-        <div className="flex justify-between items-center">
-          <Link
-            to="/shop"
-            className="text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1 hover:text-black"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Shop / Admin Hub
-          </Link>
+      {/* ADMIN NAVIGATION HEADER */}
+      <header className="bg-white border-b border-gray-200 px-6 lg:px-12 py-4 mb-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-black text-[#E5D5BC] rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-xs">W</div>
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-bold block">ATELIER CONTROL HUB</span>
+              <h2 className="font-serif text-sm tracking-widest font-bold text-gray-900">ADMINISTRATION SUITE</h2>
+            </div>
+          </div>
 
+          <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+            <Link to="/admin/home-cms" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-amber-700" /> Home Page CMS
+            </Link>
+            <Link to="/admin/add-product" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <PlusCircle className="w-3.5 h-3.5 text-amber-700" /> Add Product
+            </Link>
+            <Link to="/admin/lookbook" className="px-4 py-2 rounded-lg bg-black text-white transition-colors flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-amber-300" /> Lookbook CMS
+            </Link>
+            <Link to="/admin/limited-edition" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-700" /> Limited Edition
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* HEADER */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 space-y-4">
+        <div className="flex justify-between items-center">
           <button
             onClick={() => {
-              sessionStorage.removeItem("weftin_admin_auth");
+              localStorage.removeItem("weftin_admin_auth");
               setIsAdminAuthenticated(false);
-              showToast("Logged out of admin session.");
+              showToast("Locked admin session.");
             }}
-            className="text-xs text-rose-700 font-semibold uppercase tracking-wider border border-rose-200 bg-white hover:bg-rose-50 px-4 py-2 rounded-lg cursor-pointer"
+            className="text-xs text-rose-700 font-semibold uppercase tracking-wider border border-rose-200 bg-white hover:bg-rose-50 px-4 py-2 rounded-lg cursor-pointer ml-auto"
           >
             Lock Admin Session
           </button>
@@ -519,7 +539,7 @@ export default function Admin_Lookbook_Page() {
       </div>
 
       {/* SECTIONS */}
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {sections.map((section) => (
           <div
             key={section.section_key}
