@@ -15,8 +15,7 @@ import {
   MapPin,
   Headphones,
   LogOut,
-  ChevronRight,
-  Settings
+  ChevronRight
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -303,7 +302,6 @@ export default function Shop_Page() {
 
     try {
       if (isAlreadyWishlisted) {
-        // Remove from wishlist
         const response = await fetch(`${API_BASE_URL}/api/wishlist/${productId}?user_email=${encodeURIComponent(savedUser.email)}`, {
           method: "DELETE",
           headers: {
@@ -323,7 +321,6 @@ export default function Shop_Page() {
           showToast("Failed to update wishlist.");
         }
       } else {
-        // Add to wishlist
         const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
           method: "POST",
           headers: {
@@ -588,9 +585,15 @@ export default function Shop_Page() {
           TOAST
       ====================================================== */}
       {toastMessage && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[100] bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-sm animate-fade-in flex items-center gap-3 border border-amber-500/30">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[100] bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-sm animate-fade-in flex items-center gap-3 border border-amber-500/30 max-w-[calc(100vw-2rem)] sm:max-w-sm">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
-          <span>{toastMessage}</span>
+          <span className="flex-1">{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage("")}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
@@ -684,7 +687,7 @@ export default function Shop_Page() {
       </header>
 
       {/* =====================================================
-          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR)
+          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR - WITHOUT ADMINISTRATION)
       ====================================================== */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
@@ -779,12 +782,6 @@ export default function Shop_Page() {
               <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
-            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
-              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
-            </Link>
           </nav>
         </div>
 
@@ -816,9 +813,7 @@ export default function Shop_Page() {
       ====================================================== */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 items-start">
 
-        {/* ===================================================
-            SIDEBAR FILTER PANEL
-        ==================================================== */}
+        {/* SIDEBAR FILTER PANEL */}
         <aside className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm space-y-7 lg:space-y-8">
           <div>
             <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
@@ -993,9 +988,7 @@ export default function Shop_Page() {
           </div>
         </aside>
 
-        {/* ===================================================
-            PRODUCT CATALOGUE
-        ==================================================== */}
+        {/* PRODUCT CATALOGUE */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm gap-4">
             <span className="text-xs text-gray-500">
