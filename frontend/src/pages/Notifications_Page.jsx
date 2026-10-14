@@ -34,7 +34,6 @@ import {
   X,
   Menu,
   ChevronRight,
-  Settings,
   Search
 } from "lucide-react";
 
@@ -701,7 +700,7 @@ export default function Notifications_Page() {
             </button>
 
             <Link to="/cart" className="relative text-gray-800 hover:text-black">
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingBag className="w-5 h-5" />
             </Link>
           </div>
         </div>
@@ -752,7 +751,7 @@ export default function Notifications_Page() {
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link to="/shop" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
-              <span className="flex items-center gap-3"><ShoppingCart className="w-4 h-4 text-amber-700" />Shop Catalog</span>
+              <span className="flex items-center gap-3"><ShoppingBag className="w-4 h-4 text-amber-700" />Shop Catalog</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link to="/collections" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
@@ -772,7 +771,7 @@ export default function Notifications_Page() {
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
 
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
             <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -821,11 +820,11 @@ export default function Notifications_Page() {
         </div>
       </aside>
 
-      {/* ==================================================
-          PAGE CONTENT
-      ================================================== */}
+      {/* --------------------------------------------------
+          MAIN CONTENT BODY
+      -------------------------------------------------- */}
 
-      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full">
+      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full space-y-6">
 
         {/* TITLE + ACTIONS */}
 
