@@ -66,7 +66,7 @@ export default function Admin_Dashboard_Page() {
   const [moduleError, setModuleError] = useState('');
   const [recordSaving, setRecordSaving] = useState(false);
 
-  // New state for Discount Codes sub-form
+  // Discount Codes sub-form states
   const [newPromoCode, setNewPromoCode] = useState('');
   const [newPromoValue, setNewPromoValue] = useState('');
   const [newPromoDesc, setNewPromoDesc] = useState('');
@@ -151,7 +151,7 @@ export default function Admin_Dashboard_Page() {
   };
 
   const loadModuleRecords = useCallback(async (moduleKey = activeNav) => {
-    if (['dashboard', 'orders', 'customers', 'products', 'custom-orders', 'discount-codes'].includes(moduleKey)) return;
+    if (['dashboard', 'orders', 'customers', 'products', 'custom-orders'].includes(moduleKey)) return;
     setModuleLoading(true);
     setModuleError('');
     try {
@@ -169,7 +169,7 @@ export default function Admin_Dashboard_Page() {
   }, []);
 
   useEffect(() => {
-    if (!['dashboard', 'orders', 'customers', 'products', 'custom-orders', 'discount-codes'].includes(activeNav)) {
+    if (!['dashboard', 'orders', 'customers', 'products', 'custom-orders'].includes(activeNav)) {
       loadModuleRecords(activeNav);
     }
   }, [activeNav, loadModuleRecords]);
@@ -191,6 +191,37 @@ export default function Admin_Dashboard_Page() {
       showToast('Record saved to the database.');
     } catch (error) { showToast(error.message || 'Save failed.'); }
     finally { setRecordSaving(false); }
+  };
+
+  // Dedicated DB function to generate & save discount codes from Screenshot 7 form
+  const createPromoCodeRecord = async () => {
+    if (!newPromoCode.trim()) {
+      showToast('Please enter a voucher code.');
+      return;
+    }
+    setRecordSaving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/records/discount-codes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPromoCode.trim().toUpperCase(),
+          description: newPromoDesc.trim() || `Value: ${newPromoValue || 'Promotional Voucher'}`,
+          status: 'Active'
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || 'Could not generate voucher');
+      showToast(`Active coupon ${newPromoCode.toUpperCase()} saved to database.`);
+      setNewPromoCode('');
+      setNewPromoValue('');
+      setNewPromoDesc('');
+      loadModuleRecords('discount-codes');
+    } catch (err) {
+      showToast(err.message || 'Failed to generate voucher.');
+    } finally {
+      setRecordSaving(false);
+    }
   };
 
   const editModuleRecord = async (record) => {
@@ -224,7 +255,11 @@ export default function Admin_Dashboard_Page() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || 'Could not update record');
-      setModuleRecords(current => current.map(item => item.id === record.id ? payload : item));
+      if (activeNav === 'discount-codes') {
+        loadModuleRecords('discount-codes');
+      } else {
+        setModuleRecords(current => current.map(item => item.id === record.id ? payload : item));
+      }
       showToast('Record updated.');
     } catch (error) { showToast(error.message || 'Update failed.'); }
   };
@@ -240,12 +275,21 @@ export default function Admin_Dashboard_Page() {
       if (!response.ok) throw new Error(payload.detail || 'Could not delete record');
       if (activeNav === 'custom-orders') {
         setAdminCustomOrders(current => current.filter(item => item.id !== record.id));
+      } else if (activeNav === 'discount-codes') {
+        loadModuleRecords('discount-codes');
       } else {
         setModuleRecords(current => current.filter(item => item.id !== record.id));
       }
       showToast('Record deleted.');
     } catch (error) { showToast(error.message || 'Delete failed.'); }
   };
+
+  // Load discount codes from DB when discount-codes tab is active
+  useEffect(() => {
+    if (activeNav === 'discount-codes') {
+      loadModuleRecords('discount-codes');
+    }
+  }, [activeNav, loadModuleRecords]);
 
   // Calculations based on period filter ("This Month", "Last Month", "Year to Date")
   const filteredOrdersByPeriod = adminOrders.filter(ord => {
@@ -1024,12 +1068,12 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'discount-codes' ? (
-            /* ================= DISCOUNT CODES MODULE (Screenshot 7 Style) ================= */
+            /* ================= DISCOUNT CODES MODULE (Screenshot 7 Style + Live DB) ================= */
             <div className="space-y-8">
               <div>
                 <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MARKETING SUITE</p>
                 <h2 className="font-serif text-3xl font-bold text-[#1C1A17] mt-1">Discount Codes & Vouchers</h2>
-                <p className="text-sm text-[#78716C]">Manage luxury customer promotional coupons and designer codes</p>
+                <p className="text-sm text-[#78716C]">Manage luxury customer promotional coupons and designer codes stored in your database</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1069,55 +1113,56 @@ export default function Admin_Dashboard_Page() {
                       />
                     </div>
                     <button 
-                      onClick={() => {
-                        if (!newPromoCode) { showToast('Please enter a voucher code.'); return; }
-                        showToast(`Active coupon ${newPromoCode.toUpperCase()} successfully generated.`);
-                        setNewPromoCode(''); setNewPromoValue(''); setNewPromoDesc('');
-                      }} 
-                      className="w-full bg-[#1C1A17] hover:bg-black text-white py-3.5 rounded-xl font-bold tracking-wider shadow-md transition mt-4"
+                      disabled={recordSaving}
+                      onClick={createPromoCodeRecord} 
+                      className="w-full bg-[#1C1A17] disabled:opacity-50 hover:bg-black text-white py-3.5 rounded-xl font-bold tracking-wider shadow-md transition mt-4"
                     >
-                      GENERATE ACTIVE COUPON
+                      {recordSaving ? 'SAVING COUPON...' : 'GENERATE ACTIVE COUPON'}
                     </button>
                   </div>
                 </div>
 
-                {/* Active Campaigns Table */}
+                {/* Active Campaigns Table (Fetched Live from NeonDB) */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Active Promotional Campaigns</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Active Promotional Campaigns</h3>
+                    <button onClick={() => loadModuleRecords('discount-codes')} className="bg-[#FAF8F5] border border-[#EFECE6] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center">
+                      <RefreshCw className="w-3.5 h-3.5 mr-1 text-[#B89768]" /> Refresh
+                    </button>
+                  </div>
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
                           <th className="py-3 px-3">Code & Details</th>
-                          <th className="py-3 px-3">Value</th>
                           <th className="py-3 px-3">Status</th>
-                          <th className="py-3 px-3">Redeemed</th>
-                          <th className="py-3 px-3">Expiry</th>
+                          <th className="py-3 px-3">Updated / Created</th>
+                          <th className="py-3 px-3">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#EFECE6] text-xs">
-                        {[
-                          { code: 'BESPOKE20', desc: 'Bespoke suit wedding seasonal promotion', val: '20%', status: 'Active', used: '48 / 100', exp: 'Dec 31, 2026' },
-                          { code: 'BRIDAL10', desc: 'Bridal Lehenga bespoke order code', val: '₹15,000', status: 'Active', used: '12 / 20', exp: 'Aug 15, 2026' },
-                          { code: 'WELCOMETAILOR', desc: 'First time registration code', val: '10%', status: 'Active', used: '142 / 200', exp: 'Oct 01, 2026' },
-                          { code: 'FESTIVE15', desc: 'Festive season launch discount', val: '15%', status: 'Draft', used: '0 / 50', exp: 'Nov 30, 2026' }
-                        ].map((camp, i) => (
-                          <tr key={i} className="hover:bg-[#FAF8F5]">
+                        {moduleRecords.map(camp => (
+                          <tr key={camp.id} className="hover:bg-[#FAF8F5]">
                             <td className="py-4 px-3">
-                              <span className="font-mono font-bold text-sm text-[#1C1A17] flex items-center"><Tag className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> {camp.code}</span>
-                              <span className="text-[#78716C] block mt-0.5">{camp.desc}</span>
+                              <span className="font-mono font-bold text-sm text-[#1C1A17] flex items-center"><Tag className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> {camp.name}</span>
+                              <span className="text-[#78716C] block mt-0.5">{camp.description}</span>
                             </td>
-                            <td className="py-4 px-3 font-serif font-bold text-sm text-[#1C1A17]">{camp.val}</td>
                             <td className="py-4 px-3">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${camp.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'}`}>
-                                {camp.status}
+                                {camp.status || 'Active'}
                               </span>
                             </td>
-                            <td className="py-4 px-3 font-medium">{camp.used}</td>
-                            <td className="py-4 px-3 text-[#78716C]">{camp.exp}</td>
+                            <td className="py-4 px-3 text-[#78716C]">{camp.updated_at ? new Date(camp.updated_at).toLocaleDateString() : '—'}</td>
+                            <td className="py-4 px-3 whitespace-nowrap">
+                              <button onClick={() => editModuleRecord(camp)} className="mr-2 px-3 py-1.5 rounded-lg border border-[#EFECE6] hover:bg-white text-xs font-semibold">Edit</button>
+                              <button onClick={() => deleteModuleRecord(camp)} className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold">Delete</button>
+                            </td>
                           </tr>
                         ))}
+                        {moduleRecords.length === 0 && !moduleLoading && (
+                          <tr><td colSpan="4" className="py-12 text-center text-[#78716C]">No discount codes in database yet. Create one using the form on the left.</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1193,33 +1238,33 @@ export default function Admin_Dashboard_Page() {
                   <div className="flex items-center justify-between pb-6 border-b border-[#EFECE6]">
                     <div>
                       <div className="flex items-center space-x-3">
-                        <span className="font-mono font-bold text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full">{selectedCustomReq?.id || 'REQ-2026-002'}</span>
-                        <span className="text-xs text-[#78716C]">Date Received: {selectedCustomReq?.date || '2026-06-15'}</span>
+                        <span className="font-mono font-bold text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full">{selectedCustomReq?.id ? `REQ-${selectedCustomReq.id}` : 'REQ-2026-002'}</span>
+                        <span className="text-xs text-[#78716C]">Date Received: {selectedCustomReq?.created_at ? new Date(selectedCustomReq.created_at).toLocaleDateString() : '2026-06-15'}</span>
                       </div>
-                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.title || 'Midnight Blue Gala Sherwani Set'}</h3>
+                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.product_name || selectedCustomReq?.title || 'Midnight Blue Gala Sherwani Set'}</h3>
                     </div>
-                    <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">Pending Review</span>
+                    <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">{selectedCustomReq?.status || 'Pending Review'}</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] space-y-2">
                       <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">VIP CUSTOMER</span>
-                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.name || 'Shreya Ghoshal'}</p>
-                      <p className="text-xs text-[#78716C]">Email: sg.music@shreya.com</p>
+                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.name || selectedCustomReq?.user_email || 'Shreya Ghoshal'}</p>
+                      <p className="text-xs text-[#78716C]">Email: {selectedCustomReq?.user_email || 'sg.music@shreya.com'}</p>
                       <p className="text-xs text-[#78716C]">Phone: +91 95432 98412</p>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] space-y-2">
                       <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">FABRIC REQUIREMENTS</span>
-                      <p className="font-bold text-sm text-[#1C1A17]">Srinagar Mulberry Raw Silk</p>
-                      <p className="text-xs text-[#78716C]">Submitted Sizing: <span className="font-semibold text-[#1C1A17]">Chest: 34", Waist: 27", Hips: 37", Length: 55"</span></p>
+                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.line || 'Srinagar Mulberry Raw Silk'}</p>
+                      <p className="text-xs text-[#78716C]">Category: <span className="font-semibold text-[#1C1A17]">{selectedCustomReq?.product_category || 'Bespoke Suit'}</span></p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider block">Garment Description & Custom Motif Requests:</label>
                     <div className="p-4 bg-[#FAF8F5] border border-[#EFECE6] rounded-xl text-xs text-[#1C1A17] italic">
-                      "{selectedCustomReq?.desc || selectedCustomReq?.message || 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
+                      "{selectedCustomReq?.message || selectedCustomReq?.desc || 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
                     </div>
                   </div>
 
@@ -1249,7 +1294,19 @@ export default function Admin_Dashboard_Page() {
                         <button onClick={() => showToast('Price quote issued and sent to client.')} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm">
                           Apply & Send Price Offer
                         </button>
-                        <button onClick={() => showToast('Order approved for workshop loom production!')} className="bg-[#1C1A17] hover:bg-black text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md">
+                        <button onClick={async () => {
+                          if (!selectedCustomReq?.id) return;
+                          try {
+                            const res = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${selectedCustomReq.id}`, {
+                              method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'Approved for Production', message: selectedCustomReq.message })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.detail || 'Failed');
+                            setAdminCustomOrders(curr => curr.map(item => item.id === selectedCustomReq.id ? data : item));
+                            showToast('Order approved for workshop loom production!');
+                          } catch(err) { showToast('Approval failed.'); }
+                        }} className="bg-[#1C1A17] hover:bg-black text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md">
                           Approve for Workshop Loom
                         </button>
                       </div>
