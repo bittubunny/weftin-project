@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   ChevronRight,
-  Settings,
   Search
 } from "lucide-react";
 
@@ -380,12 +379,6 @@ export default function Profile_Page() {
               <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
-            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
-              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
-            </Link>
           </nav>
         </div>
 
@@ -396,9 +389,7 @@ export default function Profile_Page() {
         </div>
       </aside>
 
-      {/* =========================================================
-          MAIN CONTENT
-      ========================================================= */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col min-h-screen min-w-0 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 lg:space-y-10">
 
         <div>
