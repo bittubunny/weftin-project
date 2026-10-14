@@ -1074,22 +1074,6 @@ export default function Home_Page() {
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">
-              Administration
-            </div>
-
-            <Link
-              to="/admin/home-cms"
-              onClick={closeMobileMenu}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white hover:bg-gray-900 transition-colors"
-            >
-              <span className="flex items-center gap-3 font-semibold text-amber-300">
-                <Settings className="w-4 h-4" />
-                Admin Product CMS
-              </span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
-            </Link>
           </nav>
         </div>
 
