@@ -144,13 +144,24 @@ export default function Cart_Page() {
     showToast("Item removed from cart.");
   };
 
-  const applyCoupon = () => {
-    if (coupon.trim().toUpperCase() === "FESTIVE10") {
-      setDiscount(0.1);
-      showToast("Coupon FESTIVE10 applied successfully (10% Off)!");
-    } else {
+const applyCoupon = async () => {
+    if (!coupon.trim()) {
+      showToast("Please enter a coupon code.");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/coupons/verify/${encodeURIComponent(coupon.trim())}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || "Invalid coupon code.");
+      }
+
+      setDiscount(data.discount_rate || 0.1);
+      showToast(`Coupon ${data.code} applied successfully (${Math.round((data.discount_rate || 0.1) * 100)}% Off)!`);
+    } catch (error) {
       setDiscount(0);
-      showToast('Invalid coupon code. Try "FESTIVE10"');
+      showToast(error.message || 'Invalid coupon code.');
     }
   };
 
