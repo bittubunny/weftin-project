@@ -26,7 +26,6 @@ import {
   X,
   Menu,
   ChevronRight,
-  Settings,
   Search
 } from "lucide-react";
 
@@ -542,7 +541,7 @@ export default function Wishlist_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER */}
+      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -597,7 +596,7 @@ export default function Wishlist_Page() {
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
 
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
+            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100 mt-2">Member Portal & Profile</div>
             <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><LayoutDashboard className="w-4 h-4 text-gray-700" />Dashboard Overview</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -610,7 +609,7 @@ export default function Wishlist_Page() {
               <span className="flex items-center gap-3"><Ruler className="w-4 h-4 text-gray-700" />Bespoke Fit Measurements</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-100/60 text-amber-900 font-semibold group">
+            <Link to="/wishlist" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-50 text-amber-900 font-semibold group">
               <span className="flex items-center gap-3"><Heart className="w-4 h-4 text-amber-700" />Saved Wishlist</span>
               <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
             </Link>
@@ -630,12 +629,6 @@ export default function Wishlist_Page() {
               <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
-            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
-              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
-            </Link>
           </nav>
         </div>
 
@@ -646,51 +639,37 @@ export default function Wishlist_Page() {
         </div>
       </aside>
 
-      {/* =================================================*
-          MAIN CONTENT AREA
-      ================================================== */}
+      {/* --------------------------------------------------
+          MAIN CONTENT BODY
+      -------------------------------------------------- */}
 
-      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full">
+      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-7xl mx-auto w-full space-y-8">
 
         {/* TITLE */}
-
-        <div className="mb-8">
-
+        <div>
           <div className="flex items-center gap-2 text-amber-700 mb-1">
-
             <Heart className="w-5 h-5 fill-amber-700 text-amber-700" />
-
             <h2 className="text-2xl sm:text-3xl font-serif text-gray-900">
               My Luxury Wishlist
             </h2>
-
           </div>
 
           <p className="text-xs text-gray-500">
-            View saved products and securely
-            transfer items to your shopping cart.
+            View saved products and securely transfer items to your shopping cart.
           </p>
-
         </div>
 
-        {/* ==================================================
-            LOADING
-        ================================================== */}
-
+        {/* LOADING */}
         {loading ? (
-
-          <div className="text-center py-20 text-gray-400 text-xs uppercase tracking-widest animate-pulse">
-            Loading your saved luxury items...
+          <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-16 text-center shadow-sm">
+            <div className="w-8 h-8 mx-auto mb-4 rounded-full border-2 border-gray-200 border-t-amber-700 animate-spin"></div>
+            <h3 className="font-serif text-xl text-gray-800">
+              Loading your saved luxury items...
+            </h3>
           </div>
-
         ) : wishlist.length === 0 ? (
-
-          /* ==================================================
-              EMPTY WISHLIST
-          ================================================== */
-
+          /* EMPTY WISHLIST */
           <div className="bg-white rounded-2xl border border-gray-200 p-8 sm:p-16 text-center shadow-sm">
-
             <Heart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
 
             <h3 className="font-serif text-lg font-bold text-gray-800 mb-2">
@@ -698,52 +677,33 @@ export default function Wishlist_Page() {
             </h3>
 
             <p className="text-xs text-gray-500 mb-6">
-              Explore our atelier collections and
-              tap the heart icon on any product to
-              save it here.
+              Explore our atelier collections and tap the heart icon on any product to save it here.
             </p>
 
             <Link
               to="/shop"
-              className="inline-block bg-black text-white px-6 py-3 rounded uppercase text-xs font-bold tracking-widest hover:bg-gray-800 cursor-pointer"
+              className="inline-block bg-black text-white px-8 py-3.5 rounded uppercase text-xs font-bold tracking-widest hover:bg-gray-800 cursor-pointer"
             >
               Explore Shop Catalog
             </Link>
-
           </div>
-
         ) : (
-
-          /* ==================================================
-              WISHLIST GRID
-          ================================================== */
-
+          /* WISHLIST GRID */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
             {wishlist.map((item) => (
-
               <div
                 key={item.id}
                 className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between group"
               >
-
                 <div>
-
                   {/* IMAGE */}
-
                   <div className="relative h-72 bg-gray-100 overflow-hidden">
-
                     <span className="absolute top-3 left-3 z-10 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded bg-amber-100 text-amber-900">
-                      {item.tag ||
-                        "ATELIER"}
+                      {item.tag || "ATELIER"}
                     </span>
 
                     <button
-                      onClick={() =>
-                        removeItem(
-                          item.id
-                        )
-                      }
+                      onClick={() => removeItem(item.id)}
                       className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white text-rose-700 shadow cursor-pointer z-10"
                       title="Remove from wishlist"
                     >
@@ -751,30 +711,20 @@ export default function Wishlist_Page() {
                     </button>
 
                     {item.image ? (
-
                       <img
                         src={item.image}
-                        alt={
-                          item.name ||
-                          "Wishlist item"
-                        }
+                        alt={item.name || "Wishlist item"}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
-
                     ) : (
-
                       <div className="w-full h-full flex items-center justify-center">
                         <Heart className="w-10 h-10 text-gray-300" />
                       </div>
-
                     )}
-
                   </div>
 
                   {/* PRODUCT DETAILS */}
-
                   <div className="p-4">
-
                     <span className="text-[10px] text-amber-800 font-semibold block mb-1">
                       ★ 4.9 Expert Atelier Approved
                     </span>
@@ -786,61 +736,35 @@ export default function Wishlist_Page() {
                     <p className="text-xs font-bold text-gray-950">
                       {item.price}
                     </p>
-
                   </div>
-
                 </div>
 
                 {/* MOVE TO CART */}
-
                 <div className="p-4 pt-0">
-
                   <button
-                    onClick={() =>
-                      moveToCart(item)
-                    }
+                    onClick={() => moveToCart(item)}
                     className="w-full py-2.5 bg-[#1C1816] hover:bg-black text-white text-[10px] uppercase tracking-wider rounded font-semibold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                   >
-
                     <ShoppingBag className="w-3.5 h-3.5" />
-
                     Move to Shopping Cart
-
                   </button>
-
                 </div>
-
               </div>
-
             ))}
-
           </div>
-
         )}
 
-        {/* =================================================*
-            CONSULTATION BANNER
-        ================================================== */}
-
+        {/* CONSULTATION BANNER */}
         <div className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 text-xs mt-8">
-
           <Sparkles className="w-8 h-8 text-amber-700 flex-shrink-0" />
-
           <div>
-
             <strong className="text-gray-900 font-serif block mb-1">
               TAILORS WISHLIST CONSULTATION OPTION
             </strong>
-
             <p className="text-gray-500">
-              Curious about physical draping volume
-              or how a particular saree matches your
-              measurements profile? Open live support
-              and select "Consult Wishlist Items".
+              Curious about physical draping volume or how a particular saree matches your measurements profile? Open live support and select "Consult Wishlist Items".
             </p>
-
           </div>
-
         </div>
 
       </main>
