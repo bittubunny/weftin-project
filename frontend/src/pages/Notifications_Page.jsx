@@ -34,7 +34,8 @@ import {
   X,
   Menu,
   ChevronRight,
-  Search
+  Search,
+  ShoppingBag
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
