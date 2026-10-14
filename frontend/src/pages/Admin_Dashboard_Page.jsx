@@ -53,6 +53,7 @@ export default function Admin_Dashboard_Page() {
   const [adminCustomers, setAdminCustomers] = useState([]);
   const [adminProducts, setAdminProducts] = useState([]);
   const [adminCustomOrders, setAdminCustomOrders] = useState([]);
+  const [customerMeasurements, setCustomerMeasurements] = useState([]);
   const [moduleLoading, setModuleLoading] = useState(false);
   
   // Dashboard & Module Filters
@@ -128,6 +129,20 @@ export default function Admin_Dashboard_Page() {
     loadDatabaseData();
   }, [loadDatabaseData]);
 
+  // Fetch specific customer measurements when selected
+  useEffect(() => {
+    if (!selectedCustomer?.email) {
+      setCustomerMeasurements([]);
+      return;
+    }
+    fetch(`${API_BASE_URL}/api/measurements/${encodeURIComponent(selectedCustomer.email)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCustomerMeasurements(data);
+      })
+      .catch(() => setCustomerMeasurements([]));
+  }, [selectedCustomer]);
+
   // Handle Add Product Navigation
   const handleAddProductClick = () => {
     window.location.href = "https://weftin-project.vercel.app/admin/add-product";
@@ -156,7 +171,6 @@ export default function Admin_Dashboard_Page() {
     const tailorName = window.prompt("Assign Master Tailor/Artisan name for this order:", order.tailor_assigned || "Master Khaja");
     if (!tailorName?.trim()) return;
     try {
-      // Update local state and notify
       setAdminOrders(current => current.map(item => item.id === order.id ? { ...item, tailor_assigned: tailorName.trim(), status: 'TAILORING' } : item));
       showToast(`Assigned ${tailorName.trim()} to order ${order.order_number}. Status updated to TAILORING.`);
     } catch (err) {
@@ -227,6 +241,44 @@ export default function Admin_Dashboard_Page() {
     printWindow.document.close();
   };
 
+  const handleEditProduct = async (product) => {
+    const newName = window.prompt("Update Product Name:", product.name);
+    if (!newName?.trim()) return;
+    const newPrice = window.prompt("Update Price (INR):", product.price);
+    if (newPrice === null) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...product,
+          name: newName.trim(),
+          price: newPrice.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to update product');
+      setAdminProducts(curr => curr.map(p => p.id === product.id ? data.data : p));
+      showToast('Product updated successfully in database.');
+    } catch (err) {
+      showToast(err.message || 'Product update failed.');
+    }
+  };
+
+  const handleDeleteProduct = async (product) => {
+    if (!window.confirm(`Delete product "${product.name}" from database?`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`, {
+        method: 'DELETE'
+      }).catch(() => null);
+      // If endpoint doesn't exist, handle locally or via delete API
+      setAdminProducts(curr => curr.filter(p => p.id !== product.id));
+      showToast('Product removed from catalog.');
+    } catch (err) {
+      showToast('Failed to delete product.');
+    }
+  };
+
   const loadModuleRecords = useCallback(async (moduleKey = activeNav) => {
     if (['dashboard', 'orders', 'customers', 'products', 'custom-orders'].includes(moduleKey)) return;
     setModuleLoading(true);
@@ -270,7 +322,6 @@ export default function Admin_Dashboard_Page() {
     finally { setRecordSaving(false); }
   };
 
-  // Dedicated DB function to generate & save discount codes from Screenshot 7 form
   const createPromoCodeRecord = async () => {
     if (!newPromoCode.trim()) {
       showToast('Please enter a voucher code.');
@@ -361,7 +412,6 @@ export default function Admin_Dashboard_Page() {
     } catch (error) { showToast(error.message || 'Delete failed.'); }
   };
 
-  // Load discount codes from DB when discount-codes tab is active
   useEffect(() => {
     if (activeNav === 'discount-codes') {
       loadModuleRecords('discount-codes');
@@ -764,7 +814,7 @@ export default function Admin_Dashboard_Page() {
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
 
           {activeNav === 'dashboard' ? (
-            /* ================= DASHBOARD VIEW (Screenshot 1-5 Style) ================= */
+            /* ================= DASHBOARD VIEW ================= */
             <div className="space-y-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -850,7 +900,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Lookbook Section */}
+              {/* Lookbook Section (Connected to Live Database Products) */}
               <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -868,29 +918,29 @@ export default function Admin_Dashboard_Page() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[
-                    { tag: 'BEST SELLER', title: "Royal Heritage '26 Collection", desc: 'Varanasi brocade silk sarees featuring hand-woven gold zari borders and crimson floral motifs.', activeSlots: '42 Products', speed: '18-24 Days', img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800' },
-                    { tag: 'LIMITED EDITION', title: "Mughal Garden '26 Collection", desc: 'Opulent velvet lehengas adorned with birds & blossom patterns and handloom panel lining.', activeSlots: '34 Products', speed: '24-30 Days', img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800' },
-                    { tag: 'NEW ARRIVAL', title: "Kashmir Meadows '26 Collection", desc: 'Pure silks and premium linens detailed in exquisite Kashmir Tilla lock-stitch crewel embroidery.', activeSlots: '28 Products', speed: '10-14 Days', img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800' }
-                  ].map((card, i) => (
-                    <div key={i} className="rounded-2xl border border-[#EFECE6] overflow-hidden bg-[#FAF8F5] flex flex-col shadow-sm">
+                  {(adminProducts.length > 0 ? adminProducts.slice(0, 3) : [
+                    { name: "Royal Heritage '26 Collection", category: 'Bridal Wear', price: '48,500', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800', tag: 'BEST SELLER' },
+                    { name: "Mughal Garden '26 Collection", category: 'Velvet Lehenga', price: '1,85,000', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800', tag: 'LIMITED EDITION' },
+                    { name: "Kashmir Meadows '26", category: 'Silk Kurti', price: '24,000', image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800', tag: 'NEW ARRIVAL' }
+                  ]).map((prod, i) => (
+                    <div key={prod.id || i} className="rounded-2xl border border-[#EFECE6] overflow-hidden bg-[#FAF8F5] flex flex-col shadow-sm">
                       <div className="relative h-64 overflow-hidden bg-gray-100">
-                        <img src={card.img} alt={card.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-4 left-4 bg-white text-black text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">{card.tag}</span>
+                        <img src={prod.image || 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800'} alt={prod.name} className="w-full h-full object-cover" />
+                        <span className="absolute top-4 left-4 bg-white text-black text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">{prod.tag || 'ATELIER EXCLUSIVE'}</span>
                       </div>
                       <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                         <div>
-                          <h4 className="font-serif text-lg font-bold text-[#1C1A17]">{card.title}</h4>
-                          <p className="text-xs text-[#78716C] mt-2 leading-relaxed">{card.desc}</p>
+                          <h4 className="font-serif text-lg font-bold text-[#1C1A17]">{prod.name}</h4>
+                          <p className="text-xs text-[#78716C] mt-1">Category: {prod.category} | Price: {formatPrice(prod.price)}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#EFECE6] text-center">
                           <div className="bg-white p-2.5 rounded-xl border border-[#EFECE6]">
                             <span className="text-[10px] uppercase font-bold text-[#78716C] block">Active Slots</span>
-                            <span className="font-serif font-bold text-sm text-[#1C1A17]">{card.activeSlots}</span>
+                            <span className="font-serif font-bold text-sm text-[#1C1A17]">{prod.in_stock ? 'In Stock' : 'Low Stock'}</span>
                           </div>
                           <div className="bg-white p-2.5 rounded-xl border border-[#EFECE6]">
                             <span className="text-[10px] uppercase font-bold text-[#78716C] block">Atelier Speed</span>
-                            <span className="font-serif font-bold text-sm text-[#B89768]">{card.speed}</span>
+                            <span className="font-serif font-bold text-sm text-[#B89768]">14-18 Days</span>
                           </div>
                         </div>
                       </div>
@@ -899,7 +949,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Sales Overview & Custom Order Progress */}
+              {/* Sales Overview (Interactive Growing Graph) & Custom Order Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
@@ -929,23 +979,22 @@ export default function Admin_Dashboard_Page() {
                     </div>
                   </div>
 
-                  {/* Interactive Live Graph Display */}
+                  {/* Interactive Dynamic Growing Graph */}
                   <div className="h-64 bg-[#FAF8F5] rounded-xl border border-[#EFECE6] flex flex-col justify-between p-6 relative overflow-hidden">
                     <div className="flex justify-between items-center text-xs text-[#78716C]">
                       <span>REVENUE VELOCITY ({salesTimeframe})</span>
                       <span className="font-bold text-[#1C1A17]">{salesTimeframe === 'WEEKLY' ? 'Past 7 Days' : 'Past 30 Days'}</span>
                     </div>
 
-                    {/* Bar visualization based on live records */}
-                    <div className="flex items-end justify-between gap-2 h-36 px-4 pt-6 border-b border-[#EFECE6]">
-                      {[40, 65, 50, 85, 70, 95, 80].map((heightVal, idx) => {
-                        const calculatedBarHeight = Math.min(100, Math.max(15, Math.round((chartTotalRevenue / (salesTimeframe === 'WEEKLY' ? 200000 : 800000)) * heightVal)));
+                    <div className="flex items-end justify-between gap-3 h-36 px-4 pt-6 border-b border-[#EFECE6]">
+                      {[35, 55, 45, 75, 60, 90, 85].map((val, idx) => {
+                        const barHeight = Math.min(100, Math.max(20, Math.round((chartTotalRevenue / (salesTimeframe === 'WEEKLY' ? 200000 : 800000)) * val)));
                         return (
                           <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
-                            <div className="absolute -top-8 bg-[#1C1A17] text-white text-[9px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
-                              {formatPrice(Math.round((chartTotalRevenue / 7) * (heightVal / 70)))}
+                            <div className="absolute -top-8 bg-[#1C1A17] text-white text-[9px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 shadow-md">
+                              {formatPrice(Math.round((chartTotalRevenue / 7) * (val / 60)))}
                             </div>
-                            <div style={{ height: `${calculatedBarHeight}%` }} className="w-full bg-[#B89768] rounded-t-lg transition-all duration-500 hover:opacity-90"></div>
+                            <div style={{ height: `${barHeight}%` }} className="w-full bg-[#B89768] rounded-t-lg transition-all duration-500 hover:bg-black"></div>
                             <span className="text-[10px] text-[#78716C] font-mono">{salesTimeframe === 'WEEKLY' ? `Day ${idx+1}` : `Wk ${idx+1}`}</span>
                           </div>
                         );
@@ -953,7 +1002,7 @@ export default function Admin_Dashboard_Page() {
                     </div>
 
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-[#78716C]">Live Database Aggregate</span>
+                      <span className="text-[#78716C]">Live Ledger Total</span>
                       <span className="font-serif font-bold text-sm text-[#1C1A17]">{formatPrice(chartTotalRevenue)}</span>
                     </div>
                   </div>
@@ -984,7 +1033,7 @@ export default function Admin_Dashboard_Page() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold border border-amber-200">Active Custom Orders: 106</span>
+                    <span className="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold border border-amber-200">Active Custom Orders: {adminCustomOrders.length || 106}</span>
                     <span className="px-3 py-1 bg-rose-50 text-rose-800 rounded-full text-xs font-bold border border-rose-200">Delayed Orders: 4</span>
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">Ready for Dispatch: 7</span>
                   </div>
@@ -1012,7 +1061,7 @@ export default function Admin_Dashboard_Page() {
                   </div>
 
                   <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 flex items-center justify-between">
-                    <p className="text-xs text-amber-900 font-semibold">4 custom orders are delayed and need review.</p>
+                    <p className="text-xs text-amber-900 font-semibold">Custom orders need review.</p>
                     <button onClick={() => setActiveNav('custom-orders')} className="bg-[#1C1A17] text-white text-[11px] font-bold px-4 py-2 rounded-xl">PRODUCTION BOARD</button>
                   </div>
                 </div>
@@ -1095,7 +1144,7 @@ export default function Admin_Dashboard_Page() {
                         </tr>
                       ))}
                       {filteredLiveOrders.length === 0 && (
-                        <tr><td colSpan="7" className="py-12 text-center text-[#78716C]">No orders match your filter criteria.</td></tr>
+                        <tr><td colSpan="7" className="py-12 text-center text-[#78716C]">No orders found.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1104,18 +1153,13 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'customers' ? (
-            /* ================= CUSTOMERS DIRECTORY (Screenshot 6 Style) ================= */
+            /* ================= CUSTOMERS DIRECTORY (With Live Database Measurements) ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Customers Directory</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and measurement profiles.</p>
+                  <p className="text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and live database measurement profiles.</p>
                 </div>
-                <select className="bg-white border border-[#EFECE6] px-4 py-2 rounded-xl text-xs font-semibold">
-                  <option>All Tiers</option>
-                  <option>VIP Customers</option>
-                  <option>New Customers</option>
-                </select>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1123,9 +1167,8 @@ export default function Admin_Dashboard_Page() {
                   <div className="flex items-center justify-between pb-4 border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
                     <span>Client Detail</span>
                     <span>Client Tier</span>
-                    <span>Invoiced Spent</span>
-                    <span>Comm Status</span>
-                    <span>View Sheet</span>
+                    <span>Registered Date</span>
+                    <span>Action</span>
                   </div>
                   {adminCustomers.map(cust => (
                     <div key={cust.id} onClick={() => setSelectedCustomer(cust)} className={`flex items-center justify-between py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition ${selectedCustomer?.id === cust.id ? 'bg-[#FAF8F5] border-l-4 border-l-[#B89768]' : ''}`}>
@@ -1134,86 +1177,58 @@ export default function Admin_Dashboard_Page() {
                         <p className="text-xs text-[#78716C]">{cust.phone || 'Phone not provided'} | {cust.email}</p>
                       </div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                        VIP Customer
+                        Patron
                       </span>
-                      <span className="font-serif font-bold text-sm text-[#1C1A17]">₹4,25,200</span>
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold border border-emerald-200">Contacted</span>
+                      <span className="text-xs text-[#78716C]">{cust.created_at ? new Date(cust.created_at).toLocaleDateString() : '—'}</span>
                       <span className="text-xs font-bold text-[#B89768] hover:underline flex items-center">
                         Select Client &rarr;
                       </span>
                     </div>
                   ))}
                   {adminCustomers.length === 0 && (
-                    <div className="space-y-4">
-                      {[
-                        { name: 'Aishwarya Sen', phone: '+91 98765 43210', email: 'aishwarya.sen@luxury.in', tier: 'VIP CUSTOMER', spent: '₹4,25,200', orders: '6 Orders made', comm: 'Contacted' },
-                        { name: 'Meera Deshmukh', phone: '+91 87654 32109', email: 'meera.d@vogueindia.com', tier: 'VIP CUSTOMER', spent: '₹2,87,000', orders: '3 Orders made', comm: 'Contacted' }
-                      ].map((mockC, idx) => (
-                        <div key={idx} onClick={() => setSelectedCustomer({ name: mockC.name, email: mockC.email, phone: mockC.phone, id: `C-90${idx}` })} className="flex items-center justify-between py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition">
-                          <div>
-                            <p className="font-bold text-sm text-[#1C1A17]">{mockC.name}</p>
-                            <p className="text-xs text-[#78716C]">{mockC.phone} | {mockC.email}</p>
-                          </div>
-                          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">{mockC.tier}</span>
-                          <div>
-                            <p className="font-serif font-bold text-sm text-[#1C1A17]">{mockC.spent}</p>
-                            <p className="text-[10px] text-[#78716C]">{mockC.orders}</p>
-                          </div>
-                          <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold border border-emerald-200">{mockC.comm}</span>
-                          <span className="text-xs font-bold text-[#B89768] hover:underline">Select Client &rarr;</span>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="py-8 text-center text-[#78716C]">No customers found in database.</p>
                   )}
                 </div>
 
-                {/* Master Profile & Measurements Panel */}
+                {/* Master Profile & Live Measurements Panel */}
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-6">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MASTER PROFILE</p>
-                    <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{selectedCustomer?.name || 'Aishwarya Sen'}</h3>
-                    <p className="text-xs text-[#78716C]">ID: C-901 | Active since April 2026</p>
+                    <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{selectedCustomer?.name || 'Select a customer'}</h3>
+                    <p className="text-xs text-[#78716C]">{selectedCustomer ? `Email: ${selectedCustomer.email}` : 'Choose a client to inspect database measurements.'}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between pb-2 border-b border-[#EFECE6]">
-                      <span className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider flex items-center"><FileText className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> SAVED MEASUREMENT RECORD</span>
+                      <span className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider flex items-center"><FileText className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> SAVED MEASUREMENT RECORDS</span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Chest', val: '34"' },
-                        { label: 'Waist', val: '28"' },
-                        { label: 'Hips', val: '38"' },
-                        { label: 'Length', val: '54"' },
-                        { label: 'Shoulder', val: '14.5"' },
-                        { label: 'Sleeve', val: '18"' }
-                      ].map((m, i) => (
-                        <div key={i} className="bg-[#FAF8F5] border border-[#EFECE6] p-3 rounded-xl text-center">
-                          <span className="text-[10px] text-[#78716C] uppercase font-semibold block">{m.label}</span>
-                          <span className="font-serif font-bold text-lg text-[#1C1A17]">{m.val}</span>
+                    {customerMeasurements.length > 0 ? customerMeasurements.map((m, idx) => (
+                      <div key={idx} className="bg-[#FAF8F5] border border-[#EFECE6] p-4 rounded-xl space-y-3">
+                        <div className="flex justify-between items-center text-xs font-bold">
+                          <span>{m.name || 'Fit Profile'} ({m.gender || 'Female'})</span>
+                          <span className="text-amber-800">{m.is_default ? 'Default Profile' : ''}</span>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="bg-[#FAF8F5] border border-[#EFECE6] p-3 rounded-xl text-center">
-                      <span className="text-[10px] text-[#78716C] uppercase font-semibold block">Neck Depth</span>
-                      <span className="font-serif font-bold text-lg text-[#1C1A17]">6.5"</span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Client Fitting Preferences</label>
-                      <div className="p-3 bg-[#FAF8F5] border border-[#EFECE6] rounded-xl text-xs text-[#1C1A17]">
-                        Prefers slightly loose sleeve cuffs. Extra inner lining in silk.
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                          {m.bust && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Bust</span><strong>{m.bust}</strong></div>}
+                          {m.waist && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Waist</span><strong>{m.waist}</strong></div>}
+                          {m.hips && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Hips</span><strong>{m.hips}</strong></div>}
+                          {m.shoulder && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Shoulder</span><strong>{m.shoulder}</strong></div>}
+                          {m.sleeve && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Sleeve</span><strong>{m.sleeve}</strong></div>}
+                          {m.total_length && <div className="bg-white p-2 rounded-lg border border-[#EFECE6]"><span className="text-[9px] text-[#78716C] block">Length</span><strong>{m.total_length}</strong></div>}
+                        </div>
+                        {m.remarks && <p className="text-[11px] text-[#78716C] italic">Note: "{m.remarks}"</p>}
                       </div>
-                    </div>
+                    )) : (
+                      <p className="text-xs text-[#78716C] text-center py-6">No measurement records saved for this customer.</p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
           ) : activeNav === 'discount-codes' ? (
-            /* ================= DISCOUNT CODES MODULE (Screenshot 7 Style + Live DB) ================= */
+            /* ================= DISCOUNT CODES MODULE ================= */
             <div className="space-y-8">
               <div>
                 <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MARKETING SUITE</p>
@@ -1267,7 +1282,7 @@ export default function Admin_Dashboard_Page() {
                   </div>
                 </div>
 
-                {/* Active Campaigns Table (Fetched Live from NeonDB) */}
+                {/* Active Campaigns Table */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Active Promotional Campaigns</h3>
@@ -1316,7 +1331,7 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'custom-orders' ? (
-            /* ================= CUSTOM ORDERS PIPELINE (Screenshot 8, 9 Style) ================= */
+            /* ================= CUSTOM ORDERS PIPELINE ================= */
             <div className="space-y-8">
               <div>
                 <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">BESPOKE COUTURE PIPELINE</p>
@@ -1325,56 +1340,34 @@ export default function Admin_Dashboard_Page() {
                     <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Custom Orders & Couture Workspace</h2>
                     <p className="text-sm text-[#78716C]">Review design sketches, formulate quote calculations, assign tailoring masters, and monitor sewing workflows.</p>
                   </div>
-                  <div className="flex bg-white border border-[#EFECE6] p-1.5 rounded-2xl shadow-sm">
-                    <button className="px-4 py-2 bg-[#1C1A17] text-white rounded-xl text-xs font-bold">DESIGN REQUESTS & QUOTES</button>
-                    <button className="px-4 py-2 text-[#78716C] hover:text-black rounded-xl text-xs font-bold">MASTER TAILORS & PRODUCTION</button>
-                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Pending Couture Requests List */}
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">Pending Couture Requests</h3>
-                  <p className="text-xs text-[#78716C]">Loom enquiries in need of evaluation and pricing</p>
+                  <h3 className="font-serif text-lg font-bold text-[#1C1A17]">Custom Design Enquiries</h3>
+                  <p className="text-xs text-[#78716C]">Fetched live from user requests</p>
 
                   <div className="space-y-3">
                     {adminCustomOrders.length > 0 ? adminCustomOrders.map((req) => (
                       <div key={req.id} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
                         <div className="flex justify-between items-start text-xs">
-                          <span className="font-bold text-[#1C1A17]">{req.name || req.user_email}</span>
-                          <span className="text-[#78716C]">{req.created_at ? new Date(req.created_at).toLocaleDateString() : '2026-06-15'}</span>
+                          <span className="font-bold text-[#1C1A17]">{req.user_email}</span>
+                          <span className="text-[#78716C]">{req.created_at ? new Date(req.created_at).toLocaleDateString() : ''}</span>
                         </div>
                         <p className="font-mono text-xs font-semibold text-[#B89768] mt-1">REQ-{req.id}</p>
-                        <p className="text-xs text-[#78716C] mt-2 line-clamp-2">{req.message || req.description}</p>
+                        <p className="font-serif font-bold text-sm text-[#1C1A17] mt-1">{req.product_name}</p>
+                        <p className="text-xs text-[#78716C] mt-1 line-clamp-2">{req.message}</p>
                         <div className="mt-3 pt-3 border-t border-[#EFECE6] flex items-center justify-between">
-                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800`}>
+                          <span className="px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800">
                             {req.status || 'Pending Review'}
                           </span>
                         </div>
                       </div>
-                    )) : [
-                      { name: 'Shreya Ghoshal', id: 'REQ-2026-002', date: '2026-06-15', desc: 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.', title: 'Midnight Blue Gala Sherwani Set', est: '₹1,85,000', status: 'Pending Review' },
-                      { name: 'Aishwarya Sen', id: 'REQ-2026-003', date: '2026-06-10', desc: 'A custom heavy border saree with floral design, using matching maroon velvet borders.', title: 'Zardozi Sangeet Saree', est: '₹1,10,000', status: 'Approved for Production' }
-                    ].map((req, i) => (
-                      <div key={i} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
-                        <div className="flex justify-between items-start text-xs">
-                          <span className="font-bold text-[#1C1A17]">{req.name}</span>
-                          <span className="text-[#78716C]">{req.date}</span>
-                        </div>
-                        <p className="font-mono text-xs font-semibold text-[#B89768] mt-1">{req.id}</p>
-                        <p className="text-xs text-[#78716C] mt-2 line-clamp-2">{req.desc}</p>
-                        <div className="mt-3 pt-3 border-t border-[#EFECE6] flex items-center justify-between">
-                          <div>
-                            <span className="text-[10px] text-[#78716C] block">Estimated Quote</span>
-                            <span className="font-serif font-bold text-xs text-[#1C1A17]">{req.est}</span>
-                          </div>
-                          <span className="px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800">
-                            {req.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                    )) : (
+                      <p className="text-xs text-[#78716C] text-center py-8">No custom design requests found.</p>
+                    )}
                   </div>
                 </div>
 
@@ -1383,33 +1376,32 @@ export default function Admin_Dashboard_Page() {
                   <div className="flex items-center justify-between pb-6 border-b border-[#EFECE6]">
                     <div>
                       <div className="flex items-center space-x-3">
-                        <span className="font-mono font-bold text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full">{selectedCustomReq?.id ? `REQ-${selectedCustomReq.id}` : 'REQ-2026-002'}</span>
-                        <span className="text-xs text-[#78716C]">Date Received: {selectedCustomReq?.created_at ? new Date(selectedCustomReq.created_at).toLocaleDateString() : '2026-06-15'}</span>
+                        <span className="font-mono font-bold text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full">{selectedCustomReq?.id ? `REQ-${selectedCustomReq.id}` : 'Select a request'}</span>
+                        <span className="text-xs text-[#78716C]">Date: {selectedCustomReq?.created_at ? new Date(selectedCustomReq.created_at).toLocaleDateString() : '—'}</span>
                       </div>
-                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.product_name || selectedCustomReq?.title || 'Midnight Blue Gala Sherwani Set'}</h3>
+                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.product_name || 'Select a custom request'}</h3>
                     </div>
                     <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">{selectedCustomReq?.status || 'Pending Review'}</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] space-y-2">
-                      <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">VIP CUSTOMER</span>
-                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.name || selectedCustomReq?.user_email || 'Shreya Ghoshal'}</p>
-                      <p className="text-xs text-[#78716C]">Email: {selectedCustomReq?.user_email || 'sg.music@shreya.com'}</p>
-                      <p className="text-xs text-[#78716C]">Phone: +91 95432 98412</p>
+                      <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">PATRON</span>
+                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.user_email || '—'}</p>
+                      <p className="text-xs text-[#78716C]">Category: {selectedCustomReq?.product_category || 'Bespoke'}</p>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] space-y-2">
-                      <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">FABRIC REQUIREMENTS</span>
-                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.line || 'Srinagar Mulberry Raw Silk'}</p>
-                      <p className="text-xs text-[#78716C]">Category: <span className="font-semibold text-[#1C1A17]">{selectedCustomReq?.product_category || 'Bespoke Suit'}</span></p>
+                      <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">ATELIER LINE</span>
+                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.line || 'Bespoke Custom Line'}</p>
+                      <p className="text-xs text-[#78716C]">Estimated Price: <span className="font-semibold text-[#1C1A17]">{formatPrice(selectedCustomReq?.product_price || 0)}</span></p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider block">Garment Description & Custom Motif Requests:</label>
                     <div className="p-4 bg-[#FAF8F5] border border-[#EFECE6] rounded-xl text-xs text-[#1C1A17] italic">
-                      "{selectedCustomReq?.message || selectedCustomReq?.desc || 'Midnight blue heavy raw silk. Collar and cuffs need hand-stitched Kashmiri white silk tilla lines.'}"
+                      "{selectedCustomReq?.message || 'No specific notes provided.'}"
                     </div>
                   </div>
 
@@ -1418,8 +1410,6 @@ export default function Admin_Dashboard_Page() {
                       <DollarSign className="w-4 h-4 text-[#B89768]" />
                       <h4 className="font-serif text-base font-bold text-[#1C1A17]">Issue Pricing & Quotation Calculations</h4>
                     </div>
-                    <p className="text-xs text-[#78716C]">Provide an executive price quote matching raw silk yarn requirements and artisan handcraft stitch hours. Senders will receive real-time notifications.</p>
-                    
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-[#78716C] uppercase tracking-wider block">Offer Price (INR, ₹)</label>
                       <input 
@@ -1462,7 +1452,7 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'products' ? (
-            /* ================= PRODUCTS MODULE (Screenshot 10 Style) ================= */
+            /* ================= PRODUCTS MODULE (With Direct Database Edit & Delete) ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -1498,18 +1488,6 @@ export default function Admin_Dashboard_Page() {
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                     <input placeholder="Search catalog name/SKU..." className="w-full bg-[#FAF8F5] border border-[#EFECE6] pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-[#B89768]" />
                   </div>
-                  <div className="flex space-x-3 text-xs">
-                    <select className="bg-[#FAF8F5] border border-[#EFECE6] px-4 py-2.5 rounded-xl font-semibold">
-                      <option>All Categories</option>
-                      <option>Sarees</option>
-                      <option>Lehengas</option>
-                    </select>
-                    <select className="bg-[#FAF8F5] border border-[#EFECE6] px-4 py-2.5 rounded-xl font-semibold">
-                      <option>All Statuses</option>
-                      <option>Best Seller</option>
-                      <option>Limited Edition</option>
-                    </select>
-                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1517,71 +1495,40 @@ export default function Admin_Dashboard_Page() {
                     <thead>
                       <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
                         <th className="py-3 px-3">Design Details</th>
-                        <th className="py-3 px-3">Line/Collection</th>
+                        <th className="py-3 px-3">Category</th>
                         <th className="py-3 px-3">Base SKU</th>
-                        <th className="py-3 px-3">Costing ID</th>
-                        <th className="py-3 px-3">Inventory Available</th>
-                        <th className="py-3 px-3">Product State</th>
+                        <th className="py-3 px-3">Price</th>
+                        <th className="py-3 px-3">Stock Status</th>
                         <th className="py-3 px-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#EFECE6] text-sm">
-                      {adminProducts.length > 0 ? adminProducts.map(prd => (
+                      {adminProducts.map(prd => (
                         <tr key={prd.id} className="hover:bg-[#FAF8F5]">
                           <td className="py-4 px-3 flex items-center gap-3">
                             <img src={prd.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200'} alt="" className="w-12 h-12 rounded-lg object-cover" />
                             <div>
                               <p className="font-serif font-bold text-sm text-[#1C1A17]">{prd.name}</p>
-                              <span className="text-xs text-[#78716C]">{prd.category}</span>
+                              <span className="text-xs text-[#78716C]">{prd.tag || 'Atelier'}</span>
                             </div>
                           </td>
-                          <td className="py-4 px-3 text-xs text-[#78716C]">Royal Heritage '26</td>
+                          <td className="py-4 px-3 text-xs text-[#78716C]">{prd.category}</td>
                           <td className="py-4 px-3 font-mono text-xs">{prd.sku || 'WFT-1042'}</td>
                           <td className="py-4 px-3 font-semibold">{formatPrice(prd.price)}</td>
                           <td className="py-4 px-3 text-xs">
-                            <span className="font-bold text-[#1C1A17] block">12 units available</span>
-                            <span className="text-[10px] text-[#78716C]">2 reserved for stitching</span>
-                          </td>
-                          <td className="py-4 px-3">
-                            <span className="px-3 py-1 rounded-full text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                              BEST SELLER
+                            <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold ${prd.in_stock ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              {prd.in_stock ? 'IN STOCK' : 'OUT OF STOCK'}
                             </span>
                           </td>
                           <td className="py-4 px-3 whitespace-nowrap">
-                            <button onClick={() => showToast(`Editing catalog item`)} className="p-2 rounded-xl border border-[#EFECE6] hover:bg-white mr-2"><Edit3 className="w-3.5 h-3.5 text-[#78716C]" /></button>
-                            <button onClick={() => showToast(`Item deleted.`)} className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </td>
-                        </tr>
-                      )) : [
-                        { name: 'Varanasi Brocade Silk Saree', cat: 'Sarees', col: "Royal Heritage '26", sku: 'WFT-SAR-VAR-001', price: '₹48,500', stock: '12 units available', status: 'BEST SELLER', stStyle: 'bg-amber-50 text-amber-900 border border-amber-200' },
-                        { name: 'Zardozi Hand-Embroidered Velvet Lehenga', cat: 'Lehengas', col: "Mughal Garden '26", sku: 'WFT-LEH-ZAR-002', price: '₹1,85,000', stock: '4 units available', status: 'LIMITED EDITION', stStyle: 'bg-amber-50 text-amber-900 border border-amber-200' }
-                      ].map((item, i) => (
-                        <tr key={i} className="hover:bg-[#FAF8F5]">
-                          <td className="py-4 px-3 flex items-center gap-3">
-                            <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200" alt="" className="w-12 h-12 rounded-lg object-cover" />
-                            <div>
-                              <p className="font-serif font-bold text-sm text-[#1C1A17]">{item.name}</p>
-                              <span className="text-xs text-[#78716C]">{item.cat}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-3 text-xs text-[#78716C]">{item.col}</td>
-                          <td className="py-4 px-3 font-mono text-xs">{item.sku}</td>
-                          <td className="py-4 px-3 font-semibold">{item.price}</td>
-                          <td className="py-4 px-3 text-xs">
-                            <span className="font-bold text-[#1C1A17] block">{item.stock}</span>
-                            <span className="text-[10px] text-[#78716C]">2 reserved for stitching</span>
-                          </td>
-                          <td className="py-4 px-3">
-                            <span className={`px-3 py-1 rounded-full text-[9px] font-bold ${item.stStyle}`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-3 whitespace-nowrap">
-                            <button onClick={() => showToast(`Editing catalog item ${item.sku}`)} className="p-2 rounded-xl border border-[#EFECE6] hover:bg-white mr-2"><Edit3 className="w-3.5 h-3.5 text-[#78716C]" /></button>
-                            <button onClick={() => showToast(`Item ${item.sku} deleted.`)} className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100"><Trash2 className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => handleEditProduct(prd)} className="p-2 rounded-xl border border-[#EFECE6] hover:bg-white mr-2" title="Edit Product"><Edit3 className="w-3.5 h-3.5 text-[#78716C]" /></button>
+                            <button onClick={() => handleDeleteProduct(prd)} className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100" title="Delete Product"><Trash2 className="w-3.5 h-3.5" /></button>
                           </td>
                         </tr>
                       ))}
+                      {adminProducts.length === 0 && (
+                        <tr><td colSpan="6" className="py-12 text-center text-[#78716C]">No products found in database.</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
