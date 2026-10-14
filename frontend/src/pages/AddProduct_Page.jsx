@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, Loader2, ShieldAlert, Lock, Mail, KeyRound, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, ShieldAlert, Lock, Mail, KeyRound, ShieldCheck, PlusCircle, BookOpen, Star, Layers } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -43,13 +43,13 @@ export default function AddProduct_Page() {
   };
 
   // ---------------------------------------------------------
-  // ADMIN AUTHENTICATION GUARD (ID 10 Check)
+  // ADMIN AUTHENTICATION GUARD (ID 10 Check using localStorage)
   // ---------------------------------------------------------
   useEffect(() => {
-    const sessionAuth = sessionStorage.getItem("weftin_admin_auth");
+    const adminAuth = localStorage.getItem("weftin_admin_auth");
     const storedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
 
-    if (sessionAuth === "true" && storedUser?.id === 10) {
+    if (adminAuth === "true" && storedUser?.id === 10) {
       setIsAdminAuthenticated(true);
     }
     setCheckingAuth(false);
@@ -82,7 +82,7 @@ export default function AddProduct_Page() {
         const userEmail = String(data.user.email || "").trim().toLowerCase();
 
         if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
-          sessionStorage.setItem("weftin_admin_auth", "true");
+          localStorage.setItem("weftin_admin_auth", "true");
           if (data.access_token) {
             localStorage.setItem("weftin_token", data.access_token);
           }
@@ -324,449 +324,449 @@ export default function AddProduct_Page() {
   // MAIN PRODUCT ADDITION PAGE INTERFACE (IF AUTHENTICATED)
   // ---------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans p-8 lg:p-16 relative">
+    <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans pb-16 relative">
 
-      {/* =====================================================
-          TOAST
-      ====================================================== */}
+      {/* TOAST */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm border border-amber-500/30">
           {toastMessage}
         </div>
       )}
 
-      {/* =====================================================
-          MAIN CARD
-      ====================================================== */}
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-8 pb-5 border-b border-gray-100">
-          <div>
-            <span className="text-[10px] uppercase tracking-widest text-amber-700 font-semibold block mb-1">
-              NEONDB INVENTORY ADMIN (ID: 10)
-            </span>
-            <h2 className="font-serif text-2xl text-gray-900">
-              Add New Product
-            </h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Add catalog, filter and availability information.
-            </p>
+      {/* ADMIN NAVIGATION HEADER */}
+      <header className="bg-white border-b border-gray-200 px-6 lg:px-12 py-4 mb-8">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-black text-[#E5D5BC] rounded-lg flex items-center justify-center font-serif font-bold text-base shadow-xs">W</div>
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-bold block">ATELIER CONTROL HUB</span>
+              <h2 className="font-serif text-sm tracking-widest font-bold text-gray-900">ADMINISTRATION SUITE</h2>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                sessionStorage.removeItem("weftin_admin_auth");
-                setIsAdminAuthenticated(false);
-                showToast("Logged out of admin session.");
-              }}
-              className="text-xs text-rose-700 font-semibold uppercase tracking-wider border border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded cursor-pointer"
-            >
-              Lock Session
-            </button>
-            <Link
-              to="/shop"
-              className="text-xs uppercase tracking-wider text-gray-600 flex items-center gap-1 hover:text-black"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Shop
+          <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+            <Link to="/admin/home-cms" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-amber-700" /> Home Page CMS
             </Link>
-          </div>
+            <Link to="/admin/add-product" className="px-4 py-2 rounded-lg bg-black text-white transition-colors">
+              Add Product
+            </Link>
+            <Link to="/admin/lookbook" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-amber-700" /> Lookbook CMS
+            </Link>
+            <Link to="/admin/limited-edition" className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-700" /> Limited Edition
+            </Link>
+          </nav>
         </div>
+      </header>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-7 text-xs"
-        >
+      {/* MAIN CARD */}
+      <div className="max-w-4xl mx-auto px-6 lg:px-12">
+        <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
 
-          {/* =================================================
-              BASIC PRODUCT INFORMATION
-          ================================================== */}
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
-              Product Information
-            </h3>
+          {/* HEADER */}
+          <div className="flex justify-between items-center mb-8 pb-5 border-b border-gray-100">
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-amber-700 font-semibold block mb-1">
+                NEONDB INVENTORY ADMIN (ID: 10)
+              </span>
+              <h2 className="font-serif text-2xl text-gray-900">
+                Add New Product
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Add catalog, filter and availability information.
+              </p>
+            </div>
 
-            <div className="space-y-5">
-              {/* PRODUCT NAME */}
-              <div>
-                <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Royal Gold Silk Saree"
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
-                />
-              </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  localStorage.removeItem("weftin_admin_auth");
+                  setIsAdminAuthenticated(false);
+                  showToast("Locked admin session.");
+                }}
+                className="text-xs text-rose-700 font-semibold uppercase tracking-wider border border-rose-200 bg-white hover:bg-rose-50 px-3 py-1.5 rounded cursor-pointer"
+              >
+                Lock Session
+              </button>
+            </div>
+          </div>
 
-              {/* CATEGORY + SKU */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-7 text-xs"
+          >
+
+            {/* BASIC PRODUCT INFORMATION */}
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
+                Product Information
+              </h3>
+
+              <div className="space-y-5">
                 <div>
                   <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    Category
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Royal Gold Silk Saree"
+                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                      Category
+                    </label>
+                    <select
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
+                    >
+                      {[
+                        "Sarees",
+                        "Lehengas",
+                        "Dresses & Gowns",
+                        "Kurtis",
+                        "Co-Ord Sets",
+                        "Kids Wear",
+                      ].map((category) => (
+                        <option
+                          key={category}
+                          value={category}
+                        >
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                      SKU Code
+                    </label>
+                    <input
+                      type="text"
+                      name="sku"
+                      value={form.sku}
+                      onChange={handleChange}
+                      placeholder="WFT-SR-1042"
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded uppercase focus:outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                      Price
+                    </label>
+                    <input
+                      type="text"
+                      name="price"
+                      required
+                      value={form.price}
+                      onChange={handleChange}
+                      placeholder="₹8,999"
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                      Old Price
+                    </label>
+                    <input
+                      type="text"
+                      name="old_price"
+                      value={form.old_price}
+                      onChange={handleChange}
+                      placeholder="₹12,500"
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                    Product Tag
                   </label>
                   <select
-                    name="category"
-                    value={form.category}
+                    name="tag"
+                    value={form.tag}
                     onChange={handleChange}
                     className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
                   >
-                    {[
-                      "Sarees",
-                      "Lehengas",
-                      "Dresses & Gowns",
-                      "Kurtis",
-                      "Co-Ord Sets",
-                      "Kids Wear",
-                    ].map((category) => (
-                      <option
-                        key={category}
-                        value={category}
-                      >
-                        {category}
-                      </option>
-                    ))}
+                    <option value="ATELIER EXCLUSIVE">
+                      ATELIER EXCLUSIVE
+                    </option>
+                    <option value="NEW ARRIVAL">
+                      NEW ARRIVAL
+                    </option>
+                    <option value="BEST SELLER">
+                      BEST SELLER
+                    </option>
+                    <option value="TRENDING">
+                      TRENDING
+                    </option>
+                    <option value="LIMITED EDITION">
+                      LIMITED EDITION
+                    </option>
                   </select>
                 </div>
+              </div>
+            </div>
 
-                <div>
-                  <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    SKU Code
-                  </label>
-                  <input
-                    type="text"
-                    name="sku"
-                    value={form.sku}
-                    onChange={handleChange}
-                    placeholder="WFT-SR-1042"
-                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded uppercase focus:outline-none focus:border-black"
-                  />
-                </div>
+            {/* FILTER INFORMATION */}
+            <div className="border-t border-gray-100 pt-7">
+              <div className="mb-4">
+                <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900">
+                  Shop Filter Information
+                </h3>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  These values are stored in NeonDB and used by the Shop filter panel.
+                </p>
               </div>
 
-              {/* PRICE */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    Price
-                  </label>
-                  <input
-                    type="text"
-                    name="price"
-                    required
-                    value={form.price}
-                    onChange={handleChange}
-                    placeholder="₹8,999"
-                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
-                  />
+              <div className="mb-6">
+                <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
+                  Available Sizes
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                  {availableSizes.map((size) => {
+                    const selected = form.sizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => toggleSize(size)}
+                        className={`
+                          py-2.5 px-2 rounded border text-[10px]
+                          uppercase tracking-wider font-semibold
+                          transition-all cursor-pointer
+                          ${
+                            selected
+                              ? "bg-black text-white border-black"
+                              : "bg-white text-gray-700 border-gray-200 hover:border-black"
+                          }
+                        `}
+                      >
+                        {selected && (
+                          <Check className="w-3 h-3 inline mr-1" />
+                        )}
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
-
-                <div>
-                  <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                    Old Price
-                  </label>
-                  <input
-                    type="text"
-                    name="old_price"
-                    value={form.old_price}
-                    onChange={handleChange}
-                    placeholder="₹12,500"
-                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
-                  />
-                </div>
+                <p className="text-[10px] text-gray-400 mt-2">
+                  Selected: {form.sizes.length > 0 ? form.sizes.join(", ") : "None"}
+                </p>
               </div>
 
-              {/* TAG */}
-              <div>
-                <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-                  Product Tag
+              <div className="mb-6">
+                <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
+                  Product Color
                 </label>
                 <select
-                  name="tag"
-                  value={form.tag}
+                  name="color"
+                  value={form.color}
                   onChange={handleChange}
+                  required
                   className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
                 >
-                  <option value="ATELIER EXCLUSIVE">
-                    ATELIER EXCLUSIVE
-                  </option>
-                  <option value="NEW ARRIVAL">
-                    NEW ARRIVAL
-                  </option>
-                  <option value="BEST SELLER">
-                    BEST SELLER
-                  </option>
-                  <option value="TRENDING">
-                    TRENDING
-                  </option>
-                  <option value="LIMITED EDITION">
-                    LIMITED EDITION
-                  </option>
+                  <option value="">Select Product Color</option>
+                  <option value="Rose">Rose</option>
+                  <option value="Emerald">Emerald</option>
+                  <option value="Indigo">Indigo</option>
+                  <option value="Amber">Amber</option>
+                  <option value="Pink">Pink</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Black">Black</option>
+                  <option value="White">White</option>
+                  <option value="Red">Red</option>
+                  <option value="Blue">Blue</option>
+                  <option value="Green">Green</option>
+                  <option value="Purple">Purple</option>
+                  <option value="Maroon">Maroon</option>
+                  <option value="Beige">Beige</option>
+                  <option value="Multicolor">Multicolor</option>
                 </select>
               </div>
-            </div>
-          </div>
 
-          {/* =================================================
-              FILTER INFORMATION
-          ================================================== */}
-          <div className="border-t border-gray-100 pt-7">
-            <div className="mb-4">
-              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900">
-                Shop Filter Information
+              <div>
+                <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
+                  Availability & Services
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        in_stock: !prev.in_stock,
+                      }))
+                    }
+                    className={`
+                      flex items-center justify-between
+                      border rounded-lg px-4 py-3
+                      transition-all cursor-pointer
+                      ${
+                        form.in_stock
+                          ? "border-green-300 bg-green-50"
+                          : "border-gray-200 bg-gray-50"
+                      }
+                    `}
+                  >
+                    <div className="text-left">
+                      <span className="block font-semibold text-gray-800">In Stock</span>
+                      <span className="text-[10px] text-gray-500">Product is currently available</span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${form.in_stock ? "bg-green-600 text-white" : "bg-gray-300 text-white"}`}>
+                      {form.in_stock && <Check className="w-3 h-3" />}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        custom_stitching: !prev.custom_stitching,
+                      }))
+                    }
+                    className={`
+                      flex items-center justify-between
+                      border rounded-lg px-4 py-3
+                      transition-all cursor-pointer
+                      ${
+                        form.custom_stitching
+                          ? "border-amber-300 bg-amber-50"
+                          : "border-gray-200 bg-gray-50"
+                      }
+                    `}
+                  >
+                    <div className="text-left">
+                      <span className="block font-semibold text-gray-800">Custom Stitching</span>
+                      <span className="text-[10px] text-gray-500">Tailoring service available</span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${form.custom_stitching ? "bg-amber-700 text-white" : "bg-gray-300 text-white"}`}>
+                      {form.custom_stitching && <Check className="w-3 h-3" />}
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* IMAGES */}
+            <div className="border-t border-gray-100 pt-7">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
+                Product Images
               </h3>
-              <p className="text-[11px] text-gray-500 mt-1">
-                These values are stored in NeonDB and used by the Shop filter panel.
-              </p>
-            </div>
-
-            {/* SIZES */}
-            <div className="mb-6">
-              <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
-                Available Sizes
-              </label>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {availableSizes.map((size) => {
-                  const selected = form.sizes.includes(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => toggleSize(size)}
-                      className={`
-                        py-2.5 px-2 rounded border text-[10px]
-                        uppercase tracking-wider font-semibold
-                        transition-all cursor-pointer
-                        ${
-                          selected
-                            ? "bg-black text-white border-black"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-black"
-                        }
-                      `}
-                    >
-                      {selected && (
-                        <Check className="w-3 h-3 inline mr-1" />
-                      )}
-                      {size}
-                    </button>
-                  );
-                })}
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  name="image"
+                  required
+                  value={form.image}
+                  onChange={handleChange}
+                  placeholder="Main Image URL..."
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  name="image2"
+                  value={form.image2}
+                  onChange={handleChange}
+                  placeholder="Thumbnail 2 URL..."
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  name="image3"
+                  value={form.image3}
+                  onChange={handleChange}
+                  placeholder="Thumbnail 3 URL..."
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  name="image4"
+                  value={form.image4}
+                  onChange={handleChange}
+                  placeholder="Thumbnail 4 URL..."
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
+                />
               </div>
-              <p className="text-[10px] text-gray-400 mt-2">
-                Selected: {form.sizes.length > 0 ? form.sizes.join(", ") : "None"}
-              </p>
             </div>
 
-            {/* COLOR */}
-            <div className="mb-6">
-              <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
-                Product Color
-              </label>
-              <select
-                name="color"
-                value={form.color}
-                onChange={handleChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded focus:outline-none focus:border-black"
-              >
-                <option value="">Select Product Color</option>
-                <option value="Rose">Rose</option>
-                <option value="Emerald">Emerald</option>
-                <option value="Indigo">Indigo</option>
-                <option value="Amber">Amber</option>
-                <option value="Pink">Pink</option>
-                <option value="Gold">Gold</option>
-                <option value="Silver">Silver</option>
-                <option value="Black">Black</option>
-                <option value="White">White</option>
-                <option value="Red">Red</option>
-                <option value="Blue">Blue</option>
-                <option value="Green">Green</option>
-                <option value="Purple">Purple</option>
-                <option value="Maroon">Maroon</option>
-                <option value="Beige">Beige</option>
-                <option value="Multicolor">Multicolor</option>
-              </select>
-            </div>
-
-            {/* AVAILABILITY */}
+            {/* DESCRIPTION */}
             <div>
-              <label className="block uppercase tracking-wider text-gray-500 mb-3 font-semibold">
-                Availability & Services
+              <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                Product Description
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((prev) => ({
-                      ...prev,
-                      in_stock: !prev.in_stock,
-                    }))
-                  }
-                  className={`
-                    flex items-center justify-between
-                    border rounded-lg px-4 py-3
-                    transition-all cursor-pointer
-                    ${
-                      form.in_stock
-                        ? "border-green-300 bg-green-50"
-                        : "border-gray-200 bg-gray-50"
-                    }
-                  `}
-                >
-                  <div className="text-left">
-                    <span className="block font-semibold text-gray-800">In Stock</span>
-                    <span className="text-[10px] text-gray-500">Product is currently available</span>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${form.in_stock ? "bg-green-600 text-white" : "bg-gray-300 text-white"}`}>
-                    {form.in_stock && <Check className="w-3 h-3" />}
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((prev) => ({
-                      ...prev,
-                      custom_stitching: !prev.custom_stitching,
-                    }))
-                  }
-                  className={`
-                    flex items-center justify-between
-                    border rounded-lg px-4 py-3
-                    transition-all cursor-pointer
-                    ${
-                      form.custom_stitching
-                        ? "border-amber-300 bg-amber-50"
-                        : "border-gray-200 bg-gray-50"
-                    }
-                  `}
-                >
-                  <div className="text-left">
-                    <span className="block font-semibold text-gray-800">Custom Stitching</span>
-                    <span className="text-[10px] text-gray-500">Tailoring service available</span>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${form.custom_stitching ? "bg-amber-700 text-white" : "bg-gray-300 text-white"}`}>
-                    {form.custom_stitching && <Check className="w-3 h-3" />}
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* =================================================
-              IMAGES
-          ================================================== */}
-          <div className="border-t border-gray-100 pt-7">
-            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">
-              Product Images
-            </h3>
-            <div className="space-y-3">
-              <input
-                type="text"
-                name="image"
-                required
-                value={form.image}
+              <textarea
+                name="description"
+                value={form.description}
                 onChange={handleChange}
-                placeholder="Main Image URL..."
-                className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
-              />
-              <input
-                type="text"
-                name="image2"
-                value={form.image2}
-                onChange={handleChange}
-                placeholder="Thumbnail 2 URL..."
-                className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
-              />
-              <input
-                type="text"
-                name="image3"
-                value={form.image3}
-                onChange={handleChange}
-                placeholder="Thumbnail 3 URL..."
-                className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
-              />
-              <input
-                type="text"
-                name="image4"
-                value={form.image4}
-                onChange={handleChange}
-                placeholder="Thumbnail 4 URL..."
-                className="w-full bg-gray-50 border border-gray-200 px-4 py-2.5 rounded focus:outline-none focus:border-black"
+                placeholder="Detailed description..."
+                rows="4"
+                className="w-full bg-gray-50 border border-gray-200 p-3 rounded focus:outline-none focus:border-black"
               />
             </div>
-          </div>
 
-          {/* =================================================
-              DESCRIPTION
-          ================================================== */}
-          <div>
-            <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-              Product Description
-            </label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Detailed description..."
-              rows="4"
-              className="w-full bg-gray-50 border border-gray-200 p-3 rounded focus:outline-none focus:border-black"
-            />
-          </div>
+            {/* MATERIAL & CARE */}
+            <div>
+              <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+                Material & Care Instructions
+              </label>
+              <textarea
+                name="material_care"
+                value={form.material_care}
+                onChange={handleChange}
+                placeholder="100% Pure Silk..."
+                rows="3"
+                className="w-full bg-gray-50 border border-gray-200 p-3 rounded focus:outline-none focus:border-black"
+              />
+            </div>
 
-          {/* =================================================
-              MATERIAL & CARE
-          ================================================== */}
-          <div>
-            <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">
-              Material & Care Instructions
-            </label>
-            <textarea
-              name="material_care"
-              value={form.material_care}
-              onChange={handleChange}
-              placeholder="100% Pure Silk..."
-              rows="3"
-              className="w-full bg-gray-50 border border-gray-200 p-3 rounded focus:outline-none focus:border-black"
-            />
-          </div>
+            {/* SAVE BUTTON */}
+            <button
+              type="submit"
+              disabled={saving}
+              className={`
+                w-full text-white py-4 rounded
+                text-xs uppercase tracking-[0.2em]
+                font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer
+                ${
+                  saving
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-black hover:bg-gray-800"
+                }
+              `}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving Product...
+                </>
+              ) : (
+                "Save Product to NeonDB"
+              )}
+            </button>
 
-          {/* =================================================
-              SAVE BUTTON
-          ================================================== */}
-          <button
-            type="submit"
-            disabled={saving}
-            className={`
-              w-full text-white py-4 rounded
-              text-xs uppercase tracking-[0.2em]
-              font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer
-              ${
-                saving
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-black hover:bg-gray-800"
-              }
-            `}
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving Product...
-              </>
-            ) : (
-              "Save Product to NeonDB"
-            )}
-          </button>
+          </form>
 
-        </form>
-
+        </div>
       </div>
 
     </div>
