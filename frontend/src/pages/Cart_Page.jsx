@@ -180,7 +180,7 @@ const applyCoupon = async () => {
   const discountAmount = subtotal * discount;
   const grandTotal = subtotal - discountAmount;
 
-  const handleProceedToCheckout = async () => {
+const handleProceedToCheckout = async () => {
     if (cartItems.length === 0) {
       showToast("Your shopping bag is empty.");
       return;
@@ -207,10 +207,16 @@ const applyCoupon = async () => {
     try {
       showToast("Creating your WEFTIN order...");
 
+      // Calculate discount multiplier (e.g. 10% off means each item price is multiplied by 0.9)
+      const discountMultiplier = 1 - discount;
+
       const orderRequests = cartItems.map(async (item) => {
         const unitPrice = parsePrice(item.price);
         const quantity = Number(item.qty || 1);
-        const itemTotal = unitPrice * quantity;
+        
+        // Apply the discount proportion to each item's total price
+        const discountedUnitPrice = unitPrice * discountMultiplier;
+        const itemTotal = discountedUnitPrice * quantity;
 
         const orderData = {
           user_email: savedUser.email,
@@ -221,8 +227,8 @@ const applyCoupon = async () => {
           quantity: quantity,
           size: item.size || item.sizes?.[0] || null,
           color: item.color || item.shade || null,
-          unit_price: unitPrice,
-          total_price: itemTotal,
+          unit_price: discountedUnitPrice, // Save discounted unit price
+          total_price: itemTotal,         // Save discounted item total
           status: "PROCESSING",
           payment_status: "PENDING",
           shipping_address: null,
