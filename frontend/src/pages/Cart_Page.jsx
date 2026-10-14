@@ -18,8 +18,7 @@ import {
   MapPin,
   Headphones,
   LogOut,
-  ChevronRight,
-  Settings,
+  ChevronRight
 } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
@@ -144,7 +143,7 @@ export default function Cart_Page() {
     showToast("Item removed from cart.");
   };
 
-const applyCoupon = async () => {
+  const applyCoupon = async () => {
     if (!coupon.trim()) {
       showToast("Please enter a coupon code.");
       return;
@@ -180,7 +179,7 @@ const applyCoupon = async () => {
   const discountAmount = subtotal * discount;
   const grandTotal = subtotal - discountAmount;
 
-const handleProceedToCheckout = async () => {
+  const handleProceedToCheckout = async () => {
     if (cartItems.length === 0) {
       showToast("Your shopping bag is empty.");
       return;
@@ -207,14 +206,12 @@ const handleProceedToCheckout = async () => {
     try {
       showToast("Creating your WEFTIN order...");
 
-      // Calculate discount multiplier (e.g. 10% off means each item price is multiplied by 0.9)
       const discountMultiplier = 1 - discount;
 
       const orderRequests = cartItems.map(async (item) => {
         const unitPrice = parsePrice(item.price);
         const quantity = Number(item.qty || 1);
         
-        // Apply the discount proportion to each item's total price
         const discountedUnitPrice = unitPrice * discountMultiplier;
         const itemTotal = discountedUnitPrice * quantity;
 
@@ -227,8 +224,8 @@ const handleProceedToCheckout = async () => {
           quantity: quantity,
           size: item.size || item.sizes?.[0] || null,
           color: item.color || item.shade || null,
-          unit_price: discountedUnitPrice, // Save discounted unit price
-          total_price: itemTotal,         // Save discounted item total
+          unit_price: discountedUnitPrice,
+          total_price: itemTotal,
           status: "PROCESSING",
           payment_status: "PENDING",
           shipping_address: null,
@@ -388,7 +385,7 @@ const handleProceedToCheckout = async () => {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER */}
+      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -481,12 +478,6 @@ const handleProceedToCheckout = async () => {
             <Link to="/support" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-900 transition-colors group">
               <span className="flex items-center gap-3"><Headphones className="w-4 h-4 text-gray-700" />Concierge Support</span>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-amber-800 font-bold border-t border-gray-100 mt-2">Administration</div>
-            <Link to="/admin/home-cms" onClick={closeMobileMenu} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-black text-white transition-colors">
-              <span className="flex items-center gap-3 font-semibold text-amber-300"><Settings className="w-4 h-4" />Admin Product CMS</span>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-300" />
             </Link>
           </nav>
         </div>
