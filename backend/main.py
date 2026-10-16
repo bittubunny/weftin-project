@@ -3493,9 +3493,11 @@ def get_single_order(
             conn.close()
 
 
-
 @app.post("/api/orders")
-def create_order(order: OrderCreate):
+def create_order(
+    order: OrderCreate,
+    current_user: dict = Depends(get_current_user)
+):
     conn = None
     cur = None
 
@@ -3505,6 +3507,9 @@ def create_order(order: OrderCreate):
                 status_code=400,
                 detail="Quantity must be at least 1"
             )
+
+        # Always use the email from the verified token, ignoring any email sent in the payload
+        authenticated_email = current_user["email"]
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -3538,7 +3543,7 @@ def create_order(order: OrderCreate):
             """,
             (
                 "TEMP",
-                order.user_email,
+                authenticated_email,
                 order.product_id,
                 order.product_name,
                 order.product_category,
@@ -3577,7 +3582,7 @@ def create_order(order: OrderCreate):
 
         create_notification(
             cur,
-            order.user_email,
+            authenticated_email,
             "ORDER",
             "Order Confirmed",
             f"Your order {order_number} has been placed successfully.",
@@ -3616,12 +3621,14 @@ def create_order(order: OrderCreate):
 def update_order_status(
     order_number: str,
     status: str,
-    user_email: str
+    current_user: dict = Depends(get_current_user)
 ):
     conn = None
     cur = None
 
     try:
+        authenticated_email = current_user["email"]
+
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -3633,7 +3640,7 @@ def update_order_status(
               AND user_email = %s
             LIMIT 1
             """,
-            (order_number, user_email)
+            (order_number, authenticated_email)
         )
 
         existing_order = cur.fetchone()
@@ -3656,7 +3663,7 @@ def update_order_status(
             (
                 status,
                 order_number,
-                user_email
+                authenticated_email
             )
         )
 
@@ -3713,7 +3720,7 @@ def update_order_status(
 
         create_notification(
             cur,
-            user_email,
+            authenticated_email,
             notification_type,
             title,
             description,
@@ -3751,12 +3758,14 @@ def update_order_status(
 @app.delete("/api/orders/{order_number}")
 def delete_order(
     order_number: str,
-    user_email: str
+    current_user: dict = Depends(get_current_user)
 ):
     conn = None
     cur = None
 
     try:
+        authenticated_email = current_user["email"]
+
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -3768,7 +3777,7 @@ def delete_order(
               AND user_email = %s
             LIMIT 1
             """,
-            (order_number, user_email)
+            (order_number, authenticated_email)
         )
 
         order = cur.fetchone()
@@ -3785,12 +3794,12 @@ def delete_order(
             WHERE order_number = %s
               AND user_email = %s
             """,
-            (order_number, user_email)
+            (order_number, authenticated_email)
         )
 
         create_notification(
             cur,
-            user_email,
+            authenticated_email,
             "ORDER",
             "Order Removed",
             f"Order {order_number} has been removed from your order history.",
@@ -3826,6 +3835,7 @@ def delete_order(
             cur.close()
         if conn:
             conn.close()
+
 
 
 # =========================================================
