@@ -3397,13 +3397,19 @@ class OrderCreate(BaseModel):
 # ============================================================
 # ORDERS
 # ============================================================
-
 @app.get("/api/orders/{user_email}")
-def get_user_orders(user_email: str):
+def get_user_orders(
+    user_email: str,
+    current_user: dict = Depends(get_current_user)
+):
     conn = None
     cur = None
 
     try:
+        # Always use the email from the verified login token.
+        # Do not trust the email supplied in the URL.
+        authenticated_email = current_user["email"]
+
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -3414,11 +3420,10 @@ def get_user_orders(user_email: str):
             WHERE user_email = %s
             ORDER BY ordered_at DESC, id DESC
             """,
-            (user_email,)
+            (authenticated_email,)
         )
 
         orders = cur.fetchall()
-
         return orders
 
     except Exception as e:
@@ -3434,13 +3439,19 @@ def get_user_orders(user_email: str):
         if conn:
             conn.close()
 
-
 @app.get("/api/orders/{user_email}/{order_number}")
-def get_single_order(user_email: str, order_number: str):
+def get_single_order(
+    user_email: str,
+    order_number: str,
+    current_user: dict = Depends(get_current_user)
+):
     conn = None
     cur = None
 
     try:
+        # Use the authenticated user's email, not the URL email.
+        authenticated_email = current_user["email"]
+
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -3452,7 +3463,7 @@ def get_single_order(user_email: str, order_number: str):
               AND user_email = %s
             LIMIT 1
             """,
-            (order_number, user_email)
+            (order_number, authenticated_email)
         )
 
         order = cur.fetchone()
@@ -3480,6 +3491,7 @@ def get_single_order(user_email: str, order_number: str):
             cur.close()
         if conn:
             conn.close()
+
 
 
 @app.post("/api/orders")
