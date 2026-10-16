@@ -173,9 +173,13 @@ export default function Shop_Page() {
   // FETCH USER AVATAR
   // =========================================================
   const fetchUserAvatar = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/user/${encodeURIComponent(email)}`
+        `${API_BASE_URL}/api/user/${encodeURIComponent(email)}`,
+        {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        }
       );
 
       if (!response.ok) return;
@@ -194,11 +198,15 @@ export default function Shop_Page() {
   // FETCH UNREAD NOTIFICATIONS
   // =========================================================
   const fetchUnreadCount = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        }
       );
 
       if (!response.ok) return;
