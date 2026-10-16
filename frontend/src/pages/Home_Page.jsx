@@ -56,7 +56,7 @@ export default function Home_Page() {
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "WEFTIN Member";
+    "Guest Member";
 
   const userEmail = currentUser?.email || "";
 
@@ -86,8 +86,11 @@ export default function Home_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
+    setCurrentUser(null);
+    setUserAvatar("");
+    setUnreadCount(0);
     setMobileMenuOpen(false);
-    navigate("/login");
+    showToast("Logged out successfully");
   };
 
   /*
@@ -349,7 +352,7 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  INITIAL LOAD
+  INITIAL LOAD (Allows guest browsing)
   ============================================================
   */
 
@@ -358,55 +361,45 @@ export default function Home_Page() {
       const storedUser =
         localStorage.getItem("weftin_user");
 
-      if (!storedUser) {
-        navigate("/login");
-        return;
-      }
+      if (storedUser) {
+        const savedUser = JSON.parse(storedUser);
+        if (savedUser?.email) {
+          setCurrentUser(savedUser);
 
-      const savedUser = JSON.parse(storedUser);
-
-      if (!savedUser?.email) {
-        navigate("/login");
-        return;
-      }
-
-      setCurrentUser(savedUser);
-
-      if (savedUser?.avatar) {
-        setUserAvatar(savedUser.avatar);
-      }
-
-      fetch(
-        `${API_BASE_URL}/api/user/${encodeURIComponent(
-          savedUser.email
-        )}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.avatar) {
-            setUserAvatar(data.avatar);
+          if (savedUser?.avatar) {
+            setUserAvatar(savedUser.avatar);
           }
-        })
-        .catch((err) =>
-          console.error(
-            "User avatar fetch error:",
-            err
+
+          fetch(
+            `${API_BASE_URL}/api/user/${encodeURIComponent(
+              savedUser.email
+            )}`
           )
-        );
+            .then((res) => res.json())
+            .then((data) => {
+              if (data?.avatar) {
+                setUserAvatar(data.avatar);
+              }
+            })
+            .catch((err) =>
+              console.error(
+                "User avatar fetch error:",
+                err
+              )
+            );
+        }
+      }
 
       fetchData();
     } catch (error) {
       console.error(
-        "Unable to load user:",
+        "Unable to load user configuration:",
         error
       );
-
-      navigate("/login");
     }
 
     updateCartCount();
   }, [
-    navigate,
     fetchData,
     updateCartCount
   ]);
@@ -608,10 +601,10 @@ export default function Home_Page() {
               )}
             </Link>
 
-            {/* USER */}
+            {/* USER / LOGIN LINK */}
 
             <Link
-              to="/profile"
+              to={currentUser ? "/profile" : "/login"}
               className="flex items-center gap-2 text-gray-800 hover:text-black"
             >
               {userAvatar ? (
@@ -622,12 +615,12 @@ export default function Home_Page() {
                 />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
-                  {userInitial}
+                  {currentUser ? userInitial : <User className="w-3.5 h-3.5" />}
                 </div>
               )}
 
               <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">
-                {userName}
+                {currentUser ? userName : "Sign In"}
               </span>
             </Link>
 
@@ -787,7 +780,7 @@ export default function Home_Page() {
             {/* USER */}
 
             <Link
-              to="/profile"
+              to={currentUser ? "/profile" : "/login"}
               aria-label="Profile"
             >
               {userAvatar ? (
@@ -798,7 +791,7 @@ export default function Home_Page() {
                 />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
-                  {userInitial}
+                  {currentUser ? userInitial : <User className="w-3.5 h-3.5" />}
                 </div>
               )}
             </Link>
@@ -878,17 +871,17 @@ export default function Home_Page() {
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
-                {userInitial}
+                {currentUser ? userInitial : <User className="w-5 h-5" />}
               </div>
             )}
 
             <div className="min-w-0">
               <p className="text-xs font-bold text-gray-900 truncate">
-                {userName}
+                {currentUser ? userName : "Welcome, Guest"}
               </p>
 
               <p className="text-[10px] text-gray-500 truncate">
-                {userEmail || "Member Account"}
+                {userEmail || "Sign in to view account"}
               </p>
             </div>
           </div>
@@ -1077,15 +1070,26 @@ export default function Home_Page() {
           </nav>
         </div>
 
-        {/* DRAWER FOOTER / LOGOUT */}
+        {/* DRAWER FOOTER / LOGIN OR LOGOUT */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out of account
-          </button>
+          {currentUser ? (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out of account
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              onClick={closeMobileMenu}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-white font-semibold bg-black hover:bg-gray-900 rounded-lg transition-colors cursor-pointer shadow-2xs"
+            >
+              <User className="w-4 h-4" />
+              Sign In / Register
+            </Link>
+          )}
         </div>
       </aside>
 
@@ -1731,12 +1735,12 @@ export default function Home_Page() {
 
             <ul className="space-y-2 text-xs text-gray-600">
               <li>
-                <Link to="/profile" className="hover:text-black">
+                <Link to="/login" className="hover:text-black">
                   Sign In
                 </Link>
               </li>
               <li>
-                <Link to="/profile" className="hover:text-black">
+                <Link to="/login" className="hover:text-black">
                   Register Membership
                 </Link>
               </li>
