@@ -19,24 +19,50 @@ load_dotenv()  # Load environment variables from .env file
 # SECURITY CONFIGURATION
 # ============================================================
 
-SECRET_KEY = os.getenv("SECRET_KEY", "weftin_super_secret_atelier_jwt_key_2026")
+# ============================================================
+# SECURITY CONFIGURATION
+# ============================================================
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is missing. Set it in the backend environment variables."
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
+
+# Allow requests without a token to reach our own authentication
+# function, which will return a clear 401 Unauthorized response.
+security = HTTPBearer(auto_error=False)
+
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+
+    expire = datetime.utcnow() + timedelta(
+        days=ACCESS_TOKEN_EXPIRE_DAYS
+    )
+
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
     return encoded_jwt
 
 # ============================================================
@@ -78,7 +104,78 @@ def get_db_connection():
         cursor_factory=RealDictCursor
     )
 
+# ============================================================
+# AUTHENTICATED USER
+# ============================================================
 
+def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
+    # 1. Reject requests that do not contain a Bearer token.
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Login required.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # 2. Verify the token signature and expiration.
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        user_email = payload.get("sub")
+
+        if not user_email:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication token."
+            )
+
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # 3. Confirm that the account still exists in the database.
+    conn = None
+    cur = None
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT id, name, email, avatar
+            FROM users
+            WHERE email = %s
+            LIMIT 1
+            """,
+            (user_email,)
+        )
+
+        user = cur.fetchone()
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="User account not found. Please log in again."
+            )
+
+        return dict(user)
+
+    finally:
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 # ============================================================
 # NOTIFICATION HELPER
 # ============================================================
