@@ -45,6 +45,20 @@ export default function Cart_Page() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   // ============================================================
+  // STORAGE KEY HELPER (Isolates Guest vs User Carts)
+  // ============================================================
+
+  const getCartStorageKey = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("weftin_user"));
+      if (user && user.email) {
+        return `weftin_cart_${user.email}`;
+      }
+    } catch (e) {}
+    return "weftin_cart_guest";
+  };
+
+  // ============================================================
   // LOAD CART, USER & SYNC ACROSS TABS
   // ============================================================
 
@@ -60,15 +74,9 @@ export default function Cart_Page() {
 
     const loadCart = () => {
       try {
-        // If user is not logged in as a member, ensure guest cart is empty and storage is clear
-        if (!savedUser || !savedUser.email) {
-          localStorage.removeItem("weftin_cart");
-          setCartItems([]);
-          return;
-        }
-
+        const storageKey = getCartStorageKey();
         const savedCart =
-          JSON.parse(localStorage.getItem("weftin_cart")) || [];
+          JSON.parse(localStorage.getItem(storageKey)) || [];
         setCartItems(savedCart);
       } catch (error) {
         console.error("Failed to load cart:", error);
@@ -79,7 +87,7 @@ export default function Cart_Page() {
     loadCart();
 
     const handleStorageChange = (e) => {
-      if (e.key === "weftin_cart") {
+      if (e.key?.startsWith("weftin_cart")) {
         loadCart();
       }
       if (e.key === "weftin_user") {
@@ -91,8 +99,7 @@ export default function Cart_Page() {
         } else {
           setCurrentUser(null);
           setUserAvatar("");
-          localStorage.removeItem("weftin_cart");
-          setCartItems([]);
+          loadCart();
         }
       }
     };
@@ -129,8 +136,9 @@ export default function Cart_Page() {
 
   const updateCartStorage = (updatedItems) => {
     setCartItems(updatedItems);
+    const storageKey = getCartStorageKey();
     localStorage.setItem(
-      "weftin_cart",
+      storageKey,
       JSON.stringify(updatedItems)
     );
   };
@@ -270,7 +278,7 @@ export default function Cart_Page() {
       });
 
       const createdOrders = await Promise.all(orderRequests);
-      localStorage.removeItem("weftin_cart");
+      localStorage.removeItem(getCartStorageKey());
       setCartItems([]);
       setDiscount(0);
 
@@ -287,8 +295,7 @@ export default function Cart_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
-    localStorage.removeItem("weftin_cart"); // Clears cart storage completely on logout
-    setCartItems([]); // Clears local state immediately
+    setCartItems([]);
     setCurrentUser(null);
     setUserAvatar("");
     setUnreadCount(0);
