@@ -79,22 +79,27 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  LOGOUT HANDLER (Clears user session and cart data)
+  LOGOUT HANDLER (Clears user session and cart data completely)
   ============================================================
   */
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
-    localStorage.removeItem("weftin_cart"); // <-- Clears the cart so it doesn't bleed into guest view
+    localStorage.removeItem("weftin_cart"); // <-- Completely remove cart from storage
     
     setCurrentUser(null);
     setUserAvatar("");
     setUnreadCount(0);
-    setCartCount(0); // <-- Resets cart count badge to 0
+    setCartCount(0); // <-- Force badge count to 0 instantly
     setMobileMenuOpen(false);
     
     showToast("Logged out successfully");
+
+    // Force a smooth reload/redirect to ensure all cached guest states sync clean
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 600);
   };
 
   /*
