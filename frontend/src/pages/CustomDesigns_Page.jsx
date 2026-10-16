@@ -185,7 +185,7 @@ export default function CustomDesigns_Page() {
     const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
     const token = localStorage.getItem("weftin_token");
 
-    if (!savedUser?.email) {
+    if (!savedUser?.email || !token) {
       showToast("Please sign in before creating a custom design.");
       setTimeout(() => navigate("/login"), 1000);
       return;
@@ -198,7 +198,7 @@ export default function CustomDesigns_Page() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             user_email: savedUser.email,
@@ -220,7 +220,6 @@ export default function CustomDesigns_Page() {
       showToast("Bespoke custom design request created!");
 
       setTimeout(() => {
-        navigate("/custom-designs");
         loadRequests();
       }, 500);
 
@@ -289,7 +288,9 @@ export default function CustomDesigns_Page() {
   };
 
   useEffect(() => {
-    loadRequests();
+    if (userEmail) {
+      loadRequests();
+    }
   }, [userEmail]);
 
   // --------------------------------------------------
@@ -415,35 +416,6 @@ export default function CustomDesigns_Page() {
     navigate(`/shop?search=${encodeURIComponent(query)}`);
   };
 
-  // --------------------------------------------------
-  // NOT LOGGED IN
-  // --------------------------------------------------
-
-  if (!userEmail) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center px-6">
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-10 text-center max-w-md">
-          <User className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-
-          <h2 className="font-serif text-2xl text-gray-900 mb-2">
-            Sign in required
-          </h2>
-
-          <p className="text-sm text-gray-500 mb-6">
-            Please sign in to view your bespoke custom design requests.
-          </p>
-
-          <button
-            onClick={() => navigate("/profile")}
-            className="bg-black text-white px-8 py-3 rounded-lg text-xs uppercase tracking-widest font-semibold cursor-pointer"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
@@ -460,7 +432,7 @@ export default function CustomDesigns_Page() {
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
-      {/* UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE) */}
+      {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 
@@ -565,7 +537,7 @@ export default function CustomDesigns_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
