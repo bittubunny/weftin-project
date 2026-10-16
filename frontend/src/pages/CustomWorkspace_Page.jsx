@@ -69,9 +69,13 @@ export default function CustomWorkspace_Page() {
   const userAvatar = savedUser?.avatar || "";
 
   const loadUnreadCount = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`
+        `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`,
+        {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        }
       );
       if (!response.ok) return;
       const data = await response.json();
