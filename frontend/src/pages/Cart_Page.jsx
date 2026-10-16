@@ -49,8 +49,24 @@ export default function Cart_Page() {
   // ============================================================
 
   useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
+
+    if (savedUser && savedUser.email) {
+      setCurrentUser(savedUser);
+      if (savedUser.avatar) setUserAvatar(savedUser.avatar);
+      fetchUserAvatar(savedUser.email);
+      fetchUnreadCount(savedUser.email);
+    }
+
     const loadCart = () => {
       try {
+        // If user is not logged in as a member, ensure guest cart is empty and storage is clear
+        if (!savedUser || !savedUser.email) {
+          localStorage.removeItem("weftin_cart");
+          setCartItems([]);
+          return;
+        }
+
         const savedCart =
           JSON.parse(localStorage.getItem("weftin_cart")) || [];
         setCartItems(savedCart);
@@ -62,26 +78,21 @@ export default function Cart_Page() {
 
     loadCart();
 
-    const savedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
-    if (savedUser && savedUser.email) {
-      setCurrentUser(savedUser);
-      if (savedUser.avatar) setUserAvatar(savedUser.avatar);
-      fetchUserAvatar(savedUser.email);
-      fetchUnreadCount(savedUser.email);
-    }
-
     const handleStorageChange = (e) => {
       if (e.key === "weftin_cart") {
         loadCart();
       }
       if (e.key === "weftin_user") {
         const updatedUser = JSON.parse(e.newValue || "null");
-        if (updatedUser) {
+        if (updatedUser && updatedUser.email) {
           setCurrentUser(updatedUser);
           if (updatedUser.avatar) setUserAvatar(updatedUser.avatar);
+          loadCart();
         } else {
           setCurrentUser(null);
           setUserAvatar("");
+          localStorage.removeItem("weftin_cart");
+          setCartItems([]);
         }
       }
     };
@@ -276,7 +287,7 @@ export default function Cart_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
-    localStorage.removeItem("weftin_cart"); // Clears cart so it doesn't bleed into guest view
+    localStorage.removeItem("weftin_cart"); // Clears cart storage completely on logout
     setCartItems([]); // Clears local state immediately
     setCurrentUser(null);
     setUserAvatar("");
