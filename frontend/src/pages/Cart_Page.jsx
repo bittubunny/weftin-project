@@ -79,6 +79,9 @@ export default function Cart_Page() {
         if (updatedUser) {
           setCurrentUser(updatedUser);
           if (updatedUser.avatar) setUserAvatar(updatedUser.avatar);
+        } else {
+          setCurrentUser(null);
+          setUserAvatar("");
         }
       }
     };
@@ -194,7 +197,7 @@ export default function Cart_Page() {
 
     if (!savedUser?.email) {
       showToast("Please sign in before proceeding to checkout.");
-      setTimeout(() => navigate("/profile"), 1000);
+      setTimeout(() => navigate("/login"), 1000);
       return;
     }
 
@@ -273,7 +276,13 @@ export default function Cart_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
+    localStorage.removeItem("weftin_cart"); // Clears cart so it doesn't bleed into guest view
+    setCartItems([]); // Clears local state immediately
+    setCurrentUser(null);
+    setUserAvatar("");
+    setUnreadCount(0);
     setMobileMenuOpen(false);
+    showToast("Logged out successfully");
     navigate("/login");
   };
 
@@ -287,8 +296,8 @@ export default function Cart_Page() {
     navigate(`/shop?search=${encodeURIComponent(query)}`);
   };
 
-  const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "WEFTIN Member";
-  const userInitial = userName.charAt(0).toUpperCase() || "W";
+  const userName = currentUser?.name || currentUser?.full_name || currentUser?.username || "Guest Member";
+  const userInitial = currentUser ? (userName.charAt(0).toUpperCase() || "W") : null;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
@@ -343,15 +352,15 @@ export default function Cart_Page() {
               )}
             </Link>
 
-            <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
+            <Link to={currentUser ? "/profile" : "/login"} className="flex items-center gap-2 text-gray-800 hover:text-black">
               {userAvatar ? (
                 <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
-                  {userInitial}
+                  {currentUser ? userInitial : <User className="w-3.5 h-3.5" />}
                 </div>
               )}
-              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
+              <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{currentUser ? userName : "Sign In"}</span>
             </Link>
 
             <button
@@ -385,7 +394,7 @@ export default function Cart_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -405,17 +414,17 @@ export default function Cart_Page() {
             </button>
           </div>
 
-          <div onClick={() => { closeMobileMenu(); navigate("/profile"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
+          <div onClick={() => { closeMobileMenu(); navigate(currentUser ? "/profile" : "/login"); }} className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-amber-50/30 cursor-pointer hover:bg-amber-50/60 transition-colors">
             {userAvatar ? (
               <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-600 shadow-xs" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
-                {userInitial}
+                {currentUser ? userInitial : <User className="w-5 h-5" />}
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-bold text-gray-900 truncate">{userName}</p>
-              <p className="text-[10px] text-gray-500 truncate">{currentUser?.email || "Member Account"}</p>
+              <p className="text-xs font-bold text-gray-900 truncate">{currentUser ? userName : "Welcome, Guest"}</p>
+              <p className="text-[10px] text-gray-500 truncate">{currentUser?.email || "Sign in to view account"}</p>
             </div>
           </div>
 
@@ -483,9 +492,15 @@ export default function Cart_Page() {
         </div>
 
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
-            <LogOut className="w-4 h-4" /> Log out of account
-          </button>
+          {currentUser ? (
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs">
+              <LogOut className="w-4 h-4" /> Log out of account
+            </button>
+          ) : (
+            <Link to="/login" onClick={closeMobileMenu} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-white font-semibold bg-black hover:bg-gray-900 rounded-lg transition-colors cursor-pointer shadow-2xs">
+              <User className="w-4 h-4" /> Sign In / Register
+            </Link>
+          )}
         </div>
       </aside>
 
@@ -733,30 +748,29 @@ export default function Cart_Page() {
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><a href="#" className="hover:text-black">Sarees</a></li>
-              <li><a href="#" className="hover:text-black">Lehengas</a></li>
-              <li><a href="#" className="hover:text-black">Dresses</a></li>
-              <li><a href="#" className="hover:text-black">Kurtis</a></li>
-              <li><a href="#" className="hover:text-black">Co-Ord Sets</a></li>
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><a href="#" className="hover:text-black">Help Center</a></li>
-              <li><a href="#" className="hover:text-black">Order Tracking</a></li>
-              <li><a href="#" className="hover:text-black">Returns & Adjustments</a></li>
-              <li><a href="#" className="hover:text-black">Shipping Policy</a></li>
-              <li><a href="#" className="hover:text-black">Fabric Quality Guide</a></li>
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
-              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
-              <li><Link to="/orders" className="hover:text-black">Order History</Link></li>
-              <li><Link to="/profile" className="hover:text-black">My Bespoke Fit</Link></li>
+              <li><Link to="/login" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/login" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
             </ul>
           </div>
         </div>
