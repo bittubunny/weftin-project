@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
+
 const API_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 const emptyForm = {
@@ -139,11 +140,18 @@ export default function Measurements_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_URL}/api/notifications/unread-count/${encodeURIComponent(
           email
-        )}`
+        )}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        }
       );
 
       if (!response.ok) return;
@@ -539,7 +547,7 @@ export default function Measurements_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
