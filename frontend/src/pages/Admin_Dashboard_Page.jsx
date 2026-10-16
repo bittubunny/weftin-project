@@ -36,7 +36,10 @@ import {
   KeyRound,
   Loader2,
   ShieldCheck,
-  Star
+  Menu,
+  X,
+  User,
+  Check
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -53,7 +56,9 @@ export default function Admin_Dashboard_Page() {
 
   const [activeNav, setActiveNav] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [storefrontOpen, setStorefrontOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -79,10 +84,33 @@ export default function Admin_Dashboard_Page() {
   const [moduleError, setModuleError] = useState('');
   const [recordSaving, setRecordSaving] = useState(false);
 
+  // Admin profile state
+  const [adminName, setAdminName] = useState("Khaja H.");
+  const [adminRole, setAdminRole] = useState("Master Atelier Administrator");
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "New Custom Order Inquiry", desc: "Patron submitted a custom design request.", time: "10m ago", read: false },
+    { id: 2, title: "Low Stock Warning", desc: "Silk Fabric inventory is falling below safety bounds.", time: "1h ago", read: false },
+    { id: 3, title: "Order Completed", desc: "Order #WF-2026-000029 marked as Shipped.", time: "3h ago", read: true }
+  ]);
+
   // Discount Codes sub-form states
   const [newPromoCode, setNewPromoCode] = useState('');
   const [newPromoValue, setNewPromoValue] = useState('');
   const [newPromoDesc, setNewPromoDesc] = useState('');
+
+  // Live Current Date
+  const [currentDateFormatted, setCurrentDateFormatted] = useState('');
+
+  useEffect(() => {
+    const updateDate = () => {
+      const now = new Date();
+      const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+      setCurrentDateFormatted(now.toLocaleDateString('en-US', options));
+    };
+    updateDate();
+  }, []);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -98,6 +126,7 @@ export default function Admin_Dashboard_Page() {
 
     if (adminAuth === "true" && storedUser?.id === 10) {
       setIsAdminAuthenticated(true);
+      if (storedUser?.name) setAdminName(storedUser.name);
       loadDatabaseData();
     }
     setCheckingAuth(false);
@@ -134,6 +163,7 @@ export default function Admin_Dashboard_Page() {
             localStorage.setItem("weftin_token", data.access_token);
           }
           localStorage.setItem("weftin_user", JSON.stringify(data.user));
+          if (data.user.name) setAdminName(data.user.name);
           setIsAdminAuthenticated(true);
           showToast("Admin session unlocked successfully (ID: 10).");
           loadDatabaseData();
@@ -165,14 +195,12 @@ export default function Admin_Dashboard_Page() {
       setModuleLoading(true);
       const headers = getAuthHeaders();
       
-      // 1. Fetch Orders
       const ordRes = await fetch(`${API_BASE_URL}/api/admin/orders`, { headers }).catch(() => null);
       if (ordRes && ordRes.ok) {
         const data = await ordRes.json();
         if (Array.isArray(data)) setAdminOrders(data);
       }
 
-      // 2. Fetch Users / Customers
       const usrRes = await fetch(`${API_BASE_URL}/api/admin/users`, { headers }).catch(() => null);
       if (usrRes && usrRes.ok) {
         const data = await usrRes.json();
@@ -182,14 +210,12 @@ export default function Admin_Dashboard_Page() {
         }
       }
 
-      // 3. Fetch Products
       const prdRes = await fetch(`${API_BASE_URL}/api/products`, { headers }).catch(() => null);
       if (prdRes && prdRes.ok) {
         const data = await prdRes.json();
         if (Array.isArray(data)) setAdminProducts(data);
       }
 
-      // 4. Fetch Custom Orders
       const custOrdRes = await fetch(`${API_BASE_URL}/api/admin/custom-orders`, { headers }).catch(() => null);
       if (custOrdRes && custOrdRes.ok) {
         const data = await custOrdRes.json();
@@ -206,7 +232,6 @@ export default function Admin_Dashboard_Page() {
     }
   }, [selectedCustomer, selectedCustomReq]);
 
-  // Fetch specific customer measurements when selected
   useEffect(() => {
     if (!selectedCustomer?.email) {
       setCustomerMeasurements([]);
@@ -673,7 +698,7 @@ export default function Admin_Dashboard_Page() {
   // ---------------------------------------------------------
   if (!isAdminAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex items-center justify-center p-6 relative">
+      <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex items-center justify-center p-4 sm:p-6 relative">
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
@@ -681,7 +706,7 @@ export default function Admin_Dashboard_Page() {
           </div>
         )}
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 sm:p-10 max-w-md w-full">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-10 max-w-md w-full">
           <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200">
             <Lock className="w-6 h-6" />
           </div>
@@ -754,191 +779,262 @@ export default function Admin_Dashboard_Page() {
     );
   }
 
+  const renderSidebarContent = (isCollapsed = false) => (
+    <div className="flex flex-col justify-between h-full">
+      <div>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-[#EFECE6]">
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => { setActiveNav('dashboard'); setMobileSidebarOpen(false); }}>
+            <div className="w-9 h-9 rounded-full bg-[#1C1A17] flex items-center justify-center font-bold text-white text-lg tracking-widest shadow-md font-serif">W</div>
+            {!isCollapsed && <span className="font-serif tracking-widest text-xl font-bold text-[#1C1A17]">WEFT IN</span>}
+          </div>
+          {!isCollapsed && (
+            <button onClick={() => setIsSidebarCollapsed(true)} className="hidden md:block text-[#78716C] hover:text-[#1C1A17] transition">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          {isCollapsed && (
+            <button onClick={() => setIsSidebarCollapsed(false)} className="hidden md:block text-[#78716C] hover:text-[#1C1A17] transition mx-auto">
+              <ChevronLeft className="w-4 h-4 rotate-180" />
+            </button>
+          )}
+          <button onClick={() => setMobileSidebarOpen(false)} className="md:hidden text-gray-700">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="px-4 py-6 space-y-6 overflow-y-auto max-h-[calc(100vh-220px)]">
+          <div onClick={() => { setActiveNav('dashboard'); setMobileSidebarOpen(false); }} className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition ${activeNav === 'dashboard' ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+            <LayoutDashboard className="w-5 h-5 mr-3 flex-shrink-0" />
+            {!isCollapsed && <span className="text-sm">Dashboard</span>}
+          </div>
+
+          {/* Sales Group */}
+          <div>
+            {!isCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Sales</p>}
+            <div className="space-y-1">
+              {[
+                { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: adminOrders.length > 0 ? String(adminOrders.length) : null },
+                { id: 'customers', label: 'Customers', icon: Users, badge: adminCustomers.length > 0 ? String(adminCustomers.length) : null },
+                { id: 'discount-codes', label: 'Discount Codes', icon: Tag },
+                { id: 'stock-interest', label: 'Stock Interest', icon: Bell },
+                { id: 'custom-orders', label: 'Custom Orders', icon: Scissors, badge: adminCustomOrders.length > 0 ? String(adminCustomOrders.length) : null }
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.id;
+                return (
+                  <div key={item.id} onClick={() => { setActiveNav(item.id); setMobileSidebarOpen(false); }} className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+                    <div className="flex items-center">
+                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                      {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                    </div>
+                    {!isCollapsed && item.badge && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#B89768] text-black' : 'bg-amber-100 text-amber-800'}`}>{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Catalogue Group */}
+          <div>
+            {!isCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Catalogue</p>}
+            <div className="space-y-1">
+              {[
+                { id: 'products', label: 'Products', icon: Shirt },
+                { id: 'categories', label: 'Categories', icon: Layers },
+                { id: 'customizations', label: 'Customizations', icon: Sliders }
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.id;
+                return (
+                  <div key={item.id} onClick={() => { setActiveNav(item.id); setMobileSidebarOpen(false); }} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+                    <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Production Group */}
+          <div>
+            {!isCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Production</p>}
+            <div className="space-y-1">
+              {[
+                { id: 'vendors', label: 'Vendors', icon: Truck },
+                { id: 'tailors', label: 'Tailors', icon: UsersRound },
+                { id: 'inventory', label: 'Inventory', icon: Boxes }
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.id;
+                return (
+                  <div key={item.id} onClick={() => { setActiveNav(item.id); setMobileSidebarOpen(false); }} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+                    <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Finance Group */}
+          <div>
+            {!isCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Finance</p>}
+            <div className="space-y-1">
+              {[
+                { id: 'expenses', label: 'Expenses', icon: DollarSign },
+                { id: 'analytics', label: 'Analytics', icon: BarChart2 }
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.id;
+                return (
+                  <div key={item.id} onClick={() => { setActiveNav(item.id); setMobileSidebarOpen(false); }} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+                    <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Config Group */}
+          <div>
+            {!isCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Config</p>}
+            <div className="space-y-1">
+              {[
+                { id: 'shipping', label: 'Shipping', icon: Truck },
+                { id: 'seo', label: 'SEO', icon: Globe },
+                { id: 'settings', label: 'Settings', icon: Settings }
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.id;
+                return (
+                  <div key={item.id} onClick={() => { setActiveNav(item.id); setMobileSidebarOpen(false); }} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
+                    <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-[#EFECE6] bg-[#F3EFEA] flex flex-col gap-2">
+        <button
+          onClick={() => {
+            localStorage.removeItem("weftin_admin_auth");
+            setIsAdminAuthenticated(false);
+            showToast("Locked admin session.");
+          }}
+          className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold py-2.5 px-3 rounded-xl border border-rose-200 transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
+        >
+          <span>Lock Admin Session</span>
+        </button>
+        <Link to="/" className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm">
+          <ChevronLeft className="w-3.5 h-3.5" />
+          {!isCollapsed && <span>VIEW STOREFRONT</span>}
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none relative">
       
-      {/* SIDEBAR */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#FAF8F5] border-r border-[#EFECE6] text-[#1C1A17] flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0`}>
-        <div>
-          <div className="h-20 flex items-center justify-between px-6 border-b border-[#EFECE6]">
-            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveNav('dashboard')}>
-              <div className="w-9 h-9 rounded-full bg-[#1C1A17] flex items-center justify-center font-bold text-white text-lg tracking-widest shadow-md font-serif">W</div>
-              {!isSidebarCollapsed && <span className="font-serif tracking-widest text-xl font-bold text-[#1C1A17]">WEFT IN</span>}
-            </div>
-            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="text-[#78716C] hover:text-[#1C1A17] transition">
-              <ChevronLeft className={`w-4 h-4 transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-
-          <div className="px-4 py-6 space-y-6 overflow-y-auto max-h-[calc(100vh-280px)]">
-            <div onClick={() => setActiveNav('dashboard')} className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition ${activeNav === 'dashboard' ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-              <LayoutDashboard className="w-5 h-5 mr-3 flex-shrink-0" />
-              {!isSidebarCollapsed && <span className="text-sm">Dashboard</span>}
-            </div>
-
-            {/* Sales Group */}
-            <div>
-              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Sales</p>}
-              <div className="space-y-1">
-                {[
-                  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: adminOrders.length > 0 ? String(adminOrders.length) : null },
-                  { id: 'customers', label: 'Customers', icon: Users, badge: adminCustomers.length > 0 ? String(adminCustomers.length) : null },
-                  { id: 'discount-codes', label: 'Discount Codes', icon: Tag },
-                  { id: 'stock-interest', label: 'Stock Interest', icon: Bell },
-                  { id: 'custom-orders', label: 'Custom Orders', icon: Scissors, badge: adminCustomOrders.length > 0 ? String(adminCustomOrders.length) : null }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeNav === item.id;
-                  return (
-                    <div key={item.id} onClick={() => setActiveNav(item.id)} className={`flex items-center justify-between px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-                      <div className="flex items-center">
-                        <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                        {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                      </div>
-                      {!isSidebarCollapsed && item.badge && (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#B89768] text-black' : 'bg-amber-100 text-amber-800'}`}>{item.badge}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Catalogue Group */}
-            <div>
-              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Catalogue</p>}
-              <div className="space-y-1">
-                {[
-                  { id: 'products', label: 'Products', icon: Shirt },
-                  { id: 'categories', label: 'Categories', icon: Layers },
-                  { id: 'customizations', label: 'Customizations', icon: Sliders }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeNav === item.id;
-                  return (
-                    <div key={item.id} onClick={() => setActiveNav(item.id)} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Production Group */}
-            <div>
-              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Production</p>}
-              <div className="space-y-1">
-                {[
-                  { id: 'vendors', label: 'Vendors', icon: Truck },
-                  { id: 'tailors', label: 'Tailors', icon: UsersRound },
-                  { id: 'inventory', label: 'Inventory', icon: Boxes }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeNav === item.id;
-                  return (
-                    <div key={item.id} onClick={() => setActiveNav(item.id)} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Finance Group */}
-            <div>
-              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Finance</p>}
-              <div className="space-y-1">
-                {[
-                  { id: 'expenses', label: 'Expenses', icon: DollarSign },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart2 }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeNav === item.id;
-                  return (
-                    <div key={item.id} onClick={() => setActiveNav(item.id)} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Config Group */}
-            <div>
-              {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Config</p>}
-              <div className="space-y-1">
-                {[
-                  { id: 'shipping', label: 'Shipping', icon: Truck },
-                  { id: 'seo', label: 'SEO', icon: Globe },
-                  { id: 'settings', label: 'Settings', icon: Settings }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeNav === item.id;
-                  return (
-                    <div key={item.id} onClick={() => setActiveNav(item.id)} className={`flex items-center px-4 py-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-[#1C1A17] text-white font-semibold shadow-sm' : 'text-[#78716C] hover:bg-[#F3EFEA]'}`}>
-                      <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!isSidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-[#EFECE6] bg-[#F3EFEA] flex flex-col gap-2">
-          <button
-            onClick={() => {
-              localStorage.removeItem("weftin_admin_auth");
-              setIsAdminAuthenticated(false);
-              showToast("Locked admin session.");
-            }}
-            className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold py-2.5 px-3 rounded-xl border border-rose-200 transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
-          >
-            <span>Lock Admin Session</span>
-          </button>
-          <Link to="/" className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm">
-            <ChevronLeft className="w-3.5 h-3.5" />
-            {!isSidebarCollapsed && <span>VIEW STOREFRONT</span>}
-          </Link>
-        </div>
+      {/* DESKTOP SIDEBAR */}
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#FAF8F5] border-r border-[#EFECE6] text-[#1C1A17] flex-col transition-all duration-300 z-30 flex-shrink-0`}>
+        {renderSidebarContent(isSidebarCollapsed)}
       </aside>
 
+      {/* MOBILE SIDEBAR SLIDE-OVER */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileSidebarOpen(false)}></div>
+          <div className="relative w-72 bg-[#FAF8F5] h-full shadow-2xl flex flex-col z-10">
+            {renderSidebarContent(false)}
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTAINER */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <main className="flex-1 flex flex-col h-full overflow-hidden w-full">
         
         {/* TOP HEADER */}
-        <header className="h-20 bg-white border-b border-[#EFECE6] flex items-center justify-between px-8 flex-shrink-0 z-20">
-          <div className="flex items-center space-x-4">
-            <h1 className="font-serif text-lg font-bold text-[#1C1A17]">WEFTIN Atelier Workspace</h1>
-            <span className="text-[#EFECE6]">|</span>
-            <div className="flex items-center space-x-2 text-sm text-[#78716C] bg-[#FAF8F5] px-3 py-1.5 rounded-lg border border-[#EFECE6]">
-              <Calendar className="w-4 h-4 text-[#B89768]" />
-              <span className="font-medium text-[#1C1A17]">June 15, 2026 (Mon)</span>
+        <header className="h-20 bg-white border-b border-[#EFECE6] flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-20">
+          <div className="flex items-center space-x-3">
+            <button onClick={() => setMobileSidebarOpen(true)} className="md:hidden p-2 rounded-xl bg-[#FAF8F5] border border-[#EFECE6] text-gray-800">
+              <Menu className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="font-serif text-base sm:text-lg font-bold text-[#1C1A17] truncate max-w-[180px] sm:max-w-none">WEFTIN Atelier Workspace</h1>
+              <div className="hidden sm:flex items-center space-x-2 text-xs text-[#78716C] mt-0.5">
+                <Calendar className="w-3.5 h-3.5 text-[#B89768]" />
+                <span className="font-medium text-[#1C1A17]">{currentDateFormatted || "June 15, 2026"}</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button onClick={() => showToast('Bespoke Control Console session active.')} className="bg-[#FAF8F5] hover:bg-[#F3EFEA] text-[#1C1A17] text-xs font-semibold px-4 py-2 rounded-full border border-[#EFECE6]">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <button onClick={() => showToast('Bespoke Control Console session active.')} className="hidden lg:flex bg-[#FAF8F5] hover:bg-[#F3EFEA] text-[#1C1A17] text-xs font-semibold px-4 py-2 rounded-full border border-[#EFECE6]">
               Bespoke Control Console
             </button>
-            <button onClick={() => setNotificationOpen(!notificationOpen)} className="relative w-10 h-10 rounded-full bg-[#FAF8F5] flex items-center justify-center border border-[#EFECE6]">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full"></span>
-            </button>
+
+            {/* Notifications Toggle */}
             <div className="relative">
-              <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center space-x-2 bg-[#FAF8F5] hover:bg-[#F3EFEA] px-3 py-1.5 rounded-full border border-[#EFECE6] text-xs font-semibold">
-                <span className="w-7 h-7 rounded-full bg-[#1C1A17] text-white flex items-center justify-center font-bold text-xs">K</span>
-                <span>Khaja H.</span>
+              <button onClick={() => { setNotificationOpen(!notificationOpen); setUserDropdownOpen(false); }} className="relative w-10 h-10 rounded-full bg-[#FAF8F5] hover:bg-[#F3EFEA] flex items-center justify-center border border-[#EFECE6]">
+                <Bell className="w-4 h-4 text-[#1C1A17]" />
+                {notifications.some(n => !n.read) && <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>}
+              </button>
+
+              {notificationOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-[#EFECE6] p-4 z-50 text-xs">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100 mb-3">
+                    <span className="font-bold uppercase tracking-wider text-gray-800">Atelier Notifications</span>
+                    <button onClick={() => setNotifications(notifications.map(n => ({...n, read: true})))} className="text-[10px] text-[#B89768] hover:underline font-semibold">Mark all read</button>
+                  </div>
+                  <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                    {notifications.map(n => (
+                      <div key={n.id} className={`p-3 rounded-xl border transition ${n.read ? 'bg-white border-gray-100 text-gray-600' : 'bg-amber-50/60 border-amber-200 text-gray-900 font-medium'}`}>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-bold text-xs">{n.title}</span>
+                          <span className="text-[10px] text-gray-400">{n.time}</span>
+                        </div>
+                        <p className="text-[11px] leading-snug text-gray-600">{n.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button onClick={() => { setUserDropdownOpen(!userDropdownOpen); setNotificationOpen(false); }} className="flex items-center space-x-2 bg-[#FAF8F5] hover:bg-[#F3EFEA] px-3 py-1.5 rounded-full border border-[#EFECE6] text-xs font-semibold">
+                <span className="w-7 h-7 rounded-full bg-[#1C1A17] text-white flex items-center justify-center font-bold text-xs">
+                  {adminName.charAt(0)}
+                </span>
+                <span className="hidden sm:inline">{adminName}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-[#78716C]" />
               </button>
+
               {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#EFECE6] p-2 z-50 text-xs">
-                  <button onClick={() => { setUserDropdownOpen(false); setActiveNav('settings'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#FAF8F5] font-medium">Atelier Settings</button>
-                  <button onClick={() => { setUserDropdownOpen(false); localStorage.removeItem("weftin_admin_auth"); setIsAdminAuthenticated(false); showToast('Admin session secured.'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium">Lock Session</button>
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-[#EFECE6] p-2 z-50 text-xs space-y-1">
+                  <div className="px-3 py-2 border-b border-gray-100 mb-1">
+                    <p className="font-bold text-gray-900">{adminName}</p>
+                    <p className="text-[10px] text-[#B89768] font-mono">ID: 10 (Authorized Admin)</p>
+                  </div>
+                  <button onClick={() => { setUserDropdownOpen(false); setProfileModalOpen(true); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#FAF8F5] font-medium flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-gray-500" /> Edit Admin Profile
+                  </button>
+                  <button onClick={() => { setUserDropdownOpen(false); setActiveNav('settings'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#FAF8F5] font-medium flex items-center gap-2">
+                    <Settings className="w-3.5 h-3.5 text-gray-500" /> Atelier Settings
+                  </button>
+                  <div className="border-t border-gray-100 pt-1 mt-1"></div>
+                  <button onClick={() => { setUserDropdownOpen(false); localStorage.removeItem("weftin_admin_auth"); setIsAdminAuthenticated(false); showToast('Admin session secured.'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5 text-rose-600" /> Lock Admin Session
+                  </button>
                 </div>
               )}
             </div>
@@ -946,29 +1042,29 @@ export default function Admin_Dashboard_Page() {
         </header>
 
         {/* WORKSPACE CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">
 
           {activeNav === 'dashboard' ? (
             /* ================= DASHBOARD VIEW ================= */
             <div className="space-y-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Dashboard</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Track sales, operations, and atelier workflow at a glance.</p>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">Dashboard</h2>
+                  <p className="text-xs sm:text-sm text-[#78716C] mt-1">Track sales, operations, and atelier workflow at a glance.</p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <select 
                       value={dashboardPeriod}
                       onChange={(e) => setDashboardPeriod(e.target.value)}
-                      className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-sm font-medium text-[#1C1A17] focus:outline-none focus:border-[#B89768] shadow-sm pr-8"
+                      className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-[#1C1A17] focus:outline-none focus:border-[#B89768] shadow-sm pr-8"
                     >
                       <option>This Month</option>
                       <option>Last Month</option>
                       <option>Year to Date</option>
                     </select>
                   </div>
-                  <button onClick={handleAddProductClick} className="bg-[#1C1A17] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md flex items-center space-x-2 transition">
+                  <button onClick={handleAddProductClick} className="bg-[#1C1A17] hover:bg-black text-white px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md flex items-center space-x-2 transition">
                     <Plus className="w-4 h-4" />
                     <span>ADD PRODUCT</span>
                   </button>
@@ -976,7 +1072,7 @@ export default function Admin_Dashboard_Page() {
               </div>
 
               {/* Action Banner */}
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-6">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 flex-shrink-0">
                     <AlertTriangle className="w-6 h-6" />
@@ -986,12 +1082,12 @@ export default function Admin_Dashboard_Page() {
                     <p className="text-xs text-[#78716C] mt-0.5">Urgent custom stitches lack artisan allocation and standard bounds require verification.</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-6 text-xs font-semibold text-[#1C1A17]">
-                  <div className="text-center"><span className="text-base font-bold block">5</span> Artisan Allocation Pending</div>
-                  <div className="h-8 w-px bg-[#EFECE6]"></div>
-                  <div className="text-center"><span className="text-base font-bold block">4</span> Standard Bounds To Verify</div>
-                  <div className="h-8 w-px bg-[#EFECE6]"></div>
-                  <div className="text-center"><span className="text-base font-bold block text-rose-600">3</span> Urgent Deliveries Due Soon</div>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-[#1C1A17]">
+                  <div className="text-center"><span className="text-base font-bold block">5</span> Artisan Allocation</div>
+                  <div className="hidden sm:block h-8 w-px bg-[#EFECE6]"></div>
+                  <div className="text-center"><span className="text-base font-bold block">4</span> Bounds Verify</div>
+                  <div className="hidden sm:block h-8 w-px bg-[#EFECE6]"></div>
+                  <div className="text-center"><span className="text-base font-bold block text-rose-600">3</span> Urgent Due</div>
                   <button onClick={() => setActiveNav('custom-orders')} className="bg-[#B89768] hover:bg-[#a68559] text-black px-6 py-3 rounded-xl text-xs font-bold tracking-wider shadow-sm transition">
                     REVIEW NOW
                   </button>
@@ -999,10 +1095,10 @@ export default function Admin_Dashboard_Page() {
               </div>
 
               {/* 4 Metric Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">REVENUE ({dashboardPeriod})</span><BarChart2 className="w-4 h-4 text-[#B89768]" /></div>
-                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{formatPrice(totalRevenueNumber)}</h3>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17] my-3">{formatPrice(totalRevenueNumber)}</h3>
                   <div className="space-y-2">
                     <p className="text-xs text-emerald-600 font-semibold flex items-center"><TrendingUp className="w-3.5 h-3.5 mr-1" /> +18% from last month</p>
                     <div className="flex justify-between text-[11px] text-[#78716C]"><span>Target ₹5.5L</span><span>87%</span></div>
@@ -1012,7 +1108,7 @@ export default function Admin_Dashboard_Page() {
 
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">ORDERS</span><ShoppingBag className="w-4 h-4 text-[#B89768]" /></div>
-                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{adminOrders.length}</h3>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17] my-3">{adminOrders.length}</h3>
                   <div className="space-y-2">
                     <p className="text-xs text-emerald-600 font-semibold flex items-center"><TrendingUp className="w-3.5 h-3.5 mr-1" /> +12% from last month</p>
                     <div className="flex justify-between text-[11px] text-[#78716C]"><span>Completed {adminOrders.filter(o => normalizeStatus(o.status) === 'DELIVERED').length}</span><span>88%</span></div>
@@ -1022,33 +1118,33 @@ export default function Admin_Dashboard_Page() {
 
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">PENDING ORDERS</span><Clock className="w-4 h-4 text-amber-700" /></div>
-                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{pendingOrdersCount}</h3>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17] my-3">{pendingOrdersCount}</h3>
                   <p className="text-xs text-amber-700 font-semibold flex items-center mt-1"><AlertTriangle className="w-3.5 h-3.5 mr-1" /> Requires custom handling</p>
                   <div className="pt-2 border-t border-[#EFECE6] flex justify-between text-xs"><span className="text-[#78716C]">Status</span><span className="font-bold text-amber-800">High priority</span></div>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">LOW STOCK</span><Boxes className="w-4 h-4 text-orange-600" /></div>
-                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{lowStockCount}</h3>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17] my-3">{lowStockCount}</h3>
                   <p className="text-xs text-orange-600 font-semibold flex items-center mt-1"><AlertTriangle className="w-3.5 h-3.5 mr-1" /> Needs immediate replenishment</p>
                   <div className="pt-2 border-t border-[#EFECE6] flex justify-between text-xs"><span className="text-[#78716C]">Status</span><span className="font-bold text-orange-700">Out of stock risk</span></div>
                 </div>
               </div>
 
               {/* Lookbook Section */}
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                <div className="flex items-center justify-between">
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] flex items-center justify-center text-[#B89768]">
                       <Shirt className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Seasonal Atelier Lookbook & Active Workloads</h3>
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1C1A17]">Seasonal Atelier Lookbook & Active Workloads</h3>
                       <p className="text-xs text-[#78716C]">High-fashion visual identity catalogs showing active artisan allocations.</p>
                     </div>
                   </div>
-                  <button onClick={() => setActiveNav('products')} className="text-xs font-bold text-[#B89768] hover:underline">
-                    MANAGE CATALOG IMAGES &rarr;
+                  <button onClick={() => setActiveNav('products')} className="text-xs font-bold text-[#B89768] hover:underline self-start sm:self-auto">
+                    MANAGE CATALOG IMAGES →
                   </button>
                 </div>
 
@@ -1059,7 +1155,7 @@ export default function Admin_Dashboard_Page() {
                     { name: "Kashmir Meadows '26", category: 'Silk Kurti', price: '24,000', image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800', tag: 'NEW ARRIVAL' }
                   ]).map((prod, i) => (
                     <div key={prod.id || i} className="rounded-2xl border border-[#EFECE6] overflow-hidden bg-[#FAF8F5] flex flex-col shadow-sm">
-                      <div className="relative h-64 overflow-hidden bg-gray-100">
+                      <div className="relative h-56 sm:h-64 overflow-hidden bg-gray-100">
                         <img src={prod.image || 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800'} alt={prod.name} className="w-full h-full object-cover" />
                         <span className="absolute top-4 left-4 bg-white text-black text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">{prod.tag || 'ATELIER EXCLUSIVE'}</span>
                       </div>
@@ -1086,27 +1182,25 @@ export default function Admin_Dashboard_Page() {
 
               {/* Sales Overview & Custom Order Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between">
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Sales Overview</h3>
                       <p className="text-xs text-[#78716C]">Revenue and orders performance overview based on live database data</p>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="flex bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-1 text-xs">
-                        <button 
-                          onClick={() => setSalesTimeframe('WEEKLY')} 
-                          className={`px-3 py-1.5 rounded-lg font-semibold transition ${salesTimeframe === 'WEEKLY' ? 'bg-[#1C1A17] text-white' : 'text-[#78716C] hover:text-black'}`}
-                        >
-                          WEEKLY
-                        </button>
-                        <button 
-                          onClick={() => setSalesTimeframe('MONTHLY')} 
-                          className={`px-3 py-1.5 rounded-lg font-semibold transition ${salesTimeframe === 'MONTHLY' ? 'bg-[#1C1A17] text-white' : 'text-[#78716C] hover:text-black'}`}
-                        >
-                          MONTHLY
-                        </button>
-                      </div>
+                    <div className="flex bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-1 text-xs self-start sm:self-auto">
+                      <button 
+                        onClick={() => setSalesTimeframe('WEEKLY')} 
+                        className={`px-3 py-1.5 rounded-lg font-semibold transition ${salesTimeframe === 'WEEKLY' ? 'bg-[#1C1A17] text-white' : 'text-[#78716C] hover:text-black'}`}
+                      >
+                        WEEKLY
+                      </button>
+                      <button 
+                        onClick={() => setSalesTimeframe('MONTHLY')} 
+                        className={`px-3 py-1.5 rounded-lg font-semibold transition ${salesTimeframe === 'MONTHLY' ? 'bg-[#1C1A17] text-white' : 'text-[#78716C] hover:text-black'}`}
+                      >
+                        MONTHLY
+                      </button>
                     </div>
                   </div>
 
@@ -1117,7 +1211,7 @@ export default function Admin_Dashboard_Page() {
                       <span className="font-bold text-[#1C1A17]">{salesTimeframe === 'WEEKLY' ? 'Past 7 Days' : 'Past 30 Days'}</span>
                     </div>
 
-                    <div className="flex items-end justify-between gap-3 h-36 px-4 pt-6 border-b border-[#EFECE6]">
+                    <div className="flex items-end justify-between gap-2 sm:gap-3 h-36 px-2 sm:px-4 pt-6 border-b border-[#EFECE6]">
                       {[35, 55, 45, 75, 60, 90, 85].map((val, idx) => {
                         const maxVal = salesTimeframe === 'WEEKLY' ? 200000 : 800000;
                         const barHeight = chartTotalRevenue > 0 
@@ -1129,7 +1223,7 @@ export default function Admin_Dashboard_Page() {
                               {formatPrice(Math.round((chartTotalRevenue / 7) * (val / 60)))}
                             </div>
                             <div style={{ height: `${barHeight}%` }} className="w-full bg-[#B89768] rounded-t-lg transition-all duration-500 hover:bg-black"></div>
-                            <span className="text-[10px] text-[#78716C] font-mono">{salesTimeframe === 'WEEKLY' ? `Day ${idx+1}` : `Wk ${idx+1}`}</span>
+                            <span className="text-[10px] text-[#78716C] font-mono">{salesTimeframe === 'WEEKLY' ? `D${idx+1}` : `W${idx+1}`}</span>
                           </div>
                         );
                       })}
@@ -1141,27 +1235,27 @@ export default function Admin_Dashboard_Page() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-6 pt-4 border-t border-[#EFECE6]">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[#EFECE6]">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">TOTAL REVENUE</span>
-                      <p className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{formatPrice(chartTotalRevenue)} <span className="text-xs text-emerald-600 font-semibold">+18%</span></p>
+                      <p className="font-serif text-xl sm:text-2xl font-bold text-[#1C1A17] mt-1">{formatPrice(chartTotalRevenue)} <span className="text-xs text-emerald-600 font-semibold">+18%</span></p>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">TOTAL ORDERS</span>
-                      <p className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{chartTotalOrders} <span className="text-xs text-emerald-600 font-semibold">+12%</span></p>
+                      <p className="font-serif text-xl sm:text-2xl font-bold text-[#1C1A17] mt-1">{chartTotalOrders} <span className="text-xs text-emerald-600 font-semibold">+12%</span></p>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">AVG ORDER VALUE</span>
-                      <p className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{formatPrice(chartAvgOrderValue)} <span className="text-xs text-emerald-600 font-semibold">+6%</span></p>
+                      <p className="font-serif text-xl sm:text-2xl font-bold text-[#1C1A17] mt-1">{formatPrice(chartAvgOrderValue)} <span className="text-xs text-emerald-600 font-semibold">+6%</span></p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm flex flex-col justify-between space-y-6">
+                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm flex flex-col justify-between space-y-6">
                   <div>
                     <div className="flex items-center justify-between">
                       <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Custom Order Progress</h3>
-                      <button onClick={() => setActiveNav('custom-orders')} className="text-xs font-bold text-[#B89768] hover:underline">VIEW ALL &rarr;</button>
+                      <button onClick={() => setActiveNav('custom-orders')} className="text-xs font-bold text-[#B89768] hover:underline">VIEW ALL →</button>
                     </div>
                     <p className="text-xs text-[#78716C] mt-1">Track live atelier orders from request to dispatch.</p>
                   </div>
@@ -1190,9 +1284,9 @@ export default function Admin_Dashboard_Page() {
                     ))}
                   </div>
 
-                  <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 flex items-center justify-between">
-                    <p className="text-xs text-amber-900 font-semibold">Custom orders need review.</p>
-                    <button onClick={() => setActiveNav('custom-orders')} className="bg-[#1C1A17] text-white text-[11px] font-bold px-4 py-2 rounded-xl">PRODUCTION BOARD</button>
+                  <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p className="text-xs text-amber-900 font-semibold text-center sm:text-left">Custom orders need review.</p>
+                    <button onClick={() => setActiveNav('custom-orders')} className="bg-[#1C1A17] text-white text-[11px] font-bold px-4 py-2 rounded-xl whitespace-nowrap">PRODUCTION BOARD</button>
                   </div>
                 </div>
               </div>
@@ -1201,17 +1295,17 @@ export default function Admin_Dashboard_Page() {
           ) : activeNav === 'orders' ? (
             /* ================= ORDERS MODULE ================= */
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Orders Management</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Live customer purchase orders, artisan assignments, and print reports.</p>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">Orders Management</h2>
+                  <p className="text-xs sm:text-sm text-[#78716C] mt-1">Live customer purchase orders, artisan assignments, and print reports.</p>
                 </div>
-                <button onClick={loadDatabaseData} className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center">
+                <button onClick={loadDatabaseData} className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center self-start sm:self-auto">
                   <RefreshCw className="w-3.5 h-3.5 mr-2 text-[#B89768]" /> Refresh
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-4 sm:p-8 shadow-sm space-y-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="relative w-full md:w-80">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
@@ -1223,9 +1317,9 @@ export default function Admin_Dashboard_Page() {
                       className="bg-[#FAF8F5] border border-[#EFECE6] pl-10 pr-4 py-2.5 rounded-xl text-sm w-full focus:outline-none focus:border-[#B89768]" 
                     />
                   </div>
-                  <div className="flex bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-1 text-xs overflow-x-auto">
+                  <div className="flex bg-[#FAF8F5] border border-[#EFECE6] rounded-xl p-1 text-xs overflow-x-auto w-full md:w-auto">
                     {['All', 'Active', 'Delivered', 'Cancelled'].map(tab => (
-                      <button key={tab} onClick={() => setOrderStatusFilter(tab)} className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap ${orderStatusFilter === tab ? 'bg-[#1C1A17] text-white' : 'text-[#78716C]'}`}>
+                      <button key={tab} onClick={() => setOrderStatusFilter(tab)} className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap flex-1 md:flex-initial text-center ${orderStatusFilter === tab ? 'bg-[#1C1A17] text-white' : 'text-[#78716C]'}`}>
                         {tab}
                       </button>
                     ))}
@@ -1233,7 +1327,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[750px]">
                     <thead>
                       <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
                         <th className="py-3 px-3">Order ID</th>
@@ -1285,34 +1379,34 @@ export default function Admin_Dashboard_Page() {
           ) : activeNav === 'customers' ? (
             /* ================= CUSTOMERS DIRECTORY ================= */
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Customers Directory</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and live database measurement profiles.</p>
-                </div>
+              <div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">Customers Directory</h2>
+                <p className="text-xs sm:text-sm text-[#78716C] mt-1">Registered bespoke patrons, VIP clients, and live database measurement profiles.</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-4 border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-4 sm:p-6 shadow-sm space-y-4">
+                  <div className="hidden sm:flex items-center justify-between pb-4 border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
                     <span>Client Detail</span>
                     <span>Client Tier</span>
                     <span>Registered Date</span>
                     <span>Action</span>
                   </div>
                   {adminCustomers.map(cust => (
-                    <div key={cust.id} onClick={() => setSelectedCustomer(cust)} className={`flex items-center justify-between py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition ${selectedCustomer?.id === cust.id ? 'bg-[#FAF8F5] border-l-4 border-l-[#B89768]' : ''}`}>
+                    <div key={cust.id} onClick={() => setSelectedCustomer(cust)} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 py-3.5 px-3 border-b border-gray-100 hover:bg-[#FAF8F5] rounded-xl cursor-pointer transition ${selectedCustomer?.id === cust.id ? 'bg-[#FAF8F5] sm:border-l-4 sm:border-l-[#B89768]' : ''}`}>
                       <div>
                         <p className="font-bold text-sm text-[#1C1A17]">{cust.name}</p>
-                        <p className="text-xs text-[#78716C]">{cust.phone || 'Phone not provided'} | {cust.email}</p>
+                        <p className="text-xs text-[#78716C] truncate max-w-[240px]">{cust.phone || 'Phone not provided'} | {cust.email}</p>
                       </div>
-                      <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                        Patron
-                      </span>
-                      <span className="text-xs text-[#78716C]">{cust.created_at ? new Date(cust.created_at).toLocaleDateString() : '—'}</span>
-                      <span className="text-xs font-bold text-[#B89768] hover:underline flex items-center">
-                        Select Client &rarr;
-                      </span>
+                      <div className="flex items-center justify-between sm:justify-start gap-4">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
+                          Patron
+                        </span>
+                        <span className="text-xs text-[#78716C]">{cust.created_at ? new Date(cust.created_at).toLocaleDateString() : '—'}</span>
+                        <span className="text-xs font-bold text-[#B89768] hover:underline flex items-center">
+                          Select →
+                        </span>
+                      </div>
                     </div>
                   ))}
                   {adminCustomers.length === 0 && (
@@ -1325,12 +1419,12 @@ export default function Admin_Dashboard_Page() {
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MASTER PROFILE</p>
                     <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-1">{selectedCustomer?.name || 'Select a customer'}</h3>
-                    <p className="text-xs text-[#78716C]">{selectedCustomer ? `Email: ${selectedCustomer.email}` : 'Choose a client to inspect database measurements.'}</p>
+                    <p className="text-xs text-[#78716C] truncate">{selectedCustomer ? `Email: ${selectedCustomer.email}` : 'Choose a client to inspect database measurements.'}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between pb-2 border-b border-[#EFECE6]">
-                      <span className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider flex items-center"><FileText className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> SAVED MEASUREMENT RECORDS</span>
+                      <span className="text-xs font-bold text-[#1C1A17] uppercase tracking-wider flex items-center"><FileText className="w-3.5 h-3.5 mr-1.5 text-[#B89768]" /> SAVED MEASUREMENTS</span>
                     </div>
 
                     {customerMeasurements.length > 0 ? customerMeasurements.map((m, idx) => (
@@ -1362,13 +1456,13 @@ export default function Admin_Dashboard_Page() {
             <div className="space-y-8">
               <div>
                 <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">MARKETING SUITE</p>
-                <h2 className="font-serif text-3xl font-bold text-[#1C1A17] mt-1">Discount Codes & Vouchers</h2>
-                <p className="text-sm text-[#78716C]">Manage luxury customer promotional coupons and designer codes stored in your database</p>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17] mt-1">Discount Codes & Vouchers</h2>
+                <p className="text-xs sm:text-sm text-[#78716C]">Manage luxury customer promotional coupons and designer codes stored in your database</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Create Form */}
-                <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
+                <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm space-y-6">
                   <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Create Bespoke Voucher</h3>
 
                   <div className="space-y-4 text-xs">
@@ -1413,7 +1507,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
 
                 {/* Active Campaigns Table */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Active Promotional Campaigns</h3>
                     <button onClick={() => loadModuleRecords('discount-codes')} className="bg-[#FAF8F5] border border-[#EFECE6] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center">
@@ -1422,7 +1516,7 @@ export default function Admin_Dashboard_Page() {
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                       <thead>
                         <tr className="border-b border-[#EFECE6] text-[10px] font-bold text-[#78716C] uppercase tracking-wider">
                           <th className="py-3 px-3">Code & Details</th>
@@ -1467,8 +1561,8 @@ export default function Admin_Dashboard_Page() {
                 <p className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">BESPOKE COUTURE PIPELINE</p>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-1">
                   <div>
-                    <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Custom Orders & Couture Workspace</h2>
-                    <p className="text-sm text-[#78716C]">Review design sketches, formulate quote calculations, assign tailoring masters, and monitor sewing workflows.</p>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">Custom Orders & Couture Workspace</h2>
+                    <p className="text-xs sm:text-sm text-[#78716C]">Review design sketches, formulate quote calculations, assign tailoring masters, and monitor sewing workflows.</p>
                   </div>
                 </div>
               </div>
@@ -1483,7 +1577,7 @@ export default function Admin_Dashboard_Page() {
                     {adminCustomOrders.length > 0 ? adminCustomOrders.map((req) => (
                       <div key={req.id} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
                         <div className="flex justify-between items-start text-xs">
-                          <span className="font-bold text-[#1C1A17]">{req.user_email}</span>
+                          <span className="font-bold text-[#1C1A17] truncate max-w-[160px]">{req.user_email}</span>
                           <span className="text-[#78716C]">{req.created_at ? new Date(req.created_at).toLocaleDateString() : ''}</span>
                         </div>
                         <p className="font-mono text-xs font-semibold text-[#B89768] mt-1">REQ-{req.id}</p>
@@ -1502,22 +1596,22 @@ export default function Admin_Dashboard_Page() {
                 </div>
 
                 {/* Selected Request Pricing & Approval Panel */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between pb-6 border-b border-[#EFECE6]">
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-6 sm:p-8 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#EFECE6]">
                     <div>
                       <div className="flex items-center space-x-3">
                         <span className="font-mono font-bold text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full">{selectedCustomReq?.id ? `REQ-${selectedCustomReq.id}` : 'Select a request'}</span>
                         <span className="text-xs text-[#78716C]">Date: {selectedCustomReq?.created_at ? new Date(selectedCustomReq.created_at).toLocaleDateString() : '—'}</span>
                       </div>
-                      <h3 className="font-serif text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.product_name || 'Select a custom request'}</h3>
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1C1A17] mt-2">{selectedCustomReq?.product_name || 'Select a custom request'}</h3>
                     </div>
-                    <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">{selectedCustomReq?.status || 'Pending Review'}</span>
+                    <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 self-start sm:self-auto">{selectedCustomReq?.status || 'Pending Review'}</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFECE6] space-y-2">
                       <span className="text-[10px] font-bold tracking-widest text-[#B89768] uppercase">PATRON</span>
-                      <p className="font-bold text-sm text-[#1C1A17]">{selectedCustomReq?.user_email || '—'}</p>
+                      <p className="font-bold text-sm text-[#1C1A17] truncate">{selectedCustomReq?.user_email || '—'}</p>
                       <p className="text-xs text-[#78716C]">Category: {selectedCustomReq?.product_category || 'Bespoke'}</p>
                     </div>
 
@@ -1551,12 +1645,12 @@ export default function Admin_Dashboard_Page() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between pt-4">
-                      <button onClick={() => showToast('Review stage reset.')} className="bg-white border border-[#EFECE6] hover:bg-[#FAF8F5] text-[#1C1A17] text-xs font-bold px-5 py-3 rounded-xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+                      <button onClick={() => showToast('Review stage reset.')} className="w-full sm:w-auto bg-white border border-[#EFECE6] hover:bg-[#FAF8F5] text-[#1C1A17] text-xs font-bold px-5 py-3 rounded-xl">
                         Reset Review Stage
                       </button>
-                      <div className="flex space-x-3">
-                        <button onClick={() => showToast('Price quote issued and sent to client.')} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                        <button onClick={() => showToast('Price quote issued and sent to client.')} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto text-center">
                           Apply & Send Price Offer
                         </button>
                         <button onClick={async () => {
@@ -1572,7 +1666,7 @@ export default function Admin_Dashboard_Page() {
                             setAdminCustomOrders(curr => curr.map(item => item.id === selectedCustomReq.id ? data : item));
                             showToast('Order approved for workshop loom production!');
                           } catch(err) { showToast('Approval failed.'); }
-                        }} className="bg-[#1C1A17] hover:bg-black text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md">
+                        }} className="bg-[#1C1A17] hover:bg-black text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md w-full sm:w-auto text-center">
                           Approve for Workshop Loom
                         </button>
                       </div>
@@ -1585,18 +1679,18 @@ export default function Admin_Dashboard_Page() {
           ) : activeNav === 'products' ? (
             /* ================= PRODUCTS MODULE ================= */
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">Luxury Catalog & Products</h2>
-                  <p className="text-sm text-[#78716C] mt-1">Curate lines, define size matrixes, SKU allocations, and retail prices.</p>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">Luxury Catalog & Products</h2>
+                  <p className="text-xs sm:text-sm text-[#78716C] mt-1">Curate lines, define size matrixes, SKU allocations, and retail prices.</p>
                 </div>
-                <button onClick={handleAddProductClick} className="bg-[#1C1A17] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2">
+                <button onClick={handleAddProductClick} className="bg-[#1C1A17] hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-2 self-start sm:self-auto">
                   <Plus className="w-4 h-4" /><span>+ Add New Design</span>
                 </button>
               </div>
 
               {/* Collection Pills */}
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
                   { name: "Royal Heritage '26", count: '2 Master Designs' },
                   { name: "Mughal Garden '26", count: '1 Master Designs' },
@@ -1613,7 +1707,7 @@ export default function Admin_Dashboard_Page() {
                 ))}
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
+              <div className="bg-white rounded-2xl border border-[#EFECE6] p-4 sm:p-8 shadow-sm space-y-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="relative w-full md:w-80">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
@@ -1622,7 +1716,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                       <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase">
                         <th className="py-3 px-3">Design Details</th>
@@ -1637,7 +1731,7 @@ export default function Admin_Dashboard_Page() {
                       {adminProducts.map(prd => (
                         <tr key={prd.id} className="hover:bg-[#FAF8F5]">
                           <td className="py-4 px-3 flex items-center gap-3">
-                            <img src={prd.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200'} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                            <img src={prd.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200'} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                             <div>
                               <p className="font-serif font-bold text-sm text-[#1C1A17]">{prd.name}</p>
                               <span className="text-xs text-[#78716C]">{prd.tag || 'Atelier'}</span>
@@ -1671,10 +1765,10 @@ export default function Admin_Dashboard_Page() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl font-bold text-[#1C1A17]">{modulesData[activeNav]?.title || activeNav.replaceAll('-', ' ').toUpperCase()}</h2>
-                  <p className="text-sm text-[#78716C] mt-1">{modulesData[activeNav]?.subtitle || 'Manage this WEFTIN workspace module.'}</p>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1C1A17]">{modulesData[activeNav]?.title || activeNav.replaceAll('-', ' ').toUpperCase()}</h2>
+                  <p className="text-xs sm:text-sm text-[#78716C] mt-1">{modulesData[activeNav]?.subtitle || 'Manage this WEFTIN workspace module.'}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 self-start md:self-auto">
                   <button onClick={() => loadModuleRecords(activeNav)} className="bg-white border border-[#EFECE6] px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center">
                     <RefreshCw className="w-3.5 h-3.5 mr-2" /> Refresh
                   </button>
@@ -1684,7 +1778,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white border border-[#EFECE6] rounded-2xl p-5">
                   <p className="text-xs uppercase tracking-wider text-[#78716C]">Records</p>
                   <p className="font-serif text-3xl mt-2">{moduleRecords.length}</p>
@@ -1706,7 +1800,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
                 {moduleError && <div className="rounded-xl bg-rose-50 text-rose-800 p-4 text-sm">{moduleError}. Check that the updated backend is deployed and reachable.</div>}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                       <tr className="border-b border-[#EFECE6] text-[11px] font-bold text-[#78716C] uppercase tracking-wider">
                         <th className="py-3 px-3">Name</th>
@@ -1720,7 +1814,7 @@ export default function Admin_Dashboard_Page() {
                       {moduleRecords.filter(r => JSON.stringify(r).toLowerCase().includes(moduleSearch.toLowerCase())).map(record => (
                         <tr key={record.id} className="hover:bg-[#FAF8F5]/70">
                           <td className="py-4 px-3 font-semibold">{record.name || record.product_name || 'Untitled'}</td>
-                          <td className="py-4 px-3 text-[#78716C] max-w-md">{record.description || record.message || record.user_email || '—'}</td>
+                          <td className="py-4 px-3 text-[#78716C] max-w-xs truncate">{record.description || record.message || record.user_email || '—'}</td>
                           <td className="py-4 px-3"><span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-xs">{record.status || '—'}</span></td>
                           <td className="py-4 px-3 text-[#78716C]">{record.updated_at ? new Date(record.updated_at).toLocaleString() : '—'}</td>
                           <td className="py-4 px-3 whitespace-nowrap">
@@ -1741,6 +1835,51 @@ export default function Admin_Dashboard_Page() {
 
         </div>
       </main>
+
+      {/* Admin Profile Modal */}
+      {profileModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 border border-[#EFECE6] shadow-2xl space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-serif text-xl font-bold text-[#1C1A17]">Edit Admin Profile</h3>
+              <button onClick={() => setProfileModalOpen(false)} className="text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-[#78716C] uppercase tracking-wider block mb-1">Administrator Name</label>
+                <input 
+                  type="text" 
+                  value={adminName} 
+                  onChange={(e) => setAdminName(e.target.value)}
+                  className="w-full bg-[#FAF8F5] border border-[#EFECE6] px-4 py-3 rounded-xl font-medium text-sm focus:outline-none focus:border-[#B89768]" 
+                />
+              </div>
+              <div>
+                <label className="font-bold text-[#78716C] uppercase tracking-wider block mb-1">Administrator Role / Title</label>
+                <input 
+                  type="text" 
+                  value={adminRole} 
+                  onChange={(e) => setAdminRole(e.target.value)}
+                  className="w-full bg-[#FAF8F5] border border-[#EFECE6] px-4 py-3 rounded-xl font-medium text-sm focus:outline-none focus:border-[#B89768]" 
+                />
+              </div>
+              <div>
+                <label className="font-bold text-[#78716C] uppercase tracking-wider block mb-1">Admin ID (Read-Only)</label>
+                <input 
+                  type="text" 
+                  disabled 
+                  value="10 (Authorized Admin)" 
+                  className="w-full bg-gray-100 border border-gray-200 px-4 py-3 rounded-xl font-mono text-gray-500 text-sm" 
+                />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button onClick={() => setProfileModalOpen(false)} className="flex-1 bg-white border border-[#EFECE6] text-gray-800 py-3 rounded-xl font-bold">Cancel</button>
+                <button onClick={() => { setProfileModalOpen(false); showToast("Admin profile updated successfully."); }} className="flex-1 bg-[#1C1A17] text-white py-3 rounded-xl font-bold">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Storefront Modal */}
       {storefrontOpen && (
