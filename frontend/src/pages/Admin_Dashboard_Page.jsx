@@ -13,7 +13,6 @@ import {
   UsersRound, 
   Boxes, 
   ChevronLeft, 
-  ChevronRight, 
   ChevronDown, 
   Search, 
   Plus, 
@@ -21,21 +20,18 @@ import {
   Clock, 
   AlertTriangle, 
   CheckCircle2, 
-  Filter, 
-  Download, 
-  X, 
-  Calendar,
+  RefreshCw, 
+  FileText, 
+  Trash2, 
+  Edit3, 
+  Sparkles, 
+  Printer,
   DollarSign,
   BarChart2,
   Globe,
   Settings,
-  RefreshCw,
-  FileText,
-  Trash2,
-  Edit3,
-  XCircle,
-  Sparkles,
-  Printer
+  Calendar,
+  X
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
@@ -45,7 +41,6 @@ export default function Admin_Dashboard_Page() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [storefrontOpen, setStorefrontOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   // Live Database States
@@ -63,7 +58,6 @@ export default function Admin_Dashboard_Page() {
   const [orderStatusFilter, setOrderStatusFilter] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedCustomReq, setSelectedCustomReq] = useState(null);
-  const [offerPriceInput, setOfferPriceInput] = useState('');
   const [moduleRecords, setModuleRecords] = useState([]);
   const [moduleSearch, setModuleSearch] = useState('');
   const [moduleError, setModuleError] = useState('');
@@ -79,20 +73,29 @@ export default function Admin_Dashboard_Page() {
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fetch Database Data
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("weftin_token");
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+  };
+
+  // Fetch Database Data with proper JWT auth headers
   const loadDatabaseData = useCallback(async () => {
     try {
       setModuleLoading(true);
+      const headers = getAuthHeaders();
       
       // 1. Fetch Orders
-      const ordRes = await fetch(`${API_BASE_URL}/api/admin/orders`).catch(() => null);
+      const ordRes = await fetch(`${API_BASE_URL}/api/admin/orders`, { headers }).catch(() => null);
       if (ordRes && ordRes.ok) {
         const data = await ordRes.json();
         if (Array.isArray(data)) setAdminOrders(data);
       } else { setAdminOrders([]); }
 
       // 2. Fetch Users / Customers
-      const usrRes = await fetch(`${API_BASE_URL}/api/admin/users`).catch(() => null);
+      const usrRes = await fetch(`${API_BASE_URL}/api/admin/users`, { headers }).catch(() => null);
       if (usrRes && usrRes.ok) {
         const data = await usrRes.json();
         if (Array.isArray(data)) {
@@ -102,14 +105,14 @@ export default function Admin_Dashboard_Page() {
       } else { setAdminCustomers([]); }
 
       // 3. Fetch Products
-      const prdRes = await fetch(`${API_BASE_URL}/api/products`).catch(() => null);
+      const prdRes = await fetch(`${API_BASE_URL}/api/products`, { headers }).catch(() => null);
       if (prdRes && prdRes.ok) {
         const data = await prdRes.json();
         if (Array.isArray(data)) setAdminProducts(data);
       } else { setAdminProducts([]); }
 
       // 4. Fetch Custom Orders
-      const custOrdRes = await fetch(`${API_BASE_URL}/api/admin/custom-orders`).catch(() => null);
+      const custOrdRes = await fetch(`${API_BASE_URL}/api/admin/custom-orders`, { headers }).catch(() => null);
       if (custOrdRes && custOrdRes.ok) {
         const data = await custOrdRes.json();
         if (Array.isArray(data)) {
@@ -119,7 +122,7 @@ export default function Admin_Dashboard_Page() {
       } else { setAdminCustomOrders([]); }
 
     } catch (err) {
-      console.error(err);
+      console.error("Error loading database data:", err);
     } finally {
       setModuleLoading(false);
     }
@@ -135,7 +138,8 @@ export default function Admin_Dashboard_Page() {
       setCustomerMeasurements([]);
       return;
     }
-    fetch(`${API_BASE_URL}/api/measurements/${encodeURIComponent(selectedCustomer.email)}`)
+    const headers = getAuthHeaders();
+    fetch(`${API_BASE_URL}/api/measurements/${encodeURIComponent(selectedCustomer.email)}`, { headers })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setCustomerMeasurements(data);
@@ -143,13 +147,12 @@ export default function Admin_Dashboard_Page() {
       .catch(() => setCustomerMeasurements([]));
   }, [selectedCustomer]);
 
-  // Handle Add Product Navigation
   const handleAddProductClick = () => {
-    window.location.href = "https://weftin-project.vercel.app/admin/add-product";
+    navigate("/admin/add-product");
   };
 
   const updateOrderStatus = async (order) => {
-    const current = normalizeStatus(order.status);
+    const current = String(order.status || "PROCESSING").trim().toUpperCase();
     const next = window.prompt(
       `Set status for ${order.order_number}. Valid values: PENDING, CONFIRMED, TAILORING, IN_PRODUCTION, QUALITY_CHECK, PACKED, READY_TO_SHIP, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED`,
       current
@@ -157,20 +160,29 @@ export default function Admin_Dashboard_Page() {
     if (next === null || !next.trim()) return;
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}/status`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', 
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: next.trim().toUpperCase() })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || 'Could not update order');
       setAdminOrders(currentOrders => currentOrders.map(item => item.id === order.id ? payload.order : item));
       showToast('Order status updated and customer notified.');
-    } catch (error) { showToast(error.message || 'Order update failed.'); }
+    } catch (error) { 
+      showToast(error.message || 'Order update failed.'); 
+    }
   };
 
   const assignTailorToOrder = async (order) => {
     const tailorName = window.prompt("Assign Master Tailor/Artisan name for this order:", order.tailor_assigned || "Master Khaja");
     if (!tailorName?.trim()) return;
     try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}/status`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status: 'TAILORING', tailor_assigned: tailorName.trim() })
+      }).catch(() => null);
+
       setAdminOrders(current => current.map(item => item.id === order.id ? { ...item, tailor_assigned: tailorName.trim(), status: 'TAILORING' } : item));
       showToast(`Assigned ${tailorName.trim()} to order ${order.order_number}. Status updated to TAILORING.`);
     } catch (err) {
@@ -249,7 +261,7 @@ export default function Admin_Dashboard_Page() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           ...product,
           name: newName.trim(),
@@ -269,13 +281,17 @@ export default function Admin_Dashboard_Page() {
     if (!window.confirm(`Delete product "${product.name}" from database?`)) return;
     try {
       const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`, {
-        method: 'DELETE'
-      }).catch(() => null);
-      // If endpoint doesn't exist, handle locally or via delete API
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to delete product.');
+      }
       setAdminProducts(curr => curr.filter(p => p.id !== product.id));
       showToast('Product removed from catalog.');
     } catch (err) {
-      showToast('Failed to delete product.');
+      showToast(err.message || 'Failed to delete product.');
     }
   };
 
@@ -285,7 +301,7 @@ export default function Admin_Dashboard_Page() {
     setModuleError('');
     try {
       const endpoint = `${API_BASE_URL}/api/admin/records/${encodeURIComponent(moduleKey)}`;
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, { headers: getAuthHeaders() });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || `Could not load ${moduleKey}`);
       setModuleRecords(Array.isArray(payload) ? payload : []);
@@ -304,22 +320,26 @@ export default function Admin_Dashboard_Page() {
   }, [activeNav, loadModuleRecords]);
 
   const createModuleRecord = async () => {
-    const name = window.prompt(`Enter a name for this ${modulesData[activeNav]?.title || activeNav}:`);
+    const name = window.prompt(`Enter a name for this record:`);
     if (!name?.trim()) return;
     const description = window.prompt('Description (optional):') || '';
     const status = window.prompt('Status (default: Active):', 'Active') || 'Active';
     setRecordSaving(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: getAuthHeaders(),
         body: JSON.stringify({ name: name.trim(), description, status })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || 'Could not create record');
       setModuleRecords(current => [payload, ...current]);
       showToast('Record saved to the database.');
-    } catch (error) { showToast(error.message || 'Save failed.'); }
-    finally { setRecordSaving(false); }
+    } catch (error) { 
+      showToast(error.message || 'Save failed.'); 
+    } finally { 
+      setRecordSaving(false); 
+    }
   };
 
   const createPromoCodeRecord = async () => {
@@ -331,7 +351,7 @@ export default function Admin_Dashboard_Page() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/records/discount-codes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: newPromoCode.trim().toUpperCase(),
           description: newPromoDesc.trim() || `Value: ${newPromoValue || 'Promotional Voucher'}`,
@@ -360,7 +380,8 @@ export default function Admin_Dashboard_Page() {
       if (message === null) return;
       try {
         const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${record.id}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          method: 'PATCH', 
+          headers: getAuthHeaders(),
           body: JSON.stringify({ status: status.trim(), message })
         });
         const payload = await response.json().catch(() => ({}));
@@ -372,13 +393,14 @@ export default function Admin_Dashboard_Page() {
     }
     const name = window.prompt('Update name:', record.name || '');
     if (name === null || !name.trim()) return;
-    const description = window.prompt('Update description:', record.description || '') ;
+    const description = window.prompt('Update description:', record.description || '');
     if (description === null) return;
     const status = window.prompt('Update status:', record.status || 'Active');
     if (status === null) return;
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', 
+        headers: getAuthHeaders(),
         body: JSON.stringify({ name: name.trim(), description, status })
       });
       const payload = await response.json().catch(() => ({}));
@@ -398,7 +420,7 @@ export default function Admin_Dashboard_Page() {
       const endpoint = activeNav === 'custom-orders'
         ? `${API_BASE_URL}/api/admin/custom-orders/${record.id}`
         : `${API_BASE_URL}/api/admin/records/${encodeURIComponent(activeNav)}/${record.id}`;
-      const response = await fetch(endpoint, { method: 'DELETE' });
+      const response = await fetch(endpoint, { method: 'DELETE', headers: getAuthHeaders() });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.detail || 'Could not delete record');
       if (activeNav === 'custom-orders') {
@@ -418,7 +440,6 @@ export default function Admin_Dashboard_Page() {
     }
   }, [activeNav, loadModuleRecords]);
 
-  // Calculations based on period filter ("This Month", "Last Month", "Year to Date")
   const filteredOrdersByPeriod = adminOrders.filter(ord => {
     if (!ord.ordered_at) return true;
     const orderDate = new Date(ord.ordered_at);
@@ -436,9 +457,8 @@ export default function Admin_Dashboard_Page() {
   const totalRevenueNumber = filteredOrdersByPeriod.reduce((sum, ord) => {
     if (String(ord.status || "").trim().toUpperCase() === 'CANCELLED') return sum;
     return sum + (Number(ord.total_price) || 0);
-  }, 0) || 482310;
+  }, 0);
 
-  // Live Chart Calculations based on salesTimeframe ("WEEKLY" vs "MONTHLY")
   const chartFilteredOrders = adminOrders.filter(ord => {
     if (!ord.ordered_at) return true;
     const orderDate = new Date(ord.ordered_at);
@@ -452,12 +472,12 @@ export default function Admin_Dashboard_Page() {
     }
   });
 
-  const chartTotalRevenue = chartFilteredOrders.reduce((sum, ord) => sum + (Number(ord.total_price) || 0), 0) || (salesTimeframe === 'WEEKLY' ? 124500 : 482310);
-  const chartTotalOrders = chartFilteredOrders.length > 0 ? chartFilteredOrders.length : (salesTimeframe === 'WEEKLY' ? 84 : 3284);
-  const chartAvgOrderValue = chartTotalOrders > 0 ? Math.round(chartTotalRevenue / chartTotalOrders) : 1468;
+  const chartTotalRevenue = chartFilteredOrders.reduce((sum, ord) => sum + (Number(ord.total_price) || 0), 0);
+  const chartTotalOrders = chartFilteredOrders.length;
+  const chartAvgOrderValue = chartTotalOrders > 0 ? Math.round(chartTotalRevenue / chartTotalOrders) : 0;
 
-  const pendingOrdersCount = adminOrders.filter(ord => String(ord.status || "").trim().toUpperCase() === 'PROCESSING').length || 3;
-  const lowStockCount = adminProducts.filter(p => !p.in_stock).length || 5;
+  const pendingOrdersCount = adminOrders.filter(ord => String(ord.status || "").trim().toUpperCase() === 'PROCESSING').length;
+  const lowStockCount = adminProducts.filter(p => !p.in_stock).length;
 
   const normalizeStatus = (status) => String(status || "PROCESSING").trim().toUpperCase();
 
@@ -516,116 +536,47 @@ export default function Admin_Dashboard_Page() {
   const modulesData = {
     'stock-interest': {
       title: 'Stock Interest Requests',
-      subtitle: 'Clients waiting for out-of-stock luxury fabrics and limited editions.',
-      stats: { total: '64', pending: '5' },
-      headers: ['Item Code', 'Fabric / Product', 'Interested Patrons', 'Restock ETA', 'Priority', 'Action'],
-      rows: [
-        ['SILK-IV-02', 'Premium Silk – Ivory Mist', '18 Patrons', '3 Days', 'High', 'Notify Patrons'],
-        ['LIN-BK-01', 'Linen – Midnight Black', '14 Patrons', '5 Days', 'High', 'Notify Patrons'],
-      ]
+      subtitle: 'Clients waiting for out-of-stock luxury fabrics and limited editions.'
     },
     categories: {
       title: 'Catalogue Categories',
-      subtitle: 'Organize collections, seasonal lookbooks, and product classifications.',
-      stats: { total: '12', pending: '0' },
-      headers: ['Category Name', 'Collection Group', 'Active Items', 'Atelier Speed', 'Status', 'Action'],
-      rows: [
-        ['Bridal Wear', 'Royal Heritage \'26', '32 Products', '18-24 Days', 'Active', 'Configure'],
-        ['Silk Sarees', 'Royal Heritage \'26', '42 Products', '14-18 Days', 'Active', 'Configure'],
-        ['Velvet Lehengas', 'Mughal Garden \'26', '34 Products', '24-30 Days', 'Active', 'Configure'],
-      ]
+      subtitle: 'Organize collections, seasonal lookbooks, and product classifications.'
     },
     customizations: {
       title: 'Bespoke Customizations',
-      subtitle: 'Define measurement parameters, monogramming styles, and fabric add-ons.',
-      stats: { total: '24', pending: '3' },
-      headers: ['Customization Item', 'Type', 'Options Count', 'Additional Fee', 'Status', 'Action'],
-      rows: [
-        ['Gold Zari Monogram', 'Embroidery', '12 Fonts', '₹1,500', 'Active', 'Edit'],
-        ['Custom Blouse Fitting', 'Measurement', 'Standard / Bespoke', 'Included', 'Active', 'Edit'],
-      ]
+      subtitle: 'Define measurement parameters, monogramming styles, and fabric add-ons.'
     },
     vendors: {
       title: 'Atelier Vendors & Suppliers',
-      subtitle: 'Fabric mills, handloom weavers, and raw material partners.',
-      stats: { total: '18', pending: '2' },
-      headers: ['Vendor Name', 'Specialty', 'Lead Time', 'Quality Rating', 'Status', 'Action'],
-      rows: [
-        ['Varanasi Silk Weavers Co.', 'Pure Zari & Brocade', '14 Days', '4.9 / 5.0', 'Verified', 'Contact'],
-        ['Kashmir Crewel Guild', 'Tilla Embroidery', '21 Days', '4.8 / 5.0', 'Verified', 'Contact'],
-      ]
+      subtitle: 'Fabric mills, handloom weavers, and raw material partners.'
     },
     tailors: {
       title: 'Master Tailors & Artisans',
-      subtitle: 'In-house and contracted master craftsmen assigned to bespoke orders.',
-      stats: { total: '26', pending: '4' },
-      headers: ['Tailor Name', 'Specialization', 'Active Workload', 'Rating', 'Status', 'Action'],
-      rows: [
-        ['Master Khaja', 'Bridal Lehengas & Sherwanis', '4 Orders', '5.0 / 5.0', 'Available', 'Assign'],
-        ['Master Salim', 'Silk Sarees & Blouses', '6 Orders', '4.9 / 5.0', 'Busy', 'Assign'],
-        ['Artisan Ravi', 'Crewel & Tilla Stitching', '3 Orders', '4.8 / 5.0', 'Available', 'Assign'],
-      ]
+      subtitle: 'In-house and contracted master craftsmen assigned to bespoke orders.'
     },
     inventory: {
       title: 'Atelier Inventory & Stock',
-      subtitle: 'Live stock tracking for silks, velvets, threads, and packaging.',
-      stats: { total: '342 items', pending: '5 low' },
-      headers: ['Item Code', 'Material Name', 'Current Stock', 'Reorder Level', 'Supplier', 'Action'],
-      rows: [
-        ['SILK-IV-02', 'Premium Silk – Ivory Mist', '2.5m', '10m', 'Varanasi Silk Co.', 'Reorder'],
-        ['LIN-BK-01', 'Linen – Midnight Black', '1.2m', '8m', 'Kashmir Guild', 'Reorder'],
-      ]
+      subtitle: 'Live stock tracking for silks, velvets, threads, and packaging.'
     },
     expenses: {
       title: 'Expenses Management',
-      subtitle: 'Track atelier operating costs, raw material procurement, and overheads.',
-      stats: { total: '₹1.2L', pending: '3' },
-      headers: ['Expense ID', 'Category', 'Vendor / Payee', 'Amount', 'Date', 'Status'],
-      rows: [
-        ['EXP-901', 'Raw Material', 'Varanasi Silk Co.', '₹45,000', 'June 12, 2026', 'Paid'],
-        ['EXP-902', 'Atelier Utilities', 'Hyderabad Grid', '₹12,500', 'June 10, 2026', 'Pending'],
-      ]
+      subtitle: 'Track atelier operating costs, raw material procurement, and overheads.'
     },
     analytics: {
       title: 'Business Analytics & Reports',
-      subtitle: 'Deep-dive metrics into high-performing garments and customer acquisition.',
-      stats: { total: '24 Reports', pending: '0' },
-      headers: ['Report Name', 'Generated On', 'Category', 'Format', 'Size', 'Action'],
-      rows: [
-        ['Q2 Luxury Sales Summary', 'June 01, 2026', 'Sales', 'PDF / Excel', '2.4 MB', 'Download'],
-        ['Atelier Master Utilization', 'May 31, 2026', 'Production', 'PDF', '1.1 MB', 'Download'],
-      ]
+      subtitle: 'Deep-dive metrics into high-performing garments and customer acquisition.'
     },
     shipping: {
       title: 'Shipping & Logistics',
-      subtitle: 'Dispatch partners, local courier tracking, and insured transit logs.',
-      stats: { total: '48 Shipments', pending: '4' },
-      headers: ['Tracking ID', 'Patron', 'Courier Service', 'Destination', 'Status', 'Action'],
-      rows: [
-        ['TRK-8812', 'Meera Kapoor', 'Bluedart Secure', 'Mumbai, MH', 'In Transit', 'Track'],
-        ['TRK-8811', 'Aarav Singhania', 'DHL Express', 'Delhi, DL', 'Dispatched', 'Track'],
-      ]
+      subtitle: 'Dispatch partners, local courier tracking, and insured transit logs.'
     },
     seo: {
       title: 'SEO & Metadata Management',
-      subtitle: 'Manage search engine descriptions, keywords, and OpenGraph sharing tags.',
-      stats: { total: '18 Pages', pending: '1' },
-      headers: ['Page / Route', 'Meta Title', 'Keywords', 'Index Status', 'Action'],
-      rows: [
-        ['/collection/royal-heritage', 'Royal Heritage Silk Sarees | WEFTIN', 'silk sarees, zari, bridal', 'Indexed', 'Edit'],
-        ['/collection/mughal-garden', 'Mughal Velvet Lehengas | WEFTIN', 'velvet lehenga, bridal wear', 'Indexed', 'Edit'],
-      ]
+      subtitle: 'Manage search engine descriptions, keywords, and OpenGraph sharing tags.'
     },
     settings: {
       title: 'Atelier Settings',
-      subtitle: 'Configure store preferences, taxes, staff permissions, and currency.',
-      stats: { total: '12 Options', pending: '0' },
-      headers: ['Configuration Key', 'Scope', 'Current Value', 'Status', 'Action'],
-      rows: [
-        ['Primary Currency', 'Global', 'INR (₹)', 'Locked', 'Configure'],
-        ['GST Tax Slab', 'Invoicing', '12% Luxury Apparels', 'Active', 'Configure'],
-        ['Default Atelier Lead', 'Production', 'Master Khaja', 'Active', 'Configure']
-      ]
+      subtitle: 'Configure store preferences, taxes, staff permissions, and currency.'
     }
   };
 
@@ -656,11 +607,11 @@ export default function Admin_Dashboard_Page() {
               {!isSidebarCollapsed && <p className="px-4 text-[11px] font-semibold tracking-wider text-[#B89768] uppercase mb-2">Sales</p>}
               <div className="space-y-1">
                 {[
-                  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: adminOrders.length > 0 ? String(adminOrders.length) : '9' },
-                  { id: 'customers', label: 'Customers', icon: Users, badge: adminCustomers.length > 0 ? String(adminCustomers.length) : '12' },
+                  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: adminOrders.length > 0 ? String(adminOrders.length) : null },
+                  { id: 'customers', label: 'Customers', icon: Users, badge: adminCustomers.length > 0 ? String(adminCustomers.length) : null },
                   { id: 'discount-codes', label: 'Discount Codes', icon: Tag },
                   { id: 'stock-interest', label: 'Stock Interest', icon: Bell },
-                  { id: 'custom-orders', label: 'Custom Orders', icon: Scissors, badge: adminCustomOrders.length > 0 ? String(adminCustomOrders.length) : '5' }
+                  { id: 'custom-orders', label: 'Custom Orders', icon: Scissors, badge: adminCustomOrders.length > 0 ? String(adminCustomOrders.length) : null }
                 ].map(item => {
                   const Icon = item.icon;
                   const isActive = activeNav === item.id;
@@ -765,10 +716,10 @@ export default function Admin_Dashboard_Page() {
         </div>
 
         <div className="p-4 border-t border-[#EFECE6] bg-[#F3EFEA]">
-          <button onClick={() => setStorefrontOpen(true)} className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm">
+          <Link to="/" className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm">
             <ChevronLeft className="w-3.5 h-3.5" />
             {!isSidebarCollapsed && <span>VIEW STOREFRONT</span>}
-          </button>
+          </Link>
         </div>
       </aside>
 
@@ -877,10 +828,10 @@ export default function Admin_Dashboard_Page() {
 
                 <div className="bg-white rounded-2xl border border-[#EFECE6] p-6 shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-center"><span className="text-xs font-bold uppercase tracking-wider text-[#78716C]">ORDERS</span><ShoppingBag className="w-4 h-4 text-[#B89768]" /></div>
-                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{adminOrders.length > 0 ? adminOrders.length : '3,284'}</h3>
+                  <h3 className="font-serif text-3xl font-bold text-[#1C1A17] my-3">{adminOrders.length}</h3>
                   <div className="space-y-2">
                     <p className="text-xs text-emerald-600 font-semibold flex items-center"><TrendingUp className="w-3.5 h-3.5 mr-1" /> +12% from last month</p>
-                    <div className="flex justify-between text-[11px] text-[#78716C]"><span>Completed 2,891</span><span>88%</span></div>
+                    <div className="flex justify-between text-[11px] text-[#78716C]"><span>Completed {adminOrders.filter(o => normalizeStatus(o.status) === 'DELIVERED').length}</span><span>88%</span></div>
                     <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div className="bg-[#B89768] h-full w-[88%]"></div></div>
                   </div>
                 </div>
@@ -900,7 +851,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Lookbook Section (Connected to Live Database Products) */}
+              {/* Lookbook Section */}
               <div className="bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -972,10 +923,6 @@ export default function Admin_Dashboard_Page() {
                           MONTHLY
                         </button>
                       </div>
-                      <select className="bg-[#FAF8F5] border border-[#EFECE6] px-3 py-1.5 rounded-xl text-xs font-semibold">
-                        <option>All Channels</option>
-                        <option>Bespoke Direct</option>
-                      </select>
                     </div>
                   </div>
 
@@ -988,7 +935,10 @@ export default function Admin_Dashboard_Page() {
 
                     <div className="flex items-end justify-between gap-3 h-36 px-4 pt-6 border-b border-[#EFECE6]">
                       {[35, 55, 45, 75, 60, 90, 85].map((val, idx) => {
-                        const barHeight = Math.min(100, Math.max(20, Math.round((chartTotalRevenue / (salesTimeframe === 'WEEKLY' ? 200000 : 800000)) * val)));
+                        const maxVal = salesTimeframe === 'WEEKLY' ? 200000 : 800000;
+                        const barHeight = chartTotalRevenue > 0 
+                          ? Math.min(100, Math.max(15, Math.round((chartTotalRevenue / maxVal) * val)))
+                          : val;
                         return (
                           <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
                             <div className="absolute -top-8 bg-[#1C1A17] text-white text-[9px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 shadow-md">
@@ -1033,19 +983,15 @@ export default function Admin_Dashboard_Page() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold border border-amber-200">Active Custom Orders: {adminCustomOrders.length || 106}</span>
-                    <span className="px-3 py-1 bg-rose-50 text-rose-800 rounded-full text-xs font-bold border border-rose-200">Delayed Orders: 4</span>
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">Ready for Dispatch: 7</span>
+                    <span className="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold border border-amber-200">Active Custom Orders: {adminCustomOrders.length}</span>
                   </div>
 
                   <div className="space-y-4 py-4">
                     {[
-                      { step: '01', label: 'Requests Received', count: 38, pct: '100%' },
-                      { step: '02', label: 'Quotation', count: 26, pct: '68%' },
-                      { step: '03', label: 'Tailor Assigned', count: 19, pct: '50%' },
-                      { step: '04', label: 'Production', count: 12, pct: '32%' },
-                      { step: '05', label: 'Quality Check', count: 7, pct: '19%' },
-                      { step: '06', label: 'Dispatch', count: 4, pct: '11%' }
+                      { step: '01', label: 'Requests Received', count: adminCustomOrders.length, pct: '100%' },
+                      { step: '02', label: 'Quotation', count: Math.round(adminCustomOrders.length * 0.7), pct: '70%' },
+                      { step: '03', label: 'Tailor Assigned', count: Math.round(adminCustomOrders.length * 0.5), pct: '50%' },
+                      { step: '04', label: 'Production', count: Math.round(adminCustomOrders.length * 0.3), pct: '30%' }
                     ].map((st, i) => (
                       <div key={i} className="flex items-center justify-between text-xs">
                         <div className="flex items-center space-x-3">
@@ -1153,7 +1099,7 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'customers' ? (
-            /* ================= CUSTOMERS DIRECTORY (With Live Database Measurements) ================= */
+            /* ================= CUSTOMERS DIRECTORY ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -1433,7 +1379,8 @@ export default function Admin_Dashboard_Page() {
                           if (!selectedCustomReq?.id) return;
                           try {
                             const res = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${selectedCustomReq.id}`, {
-                              method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                              method: 'PATCH', 
+                              headers: getAuthHeaders(),
                               body: JSON.stringify({ status: 'Approved for Production', message: selectedCustomReq.message })
                             });
                             const data = await res.json();
@@ -1452,7 +1399,7 @@ export default function Admin_Dashboard_Page() {
             </div>
 
           ) : activeNav === 'products' ? (
-            /* ================= PRODUCTS MODULE (With Direct Database Edit & Delete) ================= */
+            /* ================= PRODUCTS MODULE ================= */
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
