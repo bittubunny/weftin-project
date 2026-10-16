@@ -79,7 +79,7 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  STORAGE KEY HELPER (Isolates Guest vs User Carts)
+  STORAGE KEY HELPER (Seamlessly handles Guest vs User Carts)
   ============================================================
   */
 
@@ -90,12 +90,12 @@ export default function Home_Page() {
         return `weftin_cart_${user.email}`;
       }
     } catch (e) {}
-    return "weftin_cart_guest";
+    return "weftin_cart"; // Fallback to standard key for guests so it always works
   };
 
   /*
   ============================================================
-  LOGOUT HANDLER (Clears user session cleanly)
+  LOGOUT HANDLER
   ============================================================
   */
 
