@@ -56,7 +56,7 @@ export default function Home_Page() {
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "WEFTIN Member";
+    "Guest Member";
 
   const userEmail = currentUser?.email || "";
 
@@ -86,6 +86,8 @@ export default function Home_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
+    setCurrentUser(null);
+    setUserAvatar("");
     setMobileMenuOpen(false);
     navigate("/login");
   };
@@ -358,41 +360,34 @@ export default function Home_Page() {
       const storedUser =
         localStorage.getItem("weftin_user");
 
-      if (!storedUser) {
-        navigate("/login");
-        return;
-      }
+      if (storedUser) {
+        const savedUser = JSON.parse(storedUser);
+        if (savedUser?.email) {
+          setCurrentUser(savedUser);
 
-      const savedUser = JSON.parse(storedUser);
-
-      if (!savedUser?.email) {
-        navigate("/login");
-        return;
-      }
-
-      setCurrentUser(savedUser);
-
-      if (savedUser?.avatar) {
-        setUserAvatar(savedUser.avatar);
-      }
-
-      fetch(
-        `${API_BASE_URL}/api/user/${encodeURIComponent(
-          savedUser.email
-        )}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.avatar) {
-            setUserAvatar(data.avatar);
+          if (savedUser?.avatar) {
+            setUserAvatar(savedUser.avatar);
           }
-        })
-        .catch((err) =>
-          console.error(
-            "User avatar fetch error:",
-            err
+
+          fetch(
+            `${API_BASE_URL}/api/user/${encodeURIComponent(
+              savedUser.email
+            )}`
           )
-        );
+            .then((res) => res.json())
+            .then((data) => {
+              if (data?.avatar) {
+                setUserAvatar(data.avatar);
+              }
+            })
+            .catch((err) =>
+              console.error(
+                "User avatar fetch error:",
+                err
+              )
+            );
+        }
+      }
 
       fetchData();
     } catch (error) {
@@ -400,13 +395,10 @@ export default function Home_Page() {
         "Unable to load user:",
         error
       );
-
-      navigate("/login");
     }
 
     updateCartCount();
   }, [
-    navigate,
     fetchData,
     updateCartCount
   ]);
@@ -888,7 +880,7 @@ export default function Home_Page() {
               </p>
 
               <p className="text-[10px] text-gray-500 truncate">
-                {userEmail || "Member Account"}
+                {userEmail || "Guest Member"}
               </p>
             </div>
           </div>
@@ -1079,13 +1071,24 @@ export default function Home_Page() {
 
         {/* DRAWER FOOTER / LOGOUT */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
-          >
-            <LogOut className="w-4 h-4" />
-            Log out of account
-          </button>
+          {currentUser ? (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out of account
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              onClick={closeMobileMenu}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-amber-900 font-semibold hover:bg-amber-100 rounded-lg transition-colors cursor-pointer border border-amber-300 bg-amber-50"
+            >
+              <User className="w-4 h-4" />
+              Sign in to account
+            </Link>
+          )}
         </div>
       </aside>
 
