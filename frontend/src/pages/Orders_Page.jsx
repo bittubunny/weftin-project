@@ -77,8 +77,11 @@ export default function Orders_Page() {
   }, []);
 
   const fetchUserAvatar = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(email)}`);
+      const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(email)}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
       if (!response.ok) return;
       const data = await response.json();
       if (data && data.avatar) {
@@ -200,11 +203,16 @@ export default function Orders_Page() {
       return;
     }
 
+    const token = localStorage.getItem("weftin_token");
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(
           userEmail
-        )}`
+        )}`,
+        {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        }
       );
 
       const data = await response.json();
