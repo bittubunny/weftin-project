@@ -95,7 +95,10 @@ export default function Product_Overview() {
   // Load unread notifications
   useEffect(() => {
     if (!userEmail) return;
-    fetch(`${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(userEmail)}`)
+    const token = localStorage.getItem("weftin_token");
+    fetch(`${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(userEmail)}`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+    })
       .then(res => res.json())
       .then(data => {
         if (data?.count) setUnreadCount(Number(data.count));
@@ -163,7 +166,7 @@ export default function Product_Overview() {
     const savedUser = JSON.parse(localStorage.getItem("weftin_user"));
     const token = localStorage.getItem("weftin_token");
 
-    if (!savedUser?.email) {
+    if (!savedUser?.email || !token) {
       showToast("Please sign in before creating a custom design.");
       setTimeout(() => navigate("/login"), 1000);
       return;
@@ -176,7 +179,7 @@ export default function Product_Overview() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             user_email: savedUser.email,
