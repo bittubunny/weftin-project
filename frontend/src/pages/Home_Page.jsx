@@ -56,7 +56,7 @@ export default function Home_Page() {
     currentUser?.name ||
     currentUser?.full_name ||
     currentUser?.username ||
-    "Guest Member";
+    "WEFTIN Member";
 
   const userEmail = currentUser?.email || "";
 
@@ -79,22 +79,6 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  STORAGE KEY HELPER (Seamlessly handles Guest vs User Carts)
-  ============================================================
-  */
-
-  const getCartStorageKey = () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("weftin_user"));
-      if (user && user.email) {
-        return `weftin_cart_${user.email}`;
-      }
-    } catch (e) {}
-    return "weftin_cart"; // Fallback to standard key for guests so it always works
-  };
-
-  /*
-  ============================================================
   LOGOUT HANDLER
   ============================================================
   */
@@ -102,18 +86,8 @@ export default function Home_Page() {
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
-    
-    setCurrentUser(null);
-    setUserAvatar("");
-    setUnreadCount(0);
-    setCartCount(0);
     setMobileMenuOpen(false);
-    
-    showToast("Logged out successfully");
-
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 500);
+    navigate("/login");
   };
 
   /*
@@ -124,8 +98,7 @@ export default function Home_Page() {
 
   const getCart = () => {
     try {
-      const storageKey = getCartStorageKey();
-      const storedCart = localStorage.getItem(storageKey);
+      const storedCart = localStorage.getItem("weftin_cart");
 
       if (!storedCart) {
         return [];
@@ -231,9 +204,8 @@ export default function Home_Page() {
           });
         }
 
-        const storageKey = getCartStorageKey();
         localStorage.setItem(
-          storageKey,
+          "weftin_cart",
           JSON.stringify(cart)
         );
 
@@ -377,7 +349,7 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  INITIAL LOAD (Allows guest browsing)
+  INITIAL LOAD
   ============================================================
   */
 
@@ -386,45 +358,55 @@ export default function Home_Page() {
       const storedUser =
         localStorage.getItem("weftin_user");
 
-      if (storedUser) {
-        const savedUser = JSON.parse(storedUser);
-        if (savedUser?.email) {
-          setCurrentUser(savedUser);
-
-          if (savedUser?.avatar) {
-            setUserAvatar(savedUser.avatar);
-          }
-
-          fetch(
-            `${API_BASE_URL}/api/user/${encodeURIComponent(
-              savedUser.email
-            )}`
-          )
-            .then((res) => res.json())
-            .then((data) => {
-              if (data?.avatar) {
-                setUserAvatar(data.avatar);
-              }
-            })
-            .catch((err) =>
-              console.error(
-                "User avatar fetch error:",
-                err
-              )
-            );
-        }
+      if (!storedUser) {
+        navigate("/login");
+        return;
       }
+
+      const savedUser = JSON.parse(storedUser);
+
+      if (!savedUser?.email) {
+        navigate("/login");
+        return;
+      }
+
+      setCurrentUser(savedUser);
+
+      if (savedUser?.avatar) {
+        setUserAvatar(savedUser.avatar);
+      }
+
+      fetch(
+        `${API_BASE_URL}/api/user/${encodeURIComponent(
+          savedUser.email
+        )}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.avatar) {
+            setUserAvatar(data.avatar);
+          }
+        })
+        .catch((err) =>
+          console.error(
+            "User avatar fetch error:",
+            err
+          )
+        );
 
       fetchData();
     } catch (error) {
       console.error(
-        "Unable to load user configuration:",
+        "Unable to load user:",
         error
       );
+
+      navigate("/login");
     }
 
     updateCartCount();
   }, [
+    navigate,
     fetchData,
     updateCartCount
   ]);
@@ -626,10 +608,10 @@ export default function Home_Page() {
               )}
             </Link>
 
-            {/* USER / LOGIN LINK */}
+            {/* USER */}
 
             <Link
-              to={currentUser ? "/profile" : "/login"}
+              to="/profile"
               className="flex items-center gap-2 text-gray-800 hover:text-black"
             >
               {userAvatar ? (
@@ -640,12 +622,12 @@ export default function Home_Page() {
                 />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
-                  {currentUser ? userInitial : <User className="w-3.5 h-3.5" />}
+                  {userInitial}
                 </div>
               )}
 
               <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">
-                {currentUser ? userName : "Sign In"}
+                {userName}
               </span>
             </Link>
 
@@ -805,7 +787,7 @@ export default function Home_Page() {
             {/* USER */}
 
             <Link
-              to={currentUser ? "/profile" : "/login"}
+              to="/profile"
               aria-label="Profile"
             >
               {userAvatar ? (
@@ -816,7 +798,7 @@ export default function Home_Page() {
                 />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
-                  {currentUser ? userInitial : <User className="w-3.5 h-3.5" />}
+                  {userInitial}
                 </div>
               )}
             </Link>
@@ -896,17 +878,17 @@ export default function Home_Page() {
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
-                {currentUser ? userInitial : <User className="w-5 h-5" />}
+                {userInitial}
               </div>
             )}
 
             <div className="min-w-0">
               <p className="text-xs font-bold text-gray-900 truncate">
-                {currentUser ? userName : "Welcome, Guest"}
+                {userName}
               </p>
 
               <p className="text-[10px] text-gray-500 truncate">
-                {userEmail || "Sign in to view account"}
+                {userEmail || "Member Account"}
               </p>
             </div>
           </div>
@@ -1095,26 +1077,15 @@ export default function Home_Page() {
           </nav>
         </div>
 
-        {/* DRAWER FOOTER / LOGIN OR LOGOUT */}
+        {/* DRAWER FOOTER / LOGOUT */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          {currentUser ? (
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
-            >
-              <LogOut className="w-4 h-4" />
-              Log out of account
-            </button>
-          ) : (
-            <Link
-              to="/login"
-              onClick={closeMobileMenu}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-white font-semibold bg-black hover:bg-gray-900 rounded-lg transition-colors cursor-pointer shadow-2xs"
-            >
-              <User className="w-4 h-4" />
-              Sign In / Register
-            </Link>
-          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs text-rose-700 font-semibold hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-rose-200/60 bg-white shadow-2xs"
+          >
+            <LogOut className="w-4 h-4" />
+            Log out of account
+          </button>
         </div>
       </aside>
 
@@ -1760,12 +1731,12 @@ export default function Home_Page() {
 
             <ul className="space-y-2 text-xs text-gray-600">
               <li>
-                <Link to="/login" className="hover:text-black">
+                <Link to="/profile" className="hover:text-black">
                   Sign In
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-black">
+                <Link to="/profile" className="hover:text-black">
                   Register Membership
                 </Link>
               </li>
