@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingBag,
@@ -20,6 +20,7 @@ import {
   LogOut,
   ChevronRight
 } from "lucide-react";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Cart_Page() {
@@ -90,8 +91,11 @@ export default function Cart_Page() {
   }, []);
 
   const fetchUserAvatar = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(email)}`);
+      const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(email)}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
       if (!response.ok) return;
       const data = await response.json();
       if (data && data.avatar) {
@@ -103,8 +107,11 @@ export default function Cart_Page() {
   };
 
   const fetchUnreadCount = async (email) => {
+    const token = localStorage.getItem("weftin_token");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`);
+      const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count/${encodeURIComponent(email)}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
       if (!response.ok) return;
       const data = await response.json();
       setUnreadCount(Number(data.count) || 0);
@@ -186,22 +193,23 @@ export default function Cart_Page() {
     }
 
     let savedUser = null;
+    let token = null;
     try {
       savedUser = JSON.parse(localStorage.getItem("weftin_user")) || null;
+      token = localStorage.getItem("weftin_token");
     } catch (error) {
-      console.error("Failed to read user:", error);
+      console.error("Failed to read user session:", error);
     }
 
-    if (!savedUser?.email) {
+    if (!savedUser?.email || !token) {
       showToast("Please sign in before proceeding to checkout.");
-      setTimeout(() => navigate("/profile"), 1000);
+      setTimeout(() => navigate("/login"), 1000);
       return;
     }
 
     if (isCheckingOut) return;
 
     setIsCheckingOut(true);
-    const token = localStorage.getItem("weftin_token");
 
     try {
       showToast("Creating your WEFTIN order...");
@@ -238,7 +246,7 @@ export default function Cart_Page() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(orderData),
         });
@@ -385,7 +393,7 @@ export default function Cart_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
