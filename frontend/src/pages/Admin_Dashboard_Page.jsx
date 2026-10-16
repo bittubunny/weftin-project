@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -24,23 +25,23 @@ import {
   FileText, 
   Trash2, 
   Edit3, 
-  Sparkles, 
   Printer,
   DollarSign,
   BarChart2,
   Globe,
   Settings,
-  Calendar,
-  X
+  Calendar
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Admin_Dashboard_Page() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [storefrontOpen, setStorefrontOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   // Live Database States
@@ -58,6 +59,7 @@ export default function Admin_Dashboard_Page() {
   const [orderStatusFilter, setOrderStatusFilter] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedCustomReq, setSelectedCustomReq] = useState(null);
+  const [offerPriceInput, setOfferPriceInput] = useState('');
   const [moduleRecords, setModuleRecords] = useState([]);
   const [moduleSearch, setModuleSearch] = useState('');
   const [moduleError, setModuleError] = useState('');
@@ -177,7 +179,7 @@ export default function Admin_Dashboard_Page() {
     const tailorName = window.prompt("Assign Master Tailor/Artisan name for this order:", order.tailor_assigned || "Master Khaja");
     if (!tailorName?.trim()) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}/status`, {
+      await fetch(`${API_BASE_URL}/api/admin/orders/${order.id}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ status: 'TAILORING', tailor_assigned: tailorName.trim() })
