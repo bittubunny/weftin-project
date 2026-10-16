@@ -173,13 +173,25 @@ def get_current_user(
         if conn:
             conn.close()
 
+# ============================================================
+# AUTHORIZED ADMIN CHECK
+# ============================================================
+
 # List of authorized admin emails loaded from Render environment variables
 ADMIN_EMAILS = [email.strip().lower() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()]
 
 def require_admin(current_user: dict = Depends(get_current_user)):
-    user_email = current_user.get("email", "").lower()
+    user_email = str(current_user.get("email", "")).strip().lower()
+    user_id = current_user.get("id")
     
-    if not ADMIN_EMAILS or user_email not in ADMIN_EMAILS:
+    # Adaptable authorization: allows authorized admin ID 10, explicit admin email, or Render env variable list
+    is_admin = (
+        user_id == 10 or
+        user_email == "weftin.admin891@gmail.com" or
+        (ADMIN_EMAILS and user_email in ADMIN_EMAILS)
+    )
+    
+    if not is_admin:
         raise HTTPException(
             status_code=403,
             detail="Access denied. Admin privileges required."
