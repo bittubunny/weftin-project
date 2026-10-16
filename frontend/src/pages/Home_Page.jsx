@@ -79,17 +79,21 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  LOGOUT HANDLER
+  LOGOUT HANDLER (Clears user session and cart data)
   ============================================================
   */
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
+    localStorage.removeItem("weftin_cart"); // <-- Clears the cart so it doesn't bleed into guest view
+    
     setCurrentUser(null);
     setUserAvatar("");
     setUnreadCount(0);
+    setCartCount(0); // <-- Resets cart count badge to 0
     setMobileMenuOpen(false);
+    
     showToast("Logged out successfully");
   };
 
