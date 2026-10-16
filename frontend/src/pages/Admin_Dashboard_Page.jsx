@@ -54,7 +54,7 @@ export default function Admin_Dashboard_Page() {
   
   // Dashboard & Module Filters
   const [dashboardPeriod, setDashboardPeriod] = useState('This Month');
-  const [salesTimeframe, setSalesTimeframe] = useState('WEEKLY'); // 'WEEKLY' or 'MONTHLY'
+  const [salesTimeframe, setSalesTimeframe] = useState('WEEKLY');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -94,7 +94,7 @@ export default function Admin_Dashboard_Page() {
       if (ordRes && ordRes.ok) {
         const data = await ordRes.json();
         if (Array.isArray(data)) setAdminOrders(data);
-      } else { setAdminOrders([]); }
+      }
 
       // 2. Fetch Users / Customers
       const usrRes = await fetch(`${API_BASE_URL}/api/admin/users`, { headers }).catch(() => null);
@@ -104,14 +104,14 @@ export default function Admin_Dashboard_Page() {
           setAdminCustomers(data);
           if (data.length > 0 && !selectedCustomer) setSelectedCustomer(data[0]);
         }
-      } else { setAdminCustomers([]); }
+      }
 
       // 3. Fetch Products
       const prdRes = await fetch(`${API_BASE_URL}/api/products`, { headers }).catch(() => null);
       if (prdRes && prdRes.ok) {
         const data = await prdRes.json();
         if (Array.isArray(data)) setAdminProducts(data);
-      } else { setAdminProducts([]); }
+      }
 
       // 4. Fetch Custom Orders
       const custOrdRes = await fetch(`${API_BASE_URL}/api/admin/custom-orders`, { headers }).catch(() => null);
@@ -121,7 +121,7 @@ export default function Admin_Dashboard_Page() {
           setAdminCustomOrders(data);
           if (data.length > 0 && !selectedCustomReq) setSelectedCustomReq(data[0]);
         }
-      } else { setAdminCustomOrders([]); }
+      }
 
     } catch (err) {
       console.error("Error loading database data:", err);
