@@ -30,13 +30,27 @@ import {
   BarChart2,
   Globe,
   Settings,
-  Calendar
+  Calendar,
+  Lock,
+  Mail,
+  KeyRound,
+  Loader2,
+  ShieldCheck,
+  Star
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
 export default function Admin_Dashboard_Page() {
   const navigate = useNavigate();
+
+  // Admin Login Prompt States
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [adminEmailInput, setAdminEmailInput] = useState("");
+  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [authenticating, setAuthenticating] = useState(false);
+
   const [activeNav, setActiveNav] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -70,10 +84,72 @@ export default function Admin_Dashboard_Page() {
   const [newPromoValue, setNewPromoValue] = useState('');
   const [newPromoDesc, setNewPromoDesc] = useState('');
 
-  const showToast = useCallback((msg) => {
+  const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // ---------------------------------------------------------
+  // ADMIN AUTHENTICATION GUARD (ID 10 Check via localStorage)
+  // ---------------------------------------------------------
+  useEffect(() => {
+    const adminAuth = localStorage.getItem("weftin_admin_auth");
+    const storedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
+
+    if (adminAuth === "true" && storedUser?.id === 10) {
+      setIsAdminAuthenticated(true);
+      loadDatabaseData();
+    }
+    setCheckingAuth(false);
   }, []);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    if (!adminEmailInput.trim() || !adminPasswordInput.trim()) {
+      showToast("Please enter both admin email and password.");
+      return;
+    }
+
+    setAuthenticating(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: adminEmailInput.trim().toLowerCase(),
+          password: adminPasswordInput
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data?.user) {
+        const userId = Number(data.user.id || data.user.user_id);
+        const userEmail = String(data.user.email || "").trim().toLowerCase();
+
+        if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
+          localStorage.setItem("weftin_admin_auth", "true");
+          if (data.access_token) {
+            localStorage.setItem("weftin_token", data.access_token);
+          }
+          localStorage.setItem("weftin_user", JSON.stringify(data.user));
+          setIsAdminAuthenticated(true);
+          showToast("Admin session unlocked successfully (ID: 10).");
+          loadDatabaseData();
+        } else {
+          showToast("Access denied. Account does not match authorized admin ID (10).");
+        }
+      } else {
+        showToast(data.detail || "Invalid admin credentials.");
+      }
+    } catch (err) {
+      console.error("Admin login error:", err);
+      showToast("Backend connection error during authentication.");
+    } finally {
+      setAuthenticating(false);
+    }
+  };
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("weftin_token");
@@ -129,10 +205,6 @@ export default function Admin_Dashboard_Page() {
       setModuleLoading(false);
     }
   }, [selectedCustomer, selectedCustomReq]);
-
-  useEffect(() => {
-    loadDatabaseData();
-  }, [loadDatabaseData]);
 
   // Fetch specific customer measurements when selected
   useEffect(() => {
@@ -313,7 +385,7 @@ export default function Admin_Dashboard_Page() {
     } finally {
       setModuleLoading(false);
     }
-  }, []);
+  }, [activeNav]);
 
   useEffect(() => {
     if (!['dashboard', 'orders', 'customers', 'products', 'custom-orders'].includes(activeNav)) {
@@ -582,8 +654,108 @@ export default function Admin_Dashboard_Page() {
     }
   };
 
+  // ---------------------------------------------------------
+  // LOADING / CHECKING AUTH STATE
+  // ---------------------------------------------------------
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 mx-auto text-amber-700 animate-spin mb-3" />
+          <p className="text-xs uppercase tracking-widest text-gray-500">Verifying administrator credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------
+  // ADMIN CREDENTIAL GATE MODAL (IF NOT AUTHENTICATED)
+  // ---------------------------------------------------------
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans flex items-center justify-center p-6 relative">
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            {toastMessage}
+          </div>
+        )}
+
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 sm:p-10 max-w-md w-full">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200">
+            <Lock className="w-6 h-6" />
+          </div>
+
+          <h2 className="font-serif text-2xl font-light text-center text-gray-900 mb-1">Admin Dashboard Security</h2>
+          <p className="text-xs text-gray-500 text-center mb-8 leading-relaxed">
+            Please enter admin credentials (ID: 10) to access the Atelier Workspace.
+          </p>
+
+          <form onSubmit={handleAdminLogin} className="space-y-5 text-xs">
+            <div>
+              <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">ADMIN EMAIL *</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="email"
+                  required
+                  placeholder="weftin.admin891@gmail.com"
+                  value={adminEmailInput}
+                  onChange={(e) => setAdminEmailInput(e.target.value)}
+                  className="w-full bg-[#FAF8F5] border border-gray-200 pl-10 pr-4 py-3 rounded text-gray-800 focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block uppercase tracking-wider text-gray-500 mb-2 font-semibold">ADMIN PASSWORD *</label>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-[#FAF8F5] border border-gray-200 pl-10 pr-4 py-3 rounded text-gray-800 focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={authenticating}
+              className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              {authenticating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verifying Admin (ID 10)...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  Unlock Admin Dashboard
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/dashboard"
+              className="text-xs text-gray-500 hover:text-black underline"
+            >
+              Return to Member Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF8F5] font-sans text-[#1C1A17] select-none relative">
       
       {/* SIDEBAR */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-[#FAF8F5] border-r border-[#EFECE6] text-[#1C1A17] flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0`}>
@@ -717,7 +889,17 @@ export default function Admin_Dashboard_Page() {
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#EFECE6] bg-[#F3EFEA]">
+        <div className="p-4 border-t border-[#EFECE6] bg-[#F3EFEA] flex flex-col gap-2">
+          <button
+            onClick={() => {
+              localStorage.removeItem("weftin_admin_auth");
+              setIsAdminAuthenticated(false);
+              showToast("Locked admin session.");
+            }}
+            className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold py-2.5 px-3 rounded-xl border border-rose-200 transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
+          >
+            <span>Lock Admin Session</span>
+          </button>
           <Link to="/" className="w-full bg-white hover:bg-[#1C1A17] text-[#1C1A17] hover:text-white text-xs font-semibold py-2.5 px-3 rounded-xl border border-[#EFECE6] transition flex items-center justify-center space-x-2 shadow-sm">
             <ChevronLeft className="w-3.5 h-3.5" />
             {!isSidebarCollapsed && <span>VIEW STOREFRONT</span>}
@@ -756,7 +938,7 @@ export default function Admin_Dashboard_Page() {
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#EFECE6] p-2 z-50 text-xs">
                   <button onClick={() => { setUserDropdownOpen(false); setActiveNav('settings'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#FAF8F5] font-medium">Atelier Settings</button>
-                  <button onClick={() => { setUserDropdownOpen(false); showToast('Admin session secured.'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium">Lock Session</button>
+                  <button onClick={() => { setUserDropdownOpen(false); localStorage.removeItem("weftin_admin_auth"); setIsAdminAuthenticated(false); showToast('Admin session secured.'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium">Lock Session</button>
                 </div>
               )}
             </div>
@@ -902,7 +1084,7 @@ export default function Admin_Dashboard_Page() {
                 </div>
               </div>
 
-              {/* Sales Overview (Interactive Growing Graph) & Custom Order Progress */}
+              {/* Sales Overview & Custom Order Progress */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EFECE6] p-8 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
