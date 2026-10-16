@@ -79,27 +79,41 @@ export default function Home_Page() {
 
   /*
   ============================================================
-  LOGOUT HANDLER (Clears user session and cart data completely)
+  STORAGE KEY HELPER (Isolates Guest vs User Carts)
+  ============================================================
+  */
+
+  const getCartStorageKey = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("weftin_user"));
+      if (user && user.email) {
+        return `weftin_cart_${user.email}`;
+      }
+    } catch (e) {}
+    return "weftin_cart_guest";
+  };
+
+  /*
+  ============================================================
+  LOGOUT HANDLER (Clears user session cleanly)
   ============================================================
   */
 
   const handleLogout = () => {
     localStorage.removeItem("weftin_user");
     localStorage.removeItem("weftin_token");
-    localStorage.removeItem("weftin_cart"); // <-- Completely remove cart from storage
     
     setCurrentUser(null);
     setUserAvatar("");
     setUnreadCount(0);
-    setCartCount(0); // <-- Force badge count to 0 instantly
+    setCartCount(0);
     setMobileMenuOpen(false);
     
     showToast("Logged out successfully");
 
-    // Force a smooth reload/redirect to ensure all cached guest states sync clean
     setTimeout(() => {
       window.location.href = "/";
-    }, 600);
+    }, 500);
   };
 
   /*
@@ -110,7 +124,8 @@ export default function Home_Page() {
 
   const getCart = () => {
     try {
-      const storedCart = localStorage.getItem("weftin_cart");
+      const storageKey = getCartStorageKey();
+      const storedCart = localStorage.getItem(storageKey);
 
       if (!storedCart) {
         return [];
@@ -216,8 +231,9 @@ export default function Home_Page() {
           });
         }
 
+        const storageKey = getCartStorageKey();
         localStorage.setItem(
-          "weftin_cart",
+          storageKey,
           JSON.stringify(cart)
         );
 
