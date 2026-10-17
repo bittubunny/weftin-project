@@ -98,6 +98,16 @@ export default function Shop_Page() {
   };
 
   // =========================================================
+  // PRICE FORMATTER HELPER
+  // =========================================================
+  const formatPrice = (val) => {
+    if (!val && val !== 0) return "₹0";
+    const str = String(val).trim();
+    if (str.startsWith("₹")) return str;
+    return `₹${str}`;
+  };
+
+  // =========================================================
   // FETCH USER WISHLIST TO SYNC HEARTS
   // =========================================================
   const fetchUserWishlist = useCallback(async (email) => {
@@ -267,8 +277,8 @@ export default function Shop_Page() {
             id: 1,
             name: "Royal Amber Kanjeevaram Saree",
             category: "Sarees",
-            price: "₹12,999",
-            old_price: "₹15,500",
+            price: "12999",
+            old_price: "15500",
             image:
               "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=500",
             tag: "ATELIER EXCLUSIVE",
@@ -277,8 +287,8 @@ export default function Shop_Page() {
             id: 2,
             name: "Forest Sage Organza Lehenga",
             category: "Lehengas",
-            price: "₹14,499",
-            old_price: "₹18,500",
+            price: "14499",
+            old_price: "18500",
             image:
               "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=500",
             tag: "NEW ARRIVAL",
@@ -339,7 +349,7 @@ export default function Shop_Page() {
             user_email: savedUser.email,
             product_id: p.id,
             name: p.name,
-            price: p.price,
+            price: formatPrice(p.price),
             image: p.image,
             tag: p.tag || "ATELIER EXCLUSIVE",
           }),
@@ -382,7 +392,7 @@ export default function Shop_Page() {
           product_id: Number(p.id),
           name: p.name,
           category: p.category,
-          price: p.price,
+          price: formatPrice(p.price),
           size: "Standard Length",
           shade: "Gold",
           color: p.color || "",
@@ -589,9 +599,7 @@ export default function Shop_Page() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
 
-      {/* =====================================================
-          TOAST
-      ====================================================== */}
+      {/* TOAST */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[100] bg-gray-900 text-white px-5 sm:px-6 py-3 rounded-lg shadow-2xl text-sm animate-fade-in flex items-center gap-3 border border-amber-500/30 max-w-[calc(100vw-2rem)] sm:max-w-sm">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
@@ -605,16 +613,12 @@ export default function Shop_Page() {
         </div>
       )}
 
-      {/* =====================================================
-          TOP ANNOUNCEMENT BAR
-      ====================================================== */}
+      {/* TOP ANNOUNCEMENT BAR */}
       <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-2 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
-      {/* =====================================================
-          UNIFIED NAVIGATION HEADER (MATCHING HOME PAGE)
-      ====================================================== */}
+      {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
@@ -694,9 +698,7 @@ export default function Shop_Page() {
         </nav>
       </header>
 
-      {/* =====================================================
-          SLIDING NAVIGATION DRAWER (EXACT HOME PAGE BAR - WITHOUT ADMINISTRATION)
-      ====================================================== */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -800,9 +802,7 @@ export default function Shop_Page() {
         </div>
       </aside>
 
-      {/* =====================================================
-          SHOP PAGE HEADER
-      ====================================================== */}
+      {/* SHOP PAGE HEADER */}
       <div className="text-center py-8 sm:py-12 px-5 max-w-xl mx-auto">
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37] font-semibold block mb-1">
           EXCLUSIVE CURATION
@@ -816,9 +816,7 @@ export default function Shop_Page() {
         </p>
       </div>
 
-      {/* =====================================================
-          MAIN LAYOUT
-      ====================================================== */}
+      {/* MAIN LAYOUT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 items-start">
 
         {/* SIDEBAR FILTER PANEL */}
@@ -1059,10 +1057,10 @@ export default function Shop_Page() {
                       <div>
                         <h3 className="font-serif text-sm font-medium mb-1">{p.name}</h3>
                         <p className="text-xs font-bold text-gray-900">
-                          {p.price}
+                          {formatPrice(p.price)}
                           {p.old_price && (
                             <span className="text-gray-400 line-through font-normal ml-2">
-                              {p.old_price}
+                              {formatPrice(p.old_price)}
                             </span>
                           )}
                         </p>
@@ -1116,9 +1114,7 @@ export default function Shop_Page() {
         </div>
       </div>
 
-      {/* =====================================================
-          FOOTER
-      ====================================================== */}
+      {/* FOOTER */}
       <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
           <div className="md:col-span-2">
