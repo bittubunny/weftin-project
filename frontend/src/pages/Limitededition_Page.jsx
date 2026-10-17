@@ -299,7 +299,7 @@ export default function Limitededition_Page() {
   };
 
   // =========================================================
-  // ADD ITEM TO CART
+  // ADD ITEM TO CART (FIXED)
   // =========================================================
 
   const addToCart = (item) => {
@@ -313,16 +313,14 @@ export default function Limitededition_Page() {
           )
         ) || [];
 
+      const itemId = item.product_id || item.id;
+
       const existingIndex =
         cart.findIndex(
           (cartItem) =>
-            String(
-              cartItem.product_id
-            ) ===
-            String(
-              item.product_id
-            ) &&
-            item.product_id
+            String(cartItem.id) === String(itemId) ||
+            String(cartItem.product_id) === String(itemId) ||
+            cartItem.name === item.title
         );
 
       if (
@@ -341,14 +339,8 @@ export default function Limitededition_Page() {
       } else {
 
         cart.push({
-          id:
-            item.product_id ||
-            `limited-${item.id}`,
-
-          product_id:
-            item.product_id ||
-            item.id,
-
+          id: itemId,
+          product_id: itemId,
           name:
             item.title,
 
@@ -539,10 +531,7 @@ export default function Limitededition_Page() {
 
     <div className="min-h-screen bg-[#110E0D] text-white font-sans relative">
 
-      {/* =====================================================
-          TOAST
-      ====================================================== */}
-
+      {/* TOAST */}
       {toastMessage && (
 
         <div className="fixed bottom-6 right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
@@ -555,20 +544,14 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          ANNOUNCEMENT
-      ====================================================== */}
-
+      {/* ANNOUNCEMENT */}
       <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-2 px-3 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium border-b border-white/5">
 
         LIMITED DROP VAULT — EXCLUSIVE HANDLOOM MASTERPIECES
 
       </div>
 
-      {/* =====================================================
-          UNIFIED NAVIGATION HEADER
-      ====================================================== */}
-
+      {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#110E0D]/90 backdrop-blur-md border-b border-white/10 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
@@ -647,10 +630,7 @@ export default function Limitededition_Page() {
         </nav>
       </header>
 
-      {/* =====================================================
-          SLIDING NAVIGATION DRAWER
-      ====================================================== */}
-
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" onClick={() => setMobileMenuOpen(false)} />
       )}
@@ -748,10 +728,7 @@ export default function Limitededition_Page() {
         </div>
       </aside>
 
-      {/* =====================================================
-          HERO
-      ====================================================== */}
-
+      {/* HERO */}
       {hero && (
 
         <section className="relative py-16 sm:py-24 px-4 sm:px-6 text-center overflow-hidden bg-gradient-to-b from-[#1C1816] to-[#110E0D]">
@@ -813,10 +790,7 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          QUOTE
-      ====================================================== */}
-
+      {/* QUOTE */}
       {quote && (
 
         <section className="py-12 px-4 text-center border-t border-b border-white/5 bg-[#171311]">
@@ -831,10 +805,7 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          FEATURED PREMIER DROP
-      ====================================================== */}
-
+      {/* FEATURED PREMIER DROP */}
       {featured && featuredItem && (
 
         <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
@@ -912,10 +883,7 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          SECONDARY VAULTS
-      ====================================================== */}
-
+      {/* SECONDARY VAULTS */}
       {secondaryVaults && (
 
         <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
@@ -1004,10 +972,7 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          GUARANTEES
-      ====================================================== */}
-
+      {/* GUARANTEES */}
       {guarantees && (
 
         <section className="py-16 sm:py-20 bg-[#171311] px-4 sm:px-6 lg:px-12 border-t border-b border-white/5">
@@ -1051,10 +1016,7 @@ export default function Limitededition_Page() {
 
       )}
 
-      {/* =====================================================
-          FOOTER
-      ====================================================== */}
-
+      {/* FOOTER */}
       <footer className="bg-[#FAF8F5] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
 
         <div className="max-w-7xl mx-auto text-center text-xs text-gray-500">
