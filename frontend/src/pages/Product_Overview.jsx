@@ -122,6 +122,13 @@ export default function Product_Overview() {
     { id: 2, name: 'Crimson Velvet Bridal Lehenga', price: '₹24,800', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=500' },
   ];
 
+  const formatPrice = (val) => {
+    if (!val) return "₹0";
+    const str = String(val).trim();
+    if (str.startsWith("₹")) return str;
+    return `₹${str}`;
+  };
+
   const handleAddToBag = () => {
     try {
       const existingCart = JSON.parse(localStorage.getItem('weftin_cart')) || [];
@@ -137,7 +144,7 @@ export default function Product_Overview() {
           product_id: numericId,
           name: product.name,
           category: product.category,
-          price: product.price,
+          price: formatPrice(product.price),
           size: selectedSize,
           shade: selectedColor,
           qty: quantity,
@@ -186,7 +193,7 @@ export default function Product_Overview() {
             product_id: Number(product.id),
             product_name: product.name,
             product_category: product.category,
-            product_price: product.price,
+            product_price: formatPrice(product.price),
             product_image: product.image
           })
         }
@@ -319,7 +326,7 @@ export default function Product_Overview() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -503,8 +510,8 @@ export default function Product_Overview() {
             </div>
 
             <div className="flex items-baseline gap-4 mb-6 pb-6 border-b border-gray-100">
-              <span className="text-3xl font-bold text-gray-950">{product.price}</span>
-              {product.old_price && <span className="text-sm text-gray-400 line-through">{product.old_price}</span>}
+              <span className="text-3xl font-bold text-gray-950">{formatPrice(product.price)}</span>
+              {product.old_price && <span className="text-sm text-gray-400 line-through">{formatPrice(product.old_price)}</span>}
             </div>
 
             <p className="text-xs text-gray-600 leading-relaxed mb-8">
@@ -626,7 +633,7 @@ export default function Product_Overview() {
                 <div className="p-4 flex flex-col flex-grow justify-between">
                   <div>
                     <h4 className="font-serif text-sm font-medium mb-1">{rel.name}</h4>
-                    <p className="text-xs font-bold text-gray-900">{rel.price}</p>
+                    <p className="text-xs font-bold text-gray-900">{formatPrice(rel.price)}</p>
                   </div>
                 </div>
               </div>
