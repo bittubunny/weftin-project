@@ -108,7 +108,7 @@ export default function Collections_Page() {
   const fetchData = useCallback(() => {
     // Featured Collection
     fetch(`${API_BASE_URL}/api/home-products?section=Featured`)
-      .then((res) => res.ok ? res.json() : [])
+      .then((res) => (res.ok ? res.json() : []))
       .then((data) => setFeaturedProducts(Array.isArray(data) ? data : []))
       .catch((err) => {
         console.error("Featured fetch error:", err);
@@ -117,7 +117,7 @@ export default function Collections_Page() {
 
     // Best Sellers
     fetch(`${API_BASE_URL}/api/home-products?section=Best+Seller`)
-      .then((res) => res.ok ? res.json() : [])
+      .then((res) => (res.ok ? res.json() : []))
       .then((data) => setBestSellers(Array.isArray(data) ? data : []))
       .catch((err) => {
         console.error("Best seller fetch error:", err);
@@ -165,11 +165,12 @@ export default function Collections_Page() {
     "Festival Spec"
   ];
 
-  const filteredFeatured = activeTab === "Sarees"
-    ? featuredProducts
-    : featuredProducts.filter(
-        (product) => String(product?.category || "").toLowerCase().trim() === activeTab.toLowerCase().trim()
-      );
+  const filteredFeatured = featuredProducts.filter((product) => {
+    const productCat = String(product?.category || "").toLowerCase().trim();
+    const tabCat = activeTab.toLowerCase().trim();
+    if (!productCat) return false;
+    return productCat === tabCat || productCat.includes(tabCat);
+  });
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -192,13 +193,12 @@ export default function Collections_Page() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-gray-900 font-sans relative">
-
       {/* TOAST */}
       {toastMessage && (
         <div className="fixed bottom-6 right-4 sm:right-6 z-[100] bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl text-sm flex items-center gap-3 border border-amber-500/30">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
           <span className="flex-1">{toastMessage}</span>
-          <button onClick={() => setToastMessage("")} className="text-gray-400 hover:text-white">
+          <button onClick={() => setToastMessage("")} className="text-gray-400 hover:text-white cursor-pointer">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -212,7 +212,6 @@ export default function Collections_Page() {
       {/* UNIFIED NAVIGATION HEADER */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
           <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
             <Search className="w-4 h-4 text-gray-400 mr-2" />
             <input 
@@ -231,7 +230,7 @@ export default function Collections_Page() {
           </div>
 
           <div className="flex items-center gap-5 lg:gap-6">
-            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR &or;</span>
+            <span className="text-xs font-medium text-gray-700 cursor-pointer hidden sm:inline">INR ⌄</span>
             
             <Link to="/wishlist" className="text-gray-800 hover:text-black">
               <Heart className="w-5 h-5" />
@@ -288,7 +287,7 @@ export default function Collections_Page() {
         </nav>
       </header>
 
-      {/* SLIDING NAVIGATION DRAWER (WITHOUT ADMINISTRATION) */}
+      {/* SLIDING NAVIGATION DRAWER */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={closeMobileMenu} />
       )}
@@ -392,21 +391,21 @@ export default function Collections_Page() {
         </div>
       </aside>
 
-      {/* SECTION 1: FEATURED COLLECTIONS[cite: 1] */}
+      {/* SECTION 1: FEATURED COLLECTIONS */}
       <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center max-w-xl mx-auto mb-12">
           <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
-            HERITAGE SILHOUETTES[cite: 1]
+            HERITAGE SILHOUETTES
           </span>
           <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-2">
-            Featured Collections[cite: 1]
+            Featured Collections
           </h2>
           <p className="text-gray-600 text-xs">
-            Meticulously cataloged styles for every bespoke occasion.[cite: 1]
+            Meticulously cataloged styles for every bespoke occasion.
           </p>
         </div>
 
-        {/* CATEGORY TABS[cite: 1] */}
+        {/* CATEGORY TABS */}
         <div className="flex flex-wrap justify-center gap-3 mb-16">
           {categories.map((cat) => (
             <button
@@ -423,12 +422,12 @@ export default function Collections_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS GRID[cite: 1] */}
+        {/* PRODUCTS GRID */}
         {filteredFeatured.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredFeatured.map((prod) => (
+            {filteredFeatured.map((prod, index) => (
               <div
-                key={prod.id}
+                key={prod.id || index}
                 className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
               >
                 <div className="relative h-96 overflow-hidden bg-gray-100">
@@ -453,13 +452,13 @@ export default function Collections_Page() {
                       onClick={() => setQuickViewProduct(prod)}
                       className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 cursor-pointer rounded"
                     >
-                      Quick View[cite: 1]
+                      Quick View
                     </button>
                     <button
                       onClick={() => addProductToCart(prod)}
                       className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black cursor-pointer rounded"
                     >
-                      Add to Bag[cite: 1]
+                      Add to Bag
                     </button>
                   </div>
                 </div>
@@ -474,25 +473,25 @@ export default function Collections_Page() {
         )}
       </section>
 
-      {/* SECTION 2: BEST SELLERS (MATCHING SCREENSHOT 2)[cite: 2] */}
+      {/* SECTION 2: BEST SELLERS */}
       <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-16 border border-amber-900/10">
         <div className="text-center max-w-xl mx-auto mb-12">
           <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-2">
-            THE ATELIER FAVORITES[cite: 2]
+            THE ATELIER FAVORITES
           </span>
           <h2 className="text-3xl font-serif font-light text-gray-900 mb-1">
-            Best Sellers[cite: 2]
+            Best Sellers
           </h2>
           <p className="text-xs text-gray-600">
-            The highly popular garments adored by our circle.[cite: 2]
+            The highly popular garments adored by our circle.
           </p>
         </div>
 
         {bestSellers.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {bestSellers.map((item) => (
+            {bestSellers.map((item, index) => (
               <div
-                key={item.id}
+                key={item.id || index}
                 className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col justify-between"
               >
                 <div className="relative h-80 bg-gray-100 overflow-hidden">
@@ -516,7 +515,7 @@ export default function Collections_Page() {
                     onClick={() => addProductToCart(item)}
                     className="w-full py-2.5 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
                   >
-                    Add to Bag[cite: 2]
+                    Add to Bag
                   </button>
                 </div>
               </div>
@@ -529,44 +528,44 @@ export default function Collections_Page() {
         )}
       </section>
 
-      {/* FOOTER (MATCHING SCREENSHOT 3)[cite: 3] */}
+      {/* FOOTER */}
       <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
           <div className="md:col-span-2">
-            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">weftin[cite: 3]</h3>
+            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">weftin</h3>
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
-              A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.[cite: 3]
+              A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.
             </p>
-            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com[cite: 3]</p>
-            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE[cite: 3]</p>
+            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com</p>
+            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE</p>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections[cite: 3]</h4>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><Link to="/shop" className="hover:text-black">Sarees[cite: 3]</Link></li>
-              <li><Link to="/shop" className="hover:text-black">Lehengas[cite: 3]</Link></li>
-              <li><Link to="/shop" className="hover:text-black">Dresses[cite: 3]</Link></li>
-              <li><Link to="/shop" className="hover:text-black">Kurtis[cite: 3]</Link></li>
-              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets[cite: 3]</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care[cite: 3]</h4>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><Link to="/support" className="hover:text-black">Help Center[cite: 3]</Link></li>
-              <li><Link to="/orders" className="hover:text-black">Order Tracking[cite: 3]</Link></li>
-              <li><Link to="/support" className="hover:text-black">Returns & Adjustments[cite: 3]</Link></li>
-              <li><Link to="/support" className="hover:text-black">Shipping Policy[cite: 3]</Link></li>
-              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide[cite: 3]</Link></li>
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
+              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account[cite: 3]</h4>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
             <ul className="space-y-2 text-xs text-gray-600">
-              <li><Link to="/profile" className="hover:text-black">Sign In[cite: 3]</Link></li>
-              <li><Link to="/profile" className="hover:text-black">Register Membership[cite: 3]</Link></li>
-              <li><Link to="/dashboard" className="hover:text-black">Order History[cite: 3]</Link></li>
-              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit[cite: 3]</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
             </ul>
           </div>
         </div>
@@ -616,7 +615,6 @@ export default function Collections_Page() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
