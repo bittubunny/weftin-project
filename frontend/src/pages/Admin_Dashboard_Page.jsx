@@ -296,34 +296,35 @@ export default function Admin_Dashboard_Page() {
 
   // Connected real API function for sending price offer / quotation
   const handleSendPriceOffer = async () => {
-    if (!selectedCustomReq?.id) {
-      showToast("No custom order selected.");
-      return;
-    }
-    if (!offerPriceInput.trim()) {
-      showToast("Please enter a valid offer price first.");
-      return;
-    }
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${selectedCustomReq.id}`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          status: 'Quotation Ready',
-          product_price: offerPriceInput.trim()
-        })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.detail || 'Failed to send price offer');
+  if (!selectedCustomReq?.id) {
+    showToast("No custom order selected.");
+    return;
+  }
+  if (!offerPriceInput.trim()) {
+    showToast("Please enter a valid offer price first.");
+    return;
+  }
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${selectedCustomReq.id}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        status: 'Quotation Ready',
+        product_price: offerPriceInput.trim()
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || 'Failed to send price offer');
 
-      setAdminCustomOrders(curr => curr.map(item => item.id === selectedCustomReq.id ? data : item));
-      setSelectedCustomReq(data);
-      showToast('Price quote issued and sent to client successfully!');
-    } catch (err) {
-      showToast(err.message || 'Failed to send price offer.');
-    }
-  };
+    setAdminCustomOrders(curr => curr.map(item => item.id === selectedCustomReq.id ? data : item));
+    setSelectedCustomReq(data);
+    showToast('Price quote issued and sent to client successfully!');
+  } catch (err) {
+    showToast(err.message || 'Failed to send price offer.');
+  }
+};
 
+  
   const printOrderReport = (order) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -1694,9 +1695,9 @@ export default function Admin_Dashboard_Page() {
                         Reset Review Stage
                       </button>
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                        <button onClick={handleSendPriceOffer} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto text-center cursor-pointer">
-                          Apply & Send Price Offer
-                        </button>
+                     <button onClick={handleSendPriceOffer} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto text-center cursor-pointer">
+  Apply & Send Price Offer
+</button>
                         <button onClick={async () => {
                           if (!selectedCustomReq?.id) return;
                           try {
