@@ -2727,23 +2727,11 @@ def root():
 
 
 class OrderCreate(BaseModel):
-    user_email: str
-    product_id: Optional[int] = None
-    product_name: str
-    product_category: Optional[str] = None
-    product_image: Optional[str] = None
-    quantity: int = 1
+    product_id: int
+    quantity: int = Field(ge=1, le=100)
     size: Optional[str] = None
     color: Optional[str] = None
-    unit_price: float = 0
-    total_price: float = 0
-    status: str = "PROCESSING"
-    payment_status: str = "PENDING"
     shipping_address: Optional[str] = None
-    tracking_number: Optional[str] = None
-    courier: Optional[str] = None
-    estimated_delivery: Optional[str] = None
-
 
 # ============================================================
 # ORDERS
@@ -2853,6 +2841,11 @@ def get_single_order(
             conn.close()
 
 
+import re
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
+
+
 @app.post("/api/orders")
 def create_order(
     order: OrderCreate,
@@ -2862,24 +2855,67 @@ def create_order(
     cur = None
 
     try:
-        if order.quantity < 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Quantity must be at least 1"
-            )
-
         authenticated_email = current_user["email"]
 
         conn = get_db_connection()
         cur = conn.cursor()
 
+        # 1. Fetch the real product details from the database
+        cur.execute(
+            """
+            SELECT id, name, price, category, image
+            FROM products
+            WHERE id = %s
+            """,
+            (order.product_id,)
+        )
+
+        product = cur.fetchone()
+
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail="Product not found"
+            )
+
+        # 2. Read and validate the database price
+        raw_price = str(product["price"] or "")
+        normalized_price = re.sub(r"[^0-9.]", "", raw_price)
+
+        try:
+            unit_price = Decimal(normalized_price)
+        except InvalidOperation:
+            raise HTTPException(
+                status_code=400,
+                detail="Product has an invalid price"
+            )
+
+        if (
+            not normalized_price
+            or not unit_price.is_finite()
+            or unit_price < 0
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Product has an invalid price"
+            )
+
+        # 3. Calculate the total on the server
+        total_price = unit_price * order.quantity
+
+        # Customers must not choose their own order/payment status
+        initial_status = "PROCESSING"
+        initial_payment_status = "PENDING"
+
+        # 4. Create the order using trusted product details
         cur.execute(
             """
             INSERT INTO orders (
                 order_number, user_email, product_id, product_name,
                 product_category, product_image, quantity, size, color,
                 unit_price, total_price, status, payment_status,
-                shipping_address, tracking_number, courier, estimated_delivery
+                shipping_address, tracking_number, courier,
+                estimated_delivery
             )
             VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s,
@@ -2888,23 +2924,39 @@ def create_order(
             RETURNING id
             """,
             (
-                "TEMP", authenticated_email, order.product_id, order.product_name,
-                order.product_category, order.product_image, order.quantity,
-                order.size, order.color, order.unit_price, order.total_price,
-                order.status, order.payment_status, order.shipping_address,
-                order.tracking_number, order.courier, order.estimated_delivery
+                "TEMP",
+                authenticated_email,
+                product["id"],
+                product["name"],
+                product["category"],
+                product["image"],
+                order.quantity,
+                order.size,
+                order.color,
+                unit_price,
+                total_price,
+                initial_status,
+                initial_payment_status,
+                order.shipping_address,
+                None,
+                None,
+                None
             )
         )
 
         result = cur.fetchone()
         order_id = result["id"]
 
-        order_number = f"WF-{datetime.now().year}-{order_id:06d}"
+        # 5. Generate the order number
+        order_number = (
+            f"WF-{datetime.now().year}-{order_id:06d}"
+        )
 
         cur.execute(
             """
             UPDATE orders
-            SET order_number = %s, updated_at = CURRENT_TIMESTAMP
+            SET order_number = %s,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
             RETURNING *
             """,
@@ -2913,6 +2965,7 @@ def create_order(
 
         created_order = cur.fetchone()
 
+        # 6. Create the order notification
         create_notification(
             cur,
             authenticated_email,
@@ -2930,20 +2983,23 @@ def create_order(
         if conn:
             conn.rollback()
         raise
+
     except Exception as e:
         if conn:
             conn.rollback()
-        print("CREATE ORDER ERROR:", e)
+
+        print("CREATE ORDER ERROR:", repr(e))
+
         raise HTTPException(
             status_code=500,
             detail="Failed to create order"
         )
+
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
-
 
 @app.put("/api/orders/{order_number}/status")
 def update_order_status(
