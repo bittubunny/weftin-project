@@ -118,7 +118,7 @@ export default function Admin_Dashboard_Page() {
   };
 
   // ---------------------------------------------------------
-  // ADMIN AUTHENTICATION GUARD (ID 10 Check via Admin LocalStorage Keys)
+  // ADMIN AUTHENTICATION GUARD (ID 10 Check via Isolated Admin Keys)
   // ---------------------------------------------------------
   useEffect(() => {
     const adminAuth = localStorage.getItem("weftin_admin_auth");
@@ -158,11 +158,13 @@ export default function Admin_Dashboard_Page() {
         const userEmail = String(data.user.email || "").trim().toLowerCase();
 
         if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
+          // Store in isolated admin keys so storefront user state remains untouched
           localStorage.setItem("weftin_admin_auth", "true");
           if (data.access_token) {
             localStorage.setItem("weftin_admin_token", data.access_token);
           }
           localStorage.setItem("weftin_admin_user", JSON.stringify(data.user));
+          
           if (data.user.name) setAdminName(data.user.name);
           setIsAdminAuthenticated(true);
           showToast("Admin session unlocked successfully (ID: 10).");
