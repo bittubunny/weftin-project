@@ -4018,10 +4018,10 @@ def update_admin_order_status(
         if conn:
             conn.close()
 
-
 class AdminCustomOrderStatusUpdate(BaseModel):
     status: str
     message: Optional[str] = None
+    product_price: Optional[str] = None  # <-- Added this field
 
 @app.patch("/api/admin/custom-orders/{request_id}")
 def update_admin_custom_order(
@@ -4036,18 +4036,22 @@ def update_admin_custom_order(
         cur = conn.cursor()
         cur.execute("""
             UPDATE custom_design_requests
-            SET status = %s, message = COALESCE(%s, message)
+            SET status = %s, 
+                message = COALESCE(%s, message),
+                product_price = COALESCE(%s, product_price)  -- <-- Added price update logic
             WHERE id = %s
             RETURNING id, user_email, product_name, product_category, product_price,
                       status, line, message, created_at
-        """, (payload.status.strip(), payload.message, request_id))
+        """, (payload.status.strip(), payload.message, payload.product_price, request_id))
+        
         request_row = cur.fetchone()
         if not request_row:
             raise HTTPException(status_code=404, detail="Custom order not found")
+            
         create_notification(
             cur, request_row["user_email"], "custom_design",
             "Custom design status updated",
-            f"Your request for {request_row['product_name']} is now: {request_row['status']}.",
+            f"Your request for {request_row['product_name']} has a new update / price quotation.",
             "custom_design", request_id
         )
         conn.commit()
