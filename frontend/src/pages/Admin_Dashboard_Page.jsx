@@ -118,15 +118,15 @@ export default function Admin_Dashboard_Page() {
   };
 
   // ---------------------------------------------------------
-  // ADMIN AUTHENTICATION GUARD (ID 10 Check via localStorage)
+  // ADMIN AUTHENTICATION GUARD (ID 10 Check via Admin LocalStorage Keys)
   // ---------------------------------------------------------
   useEffect(() => {
     const adminAuth = localStorage.getItem("weftin_admin_auth");
-    const storedUser = JSON.parse(localStorage.getItem("weftin_user") || "null");
+    const storedAdminUser = JSON.parse(localStorage.getItem("weftin_admin_user") || "null");
 
-    if (adminAuth === "true" && storedUser?.id === 10) {
+    if (adminAuth === "true" && storedAdminUser?.id === 10) {
       setIsAdminAuthenticated(true);
-      if (storedUser?.name) setAdminName(storedUser.name);
+      if (storedAdminUser?.name) setAdminName(storedAdminUser.name);
       loadDatabaseData();
     }
     setCheckingAuth(false);
@@ -160,9 +160,9 @@ export default function Admin_Dashboard_Page() {
         if (userId === 10 && userEmail === "weftin.admin891@gmail.com") {
           localStorage.setItem("weftin_admin_auth", "true");
           if (data.access_token) {
-            localStorage.setItem("weftin_token", data.access_token);
+            localStorage.setItem("weftin_admin_token", data.access_token);
           }
-          localStorage.setItem("weftin_user", JSON.stringify(data.user));
+          localStorage.setItem("weftin_admin_user", JSON.stringify(data.user));
           if (data.user.name) setAdminName(data.user.name);
           setIsAdminAuthenticated(true);
           showToast("Admin session unlocked successfully (ID: 10).");
@@ -182,7 +182,7 @@ export default function Admin_Dashboard_Page() {
   };
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("weftin_token");
+    const token = localStorage.getItem("weftin_admin_token");
     return {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -419,7 +419,7 @@ export default function Admin_Dashboard_Page() {
   }, [activeNav, loadModuleRecords]);
 
   const createModuleRecord = async () => {
-    const name = window.prompt(`Enter a name for this record:`);
+    const name = window.prompt("Enter a name for this record:");
     if (!name?.trim()) return;
     const description = window.prompt('Description (optional):') || '';
     const status = window.prompt('Status (default: Active):', 'Active') || 'Active';
@@ -925,6 +925,8 @@ export default function Admin_Dashboard_Page() {
         <button
           onClick={() => {
             localStorage.removeItem("weftin_admin_auth");
+            localStorage.removeItem("weftin_admin_token");
+            localStorage.removeItem("weftin_admin_user");
             setIsAdminAuthenticated(false);
             showToast("Locked admin session.");
           }}
@@ -1032,7 +1034,14 @@ export default function Admin_Dashboard_Page() {
                     <Settings className="w-3.5 h-3.5 text-gray-500" /> Atelier Settings
                   </button>
                   <div className="border-t border-gray-100 pt-1 mt-1"></div>
-                  <button onClick={() => { setUserDropdownOpen(false); localStorage.removeItem("weftin_admin_auth"); setIsAdminAuthenticated(false); showToast('Admin session secured.'); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium flex items-center gap-2">
+                  <button onClick={() => { 
+                    setUserDropdownOpen(false); 
+                    localStorage.removeItem("weftin_admin_auth"); 
+                    localStorage.removeItem("weftin_admin_token");
+                    localStorage.removeItem("weftin_admin_user");
+                    setIsAdminAuthenticated(false); 
+                    showToast('Admin session secured.'); 
+                  }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-medium flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5 text-rose-600" /> Lock Admin Session
                   </button>
                 </div>
