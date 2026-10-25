@@ -223,7 +223,10 @@ export default function Admin_Dashboard_Page() {
         const data = await custOrdRes.json();
         if (Array.isArray(data)) {
           setAdminCustomOrders(data);
-          if (data.length > 0 && !selectedCustomReq) setSelectedCustomReq(data[0]);
+          if (data.length > 0 && !selectedCustomReq) {
+            setSelectedCustomReq(data[0]);
+            if (data[0].product_price) setOfferPriceInput(String(data[0].product_price));
+          }
         }
       }
 
@@ -288,6 +291,36 @@ export default function Admin_Dashboard_Page() {
       showToast(`Assigned ${tailorName.trim()} to order ${order.order_number}. Status updated to TAILORING.`);
     } catch (err) {
       showToast('Failed to assign tailor.');
+    }
+  };
+
+  // Connected real API function for sending price offer / quotation
+  const handleSendPriceOffer = async () => {
+    if (!selectedCustomReq?.id) {
+      showToast("No custom order selected.");
+      return;
+    }
+    if (!offerPriceInput.trim()) {
+      showToast("Please enter a valid offer price first.");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/custom-orders/${selectedCustomReq.id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          status: 'Quotation Ready',
+          product_price: offerPriceInput.trim()
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || 'Failed to send price offer');
+
+      setAdminCustomOrders(curr => curr.map(item => item.id === selectedCustomReq.id ? data : item));
+      setSelectedCustomReq(data);
+      showToast('Price quote issued and sent to client successfully!');
+    } catch (err) {
+      showToast(err.message || 'Failed to send price offer.');
     }
   };
 
@@ -1586,7 +1619,7 @@ export default function Admin_Dashboard_Page() {
 
                   <div className="space-y-3">
                     {adminCustomOrders.length > 0 ? adminCustomOrders.map((req) => (
-                      <div key={req.id} onClick={() => setSelectedCustomReq(req)} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
+                      <div key={req.id} onClick={() => { setSelectedCustomReq(req); setOfferPriceInput(req.product_price ? String(req.product_price) : ''); }} className={`p-4 rounded-2xl border cursor-pointer transition ${selectedCustomReq?.id === req.id ? 'bg-[#FAF8F5] border-[#B89768] shadow-sm' : 'border-[#EFECE6] hover:bg-[#FAF8F5]'}`}>
                         <div className="flex justify-between items-start text-xs">
                           <span className="font-bold text-[#1C1A17] truncate max-w-[160px]">{req.user_email}</span>
                           <span className="text-[#78716C]">{req.created_at ? new Date(req.created_at).toLocaleDateString() : ''}</span>
@@ -1661,7 +1694,7 @@ export default function Admin_Dashboard_Page() {
                         Reset Review Stage
                       </button>
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                        <button onClick={() => showToast('Price quote issued and sent to client.')} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto text-center">
+                        <button onClick={handleSendPriceOffer} className="bg-[#B89768] hover:bg-[#a68559] text-black text-xs font-bold px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto text-center cursor-pointer">
                           Apply & Send Price Offer
                         </button>
                         <button onClick={async () => {
