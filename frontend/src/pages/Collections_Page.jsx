@@ -23,7 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onr
 export default function Collections_Page() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("Sarees");
+  const [activeTab, setActiveTab] = useState("All");
   const [cartCount, setCartCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [userAvatar, setUserAvatar] = useState("");
@@ -156,6 +156,7 @@ export default function Collections_Page() {
   }, [fetchData, updateCartCount]);
 
   const categories = [
+    "All",
     "Sarees",
     "Lehengas",
     "Dresses",
@@ -165,12 +166,15 @@ export default function Collections_Page() {
     "Festival Spec"
   ];
 
-  const filteredFeatured = featuredProducts.filter((product) => {
-    const productCat = String(product?.category || "").toLowerCase().trim();
-    const tabCat = activeTab.toLowerCase().trim();
-    if (!productCat) return false;
-    return productCat === tabCat || productCat.includes(tabCat);
-  });
+  const filteredFeatured =
+    activeTab === "All"
+      ? featuredProducts
+      : featuredProducts.filter((product) => {
+          const productCat = String(product?.category || "").toLowerCase().trim();
+          const tabCat = activeTab.toLowerCase().trim();
+          if (!productCat) return false;
+          return productCat === tabCat || productCat.includes(tabCat);
+        });
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -210,8 +214,8 @@ export default function Collections_Page() {
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-2.5">
+        <div className="w-full flex items-center justify-between">
           <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200">
             <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input 
@@ -392,7 +396,7 @@ export default function Collections_Page() {
       </aside>
 
       {/* SECTION 1: FEATURED COLLECTIONS */}
-      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section className="py-10 px-4 sm:px-8 w-full">
         <div className="text-center max-w-xl mx-auto mb-6">
           <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             HERITAGE SILHOUETTES
@@ -428,7 +432,7 @@ export default function Collections_Page() {
             {filteredFeatured.map((prod, index) => (
               <div
                 key={prod.id || index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(20%-19px)] flex-shrink-0 snap-start"
               >
                 <div className="relative h-96 overflow-hidden bg-gray-100">
                   <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] tracking-widest px-3 py-1 uppercase">
@@ -466,7 +470,7 @@ export default function Collections_Page() {
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
+          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center mx-4">
             <p className="font-serif text-xl text-gray-900">No {activeTab} available</p>
             <p className="text-xs text-gray-500 mt-2">Please check another collection.</p>
           </div>
@@ -474,7 +478,7 @@ export default function Collections_Page() {
       </section>
 
       {/* SECTION 2: BEST SELLERS */}
-      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
+      <section className="py-10 px-4 sm:px-8 w-full bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
         <div className="text-center max-w-xl mx-auto mb-8">
           <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
             THE ATELIER FAVORITES
@@ -492,7 +496,7 @@ export default function Collections_Page() {
             {bestSellers.map((item, index) => (
               <div
                 key={item.id || index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(20%-19px)] flex-shrink-0 snap-start"
               >
                 <div className="relative h-96 bg-gray-100 overflow-hidden">
                   <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
@@ -538,7 +542,7 @@ export default function Collections_Page() {
 
       {/* FOOTER */}
       <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300 mt-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           <div className="md:col-span-2">
             <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">weftin</h3>
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
@@ -577,7 +581,7 @@ export default function Collections_Page() {
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
           <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-black">Privacy Policy</a>
