@@ -1097,7 +1097,7 @@ export default function Home_Page() {
           SECTION 1: HERO EDITORIAL
       ====================================================== */}
 
-      <section className="relative h-[75vh] sm:h-[85vh] flex items-center px-6 lg:px-20 overflow-hidden bg-gray-900">
+      <section className="relative h-[70vh] sm:h-[80vh] flex items-center px-6 lg:px-20 overflow-hidden bg-gray-900">
 
         <div className="absolute inset-0">
 
@@ -1154,16 +1154,16 @@ export default function Home_Page() {
 
       <section
         id="collections"
-        className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto"
+        className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto"
       >
 
-        <div className="text-center max-w-xl mx-auto mb-12">
+        <div className="text-center max-w-xl mx-auto mb-8">
 
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             HERITAGE SILHOUETTES
           </span>
 
-          <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-2">
+          <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-1">
             Featured Collections
           </h2>
 
@@ -1175,7 +1175,7 @@ export default function Home_Page() {
 
         {/* CATEGORY TABS */}
 
-        <div className="flex flex-wrap justify-center gap-3 mb-16">
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
 
           {categories.map((cat) => (
             <button
@@ -1197,7 +1197,7 @@ export default function Home_Page() {
         {/* PRODUCTS (Single-Row Horizontal Scroll Container) */}
 
         {filteredFeatured.length > 0 ? (
-          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-6 pt-2 px-1 scroll-smooth snap-x snap-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
 
             {filteredFeatured.map((prod) => (
               <div
@@ -1256,7 +1256,7 @@ export default function Home_Page() {
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl py-16 text-center">
+          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
             <p className="font-serif text-xl text-gray-900">
               No {activeTab} available
             </p>
@@ -1274,18 +1274,18 @@ export default function Home_Page() {
 
       <section
         id="custom"
-        className="py-16 sm:py-24 bg-[#110E0D] text-[#FAF8F5] px-6 lg:px-12"
+        className="py-12 sm:py-16 bg-[#110E0D] text-[#FAF8F5] px-6 lg:px-12 my-8"
       >
 
         <div className="max-w-7xl mx-auto">
 
-          <div className="text-center max-w-xl mx-auto mb-16">
+          <div className="text-center max-w-xl mx-auto mb-10">
 
-            <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-2">
+            <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-1">
               INTERACTIVE SIGNATURE SHOWCASE
             </span>
 
-            <h2 className="text-3xl lg:text-4xl font-serif font-light mb-3">
+            <h2 className="text-3xl lg:text-4xl font-serif font-light mb-2">
               Customizable Atelier Drop
             </h2>
 
@@ -1454,11 +1454,11 @@ export default function Home_Page() {
           SECTION 4: BEST SELLERS
       ====================================================== */}
 
-      <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-16 sm:my-24 border border-amber-900/10">
+      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-8 border border-amber-900/10">
 
-        <div className="text-center max-w-xl mx-auto mb-12">
+        <div className="text-center max-w-xl mx-auto mb-10">
 
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
             THE ATELIER FAVORITES
           </span>
 
@@ -1531,7 +1531,7 @@ export default function Home_Page() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-sm text-gray-500">
+          <div className="text-center py-10 text-sm text-gray-500">
             No best sellers available right now.
           </div>
         )}
@@ -1541,11 +1541,11 @@ export default function Home_Page() {
           SECTION 5: TRENDING NOW
       ====================================================== */}
 
-      <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto my-8">
 
-        <div className="text-center max-w-xl mx-auto mb-12">
+        <div className="text-center max-w-xl mx-auto mb-10">
 
-          <span className="text-xs uppercase tracking-[0.25em] text-rose-800 font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-rose-800 font-semibold block mb-1">
             STYLE COORDINATES
           </span>
 
@@ -1605,7 +1605,7 @@ export default function Home_Page() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-sm text-gray-500">
+          <div className="text-center py-10 text-sm text-gray-500">
             No trending products available right now.
           </div>
         )}
@@ -1615,11 +1615,11 @@ export default function Home_Page() {
           SECTION 6: INSTAGRAM JOURNAL
       ====================================================== */}
 
-      <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto my-8">
 
-        <div className="text-center max-w-xl mx-auto mb-16">
+        <div className="text-center max-w-xl mx-auto mb-10">
 
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             VISUAL JOURNAL
           </span>
 
@@ -1638,7 +1638,7 @@ export default function Home_Page() {
             (imgUrl, index) => (
               <div
                 key={index}
-                className="relative h-64 rounded-xl overflow-hidden group cursor-pointer"
+                className="relative h-56 sm:h-64 rounded-xl overflow-hidden group cursor-pointer"
                 onClick={() =>
                   showToast(
                     "Opening Instagram gallery..."
@@ -1660,8 +1660,8 @@ export default function Home_Page() {
           FOOTER
       ====================================================== */}
 
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           
           <div className="md:col-span-2">
             <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">
@@ -1759,7 +1759,7 @@ export default function Home_Page() {
 
         </div>
 
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-8 text-[11px] text-gray-500">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
           <p>
             © 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.
           </p>
