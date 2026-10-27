@@ -1194,15 +1194,15 @@ export default function Home_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS (Horizontal scroll on mobile/tablet, 4-col grid on desktop) */}
+        {/* PRODUCTS (Single-Row Horizontal Scroll Container) */}
 
         {filteredFeatured.length > 0 ? (
-          <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-none">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-6 pt-2 px-1 scroll-smooth snap-x snap-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
 
             {filteredFeatured.map((prod) => (
               <div
                 key={prod.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col min-w-[280px] sm:min-w-0 flex-shrink-0"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-96 overflow-hidden bg-gray-100">
