@@ -37,9 +37,9 @@ export default function Shop_Page() {
   // Wishlist item IDs tracker for instant state styling
   const [wishlistProductIds, setWishlistProductIds] = useState(new Set());
 
-  // Pagination states
+  // Pagination states (8 items = exactly 2 rows of 4 on desktop)
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 8;
 
   // Sidebar filter states
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -565,7 +565,7 @@ export default function Shop_Page() {
   }, [products, appliedFilters, sortBy, searchText]);
 
   // =========================================================
-  // PAGINATION SLICE
+  // PAGINATION SLICE (8 Items = 2 Rows of 4 on Desktop)
   // =========================================================
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = useMemo(() => {
@@ -1027,7 +1027,7 @@ export default function Shop_Page() {
               <p className="text-xs text-gray-500">Try changing your filters or selecting another category.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
               {paginatedProducts.map((p) => {
                 const isWishlisted = wishlistProductIds.has(Number(p.id));
                 return (
