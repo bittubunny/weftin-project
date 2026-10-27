@@ -324,12 +324,12 @@ export default function Lookbook_Page() {
     );
   };
 
-  const UserAvatar = ({ size = "w-8 h-8" }) => {
+  const UserAvatar = ({ size = "w-6 h-6" }) => {
     if (userAvatar) {
       return <img src={userAvatar} alt={userName} className={`${size} rounded-full object-cover border border-amber-600 shadow-xs`} />;
     }
     return (
-      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs`}>
+      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]`}>
         {userInitial}
       </div>
     );
@@ -375,16 +375,16 @@ export default function Lookbook_Page() {
       )}
 
       {/* TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-1.5 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium">
         EXPLORE THE LOOKBOOK — CURATED EDITORIAL LOOKS FOR THE SEASON
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-2.5">
+        <div className="w-full flex items-center justify-between">
           
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200">
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input 
               type="text" 
               value={searchText}
@@ -396,7 +396,7 @@ export default function Lookbook_Page() {
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+              <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
             </Link>
           </div>
 
@@ -420,7 +420,7 @@ export default function Lookbook_Page() {
             </Link>
 
             <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
-              <UserAvatar size="w-7 h-7" />
+              <UserAvatar size="w-6 h-6" />
               <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
@@ -429,7 +429,7 @@ export default function Lookbook_Page() {
               className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
               aria-label="Open navigation drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -445,7 +445,7 @@ export default function Lookbook_Page() {
         </div>
 
         {/* Sub Nav Links */}
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
           <Link to="/" className="hover:text-black transition-colors">Home</Link>
           <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
           <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
@@ -555,7 +555,7 @@ export default function Lookbook_Page() {
 
       {/* HERO SECTION */}
       {hero && (
-        <section className="relative h-[55vh] sm:h-[60vh] flex items-center justify-center px-4 sm:px-6 overflow-hidden bg-gray-900 text-white">
+        <section className="relative h-[55vh] sm:h-[60vh] flex items-center justify-center px-4 sm:px-6 overflow-hidden bg-gray-900 text-white w-full">
           <div className="absolute inset-0">
             {hero.image_url && (
               <img
@@ -566,7 +566,7 @@ export default function Lookbook_Page() {
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
           </div>
-          <div className="relative z-10 text-center max-w-2xl mx-auto">
+          <div className="relative z-10 text-center max-w-2xl mx-auto px-4">
             {hero.eyebrow && (
               <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-amber-300 font-semibold mb-3 block">
                 {hero.eyebrow}
@@ -586,8 +586,8 @@ export default function Lookbook_Page() {
 
       {/* SEASONAL TRENDS */}
       {seasonal && (
-        <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+        <section className="py-12 sm:py-16 px-4 sm:px-8 w-full">
+          <div className="text-center max-w-xl mx-auto mb-10">
             {seasonal.eyebrow && (
               <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
                 {seasonal.eyebrow}
@@ -597,7 +597,7 @@ export default function Lookbook_Page() {
               {seasonal.title}
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
             {(seasonal.items || []).map((trend) => (
               <div key={trend.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col group">
                 <div className="relative h-72 sm:h-80 overflow-hidden bg-gray-100">
@@ -641,9 +641,9 @@ export default function Lookbook_Page() {
 
       {/* STYLING GUIDES */}
       {guides && (
-        <section className="py-16 sm:py-20 bg-[#F3EDE2]/40 px-4 sm:px-6 lg:px-12 border-t border-b border-gray-200">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+        <section className="py-12 sm:py-16 bg-[#F3EDE2]/40 px-4 sm:px-8 border-t border-b border-gray-200 w-full">
+          <div className="w-full">
+            <div className="text-center max-w-xl mx-auto mb-10">
               {guides.eyebrow && (
                 <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
                   {guides.eyebrow}
@@ -653,9 +653,9 @@ export default function Lookbook_Page() {
                 {guides.title}
               </h2>
             </div>
-            <div className="space-y-12">
+            <div className="space-y-12 w-full">
               {(guides.items || []).map((guide) => (
-                <div key={guide.id} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-200">
+                <div key={guide.id} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-gray-200 w-full">
                   <div className="relative h-64 sm:h-80 rounded-xl overflow-hidden">
                     {guide.image_url && (
                       <img
@@ -697,8 +697,8 @@ export default function Lookbook_Page() {
 
       {/* MOODBOARD */}
       {moodboard && (
-        <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+        <section className="py-12 sm:py-16 px-4 sm:px-8 w-full">
+          <div className="text-center max-w-xl mx-auto mb-10">
             {moodboard.eyebrow && (
               <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
                 {moodboard.eyebrow}
@@ -708,7 +708,7 @@ export default function Lookbook_Page() {
               {moodboard.title}
             </h2>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
             {(moodboard.items || []).map((item) => (
               <div
                 key={item.id}
@@ -737,9 +737,9 @@ export default function Lookbook_Page() {
 
       {/* STYLED LOOKS */}
       {styledLooks && (
-        <section className="py-16 sm:py-20 bg-[#1C1816] text-white px-4 sm:px-6 lg:px-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+        <section className="py-12 sm:py-16 bg-[#1C1816] text-white px-4 sm:px-8 w-full">
+          <div className="w-full">
+            <div className="text-center max-w-xl mx-auto mb-10">
               {styledLooks.eyebrow && (
                 <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-2">
                   {styledLooks.eyebrow}
@@ -754,7 +754,7 @@ export default function Lookbook_Page() {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full">
               {(styledLooks.items || []).map((look) => (
                 <div key={look.id} className="bg-[#24201D] rounded-xl overflow-hidden border border-white/10 flex flex-col">
                   <div className="relative h-80 sm:h-96 overflow-hidden">
@@ -794,8 +794,8 @@ export default function Lookbook_Page() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto text-center text-xs text-gray-500">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 w-full mt-10">
+        <div className="w-full text-center text-xs text-gray-500">
           <p>© 2026 WEFTIN Atelier. Lookbook Page Connected with Router.</p>
         </div>
       </footer>
