@@ -72,7 +72,7 @@ export default function CustomDesigns_Page() {
   // USER AVATAR (Interactive profile redirect)
   // --------------------------------------------------
 
-  const UserAvatar = ({ size = "w-7 h-7" }) => {
+  const UserAvatar = ({ size = "w-6 h-6" }) => {
     const handleAvatarClick = (e) => {
       e.stopPropagation();
       navigate("/profile");
@@ -92,7 +92,7 @@ export default function CustomDesigns_Page() {
     return (
       <div
         onClick={handleAvatarClick}
-        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 cursor-pointer hover:bg-amber-200 transition-colors text-xs`}
+        className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 cursor-pointer hover:bg-amber-200 transition-colors text-[10px]`}
       >
         {userInitial}
       </div>
@@ -428,20 +428,20 @@ export default function CustomDesigns_Page() {
       )}
 
       {/* TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-1.5 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-2.5">
+        <div className="w-full flex items-center justify-between">
 
           {/* SEARCH */}
           <form
             onSubmit={handleSearch}
-            className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200"
+            className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200"
           >
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input
               type="text"
               value={searchText}
@@ -453,7 +453,7 @@ export default function CustomDesigns_Page() {
 
           {/* LOGO */}
           <Link to="/" className="text-center">
-            <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">
+            <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-gray-900">
               WEFTIN
             </h1>
           </Link>
@@ -499,7 +499,7 @@ export default function CustomDesigns_Page() {
               className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
               aria-label="Open Navigation Drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -515,7 +515,7 @@ export default function CustomDesigns_Page() {
         </div>
 
         {/* SUB NAV LINKS */}
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
           <Link to="/" className="hover:text-black transition-colors">
             Home
           </Link>
@@ -812,7 +812,7 @@ export default function CustomDesigns_Page() {
       </aside>
 
       {/* MAIN CONTENT BODY */}
-      <main className="p-4 sm:p-6 lg:p-8 xl:p-12 max-w-6xl mx-auto space-y-12">
+      <main className="w-full px-4 sm:px-8 py-8 sm:py-12 space-y-12">
 
         {/* PAGE HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1143,6 +1143,56 @@ export default function CustomDesigns_Page() {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 mt-10 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
+          <div className="md:col-span-2">
+            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">WEFTIN</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-4">
+              A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.
+            </p>
+            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com</p>
+            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE</p>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
+              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
+          <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
+          <div className="flex gap-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-black">Privacy Policy</a>
+            <a href="#" className="hover:text-black">Terms of Service</a>
+          </div>
+        </div>
+      </footer>
 
     </div>
   );
