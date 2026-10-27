@@ -217,7 +217,7 @@ export default function Lookbook_Page() {
   };
 
   // =========================================================
-  // ADD LOOK TO CART (OPTION 1 FIX)
+  // ADD LOOK TO CART
   // =========================================================
 
   const addLookToCart = (look) => {
@@ -794,9 +794,52 @@ export default function Lookbook_Page() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 w-full mt-10">
-        <div className="w-full text-center text-xs text-gray-500">
-          <p>© 2026 WEFTIN Atelier. Lookbook Page Connected with Router.</p>
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 mt-10 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
+          <div className="md:col-span-2">
+            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">WEFTIN</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-4">
+              A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.
+            </p>
+            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com</p>
+            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE</p>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
+              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
+          <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
+          <div className="flex gap-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-black">Privacy Policy</a>
+            <a href="#" className="hover:text-black">Terms of Service</a>
+          </div>
         </div>
       </footer>
 
