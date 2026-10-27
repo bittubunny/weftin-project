@@ -39,7 +39,7 @@ export default function Shop_Page() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 12;
 
   // Sidebar filter states
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -614,16 +614,16 @@ export default function Shop_Page() {
       )}
 
       {/* TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-2 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-1.5 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-2.5">
+        <div className="w-full flex items-center justify-between">
           
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200">
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input 
               type="text" 
               value={searchText}
@@ -635,7 +635,7 @@ export default function Shop_Page() {
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+              <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
             </Link>
           </div>
 
@@ -662,9 +662,9 @@ export default function Shop_Page() {
 
             <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
               {userAvatar ? (
-                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+                <img src={userAvatar} alt={userName} className="w-6 h-6 rounded-full object-cover border border-amber-600 shadow-xs" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]">
                   {userInitial}
                 </div>
               )}
@@ -676,7 +676,7 @@ export default function Shop_Page() {
               className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
               aria-label="Open navigation drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -688,7 +688,7 @@ export default function Shop_Page() {
         </div>
 
         {/* Sub Nav Links */}
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
           <Link to="/" className="hover:text-black transition-colors">Home</Link>
           <Link to="/shop" className="text-black font-semibold border-b border-black pb-0.5">Shop</Link>
           <Link to="/collections" className="hover:text-black transition-colors">Collections</Link>
@@ -803,21 +803,21 @@ export default function Shop_Page() {
       </aside>
 
       {/* SHOP PAGE HEADER */}
-      <div className="text-center py-8 sm:py-12 px-5 max-w-xl mx-auto">
+      <div className="text-center py-8 sm:py-10 px-4 w-full">
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#D4AF37] font-semibold block mb-1">
           EXCLUSIVE CURATION
         </span>
         <h2 className="text-3xl sm:text-4xl font-serif font-light text-gray-900 mb-2">
           Shop
         </h2>
-        <p className="text-xs text-gray-600 leading-relaxed">
+        <p className="text-xs text-gray-600 leading-relaxed max-w-xl mx-auto">
           Explore pristine heritage ethnic attire, custom-tailoring fabrics,
           and modern silhouettes.
         </p>
       </div>
 
       {/* MAIN LAYOUT */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 items-start">
+      <div className="w-full px-4 sm:px-8 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 items-start">
 
         {/* SIDEBAR FILTER PANEL */}
         <aside className="bg-white p-5 sm:p-6 rounded-xl border border-gray-200 shadow-sm space-y-7 lg:space-y-8">
@@ -1115,8 +1115,8 @@ export default function Shop_Page() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 mt-10 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           <div className="md:col-span-2">
             <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">WEFTIN</h3>
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
@@ -1155,7 +1155,7 @@ export default function Shop_Page() {
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-8 text-[11px] text-gray-500">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
           <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-black">Privacy Policy</a>
