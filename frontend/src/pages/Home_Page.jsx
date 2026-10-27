@@ -1194,7 +1194,7 @@ export default function Home_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS (Single-Row Horizontal Scroll Container with handle hidden) */}
+        {/* PRODUCTS (Single-Row Horizontal Scroll Container with fixed uniform card dimensions) */}
 
         {filteredFeatured.length > 0 ? (
           <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
@@ -1202,10 +1202,10 @@ export default function Home_Page() {
             {filteredFeatured.map((prod) => (
               <div
                 key={prod.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
-                <div className="relative h-80 sm:h-96 overflow-hidden bg-gray-100">
+                <div className="relative h-96 overflow-hidden bg-gray-100">
 
                   <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] tracking-widest px-3 py-1 uppercase">
                     {prod.tag || "FEATURED"}
@@ -1218,10 +1218,10 @@ export default function Home_Page() {
                   />
                 </div>
 
-                <div className="p-4 sm:p-5 flex flex-col flex-grow justify-between">
+                <div className="p-5 flex flex-col flex-grow justify-between">
 
                   <div>
-                    <h3 className="font-serif text-base text-gray-900 mb-1">
+                    <h3 className="font-serif text-base text-gray-900 mb-1 truncate">
                       {prod.name}
                     </h3>
 
@@ -1477,10 +1477,10 @@ export default function Home_Page() {
             {bestSellers.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
-                <div className="relative h-80 bg-gray-100 overflow-hidden">
+                <div className="relative h-96 bg-gray-100 overflow-hidden">
 
                   <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
                     {item.tag || "BEST SELLER"}
@@ -1493,25 +1493,25 @@ export default function Home_Page() {
                   />
                 </div>
 
-                <div className="p-4 flex flex-col flex-grow justify-between">
+                <div className="p-5 flex flex-col flex-grow justify-between">
 
                   <div>
-                    <h3 className="font-serif text-sm font-medium mb-1">
+                    <h3 className="font-serif text-base text-gray-900 mb-1 truncate">
                       {item.name}
                     </h3>
 
-                    <p className="text-xs font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900">
                       {item.price}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
 
                     <button
                       onClick={() =>
                         setQuickViewProduct(item)
                       }
-                      className="py-2 border border-gray-300 text-gray-800 text-[11px] uppercase tracking-wider hover:bg-gray-50 cursor-pointer"
+                      className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 cursor-pointer"
                     >
                       Quick View
                     </button>
@@ -1520,7 +1520,7 @@ export default function Home_Page() {
                       onClick={() =>
                         addProductToCart(item)
                       }
-                      className="py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer"
+                      className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black cursor-pointer"
                     >
                       Add to Bag
                     </button>
@@ -1564,10 +1564,10 @@ export default function Home_Page() {
             {trendingNow.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
-                <div className="relative h-80 bg-gray-100 overflow-hidden">
+                <div className="relative h-96 bg-gray-100 overflow-hidden">
 
                   <span className="absolute top-3 left-3 z-10 bg-black text-white text-[9px] uppercase px-2.5 py-1">
                     {item.tag || "TRENDING"}
@@ -1580,26 +1580,39 @@ export default function Home_Page() {
                   />
                 </div>
 
-                <div className="p-4 flex flex-col flex-grow">
+                <div className="p-5 flex flex-col flex-grow justify-between">
 
                   <div>
-                    <h4 className="font-serif text-sm font-medium mb-1">
+                    <h4 className="font-serif text-base text-gray-900 mb-1 truncate">
                       {item.name}
                     </h4>
 
-                    <p className="text-xs font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900">
                       {item.price}
                     </p>
                   </div>
 
-                  <button
-                    onClick={() =>
-                      addProductToCart(item)
-                    }
-                    className="mt-4 w-full py-2 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer"
-                  >
-                    Add to Bag
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+
+                    <button
+                      onClick={() =>
+                        setQuickViewProduct(item)
+                      }
+                      className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 cursor-pointer"
+                    >
+                      Quick View
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        addProductToCart(item)
+                      }
+                      className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black cursor-pointer"
+                    >
+                      Add to Bag
+                    </button>
+
+                  </div>
                 </div>
               </div>
             ))}
