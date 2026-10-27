@@ -23,6 +23,9 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onrender.com";
 
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250";
+
 export default function Limitededition_Page() {
   const navigate = useNavigate();
 
@@ -440,12 +443,12 @@ export default function Limitededition_Page() {
     );
   };
 
-  const UserAvatar = ({ size = "w-8 h-8" }) => {
+  const UserAvatar = ({ size = "w-6 h-6" }) => {
     if (userAvatar) {
       return <img src={userAvatar} alt={userName} className={`${size} rounded-full object-cover border border-amber-600 shadow-xs`} />;
     }
     return (
-      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs`}>
+      <div className={`${size} rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]`}>
         {userInitial}
       </div>
     );
@@ -545,18 +548,18 @@ export default function Limitededition_Page() {
       )}
 
       {/* ANNOUNCEMENT */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-2 px-3 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium border-b border-white/5">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[9px] sm:text-xs py-1.5 px-3 text-center tracking-[0.12em] sm:tracking-[0.2em] uppercase font-medium border-b border-white/5">
 
         LIMITED DROP VAULT — EXCLUSIVE HANDLOOM MASTERPIECES
 
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#110E0D]/90 backdrop-blur-md border-b border-white/10 px-6 lg:px-12 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#110E0D]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-2.5">
+        <div className="w-full flex items-center justify-between">
           
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-white/5 rounded-full px-4 py-2 w-64 border border-white/10">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-white/5 rounded-full px-3 py-1.5 w-60 border border-white/10">
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input 
               type="text" 
               value={searchText}
@@ -568,9 +571,9 @@ export default function Limitededition_Page() {
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-white">WEFTIN</h1>
+              <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-white">WEFTIN</h1>
             </Link>
-            <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-amber-400 block">
+            <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.3em] text-amber-400 block">
               Atelier Vault
             </span>
           </div>
@@ -595,7 +598,7 @@ export default function Limitededition_Page() {
             </Link>
 
             <Link to="/profile" className="flex items-center gap-2 text-gray-300 hover:text-white">
-              <UserAvatar size="w-7 h-7" />
+              <UserAvatar size="w-6 h-6" />
               <span className="text-xs font-semibold hidden sm:inline max-w-28 truncate">{userName}</span>
             </Link>
 
@@ -604,7 +607,7 @@ export default function Limitededition_Page() {
               className="p-1 text-gray-300 hover:text-white cursor-pointer flex items-center gap-1.5 border-l pl-4 border-white/10"
               aria-label="Open navigation drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -620,7 +623,7 @@ export default function Limitededition_Page() {
         </div>
 
         {/* Sub Nav Links */}
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-white/10 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-300 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-white/10 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-300 font-medium">
           <Link to="/" className="hover:text-amber-400 transition-colors">Home</Link>
           <Link to="/shop" className="hover:text-amber-400 transition-colors">Shop</Link>
           <Link to="/collections" className="hover:text-amber-400 transition-colors">Collections</Link>
@@ -731,9 +734,9 @@ export default function Limitededition_Page() {
       {/* HERO */}
       {hero && (
 
-        <section className="relative py-16 sm:py-24 px-4 sm:px-6 text-center overflow-hidden bg-gradient-to-b from-[#1C1816] to-[#110E0D]">
+        <section className="relative py-16 sm:py-24 px-4 sm:px-8 text-center overflow-hidden bg-gradient-to-b from-[#1C1816] to-[#110E0D] w-full">
 
-          <div className="max-w-3xl mx-auto">
+          <div className="w-full">
 
             {hero.eyebrow && (
 
@@ -793,7 +796,7 @@ export default function Limitededition_Page() {
       {/* QUOTE */}
       {quote && (
 
-        <section className="py-12 px-4 text-center border-t border-b border-white/5 bg-[#171311]">
+        <section className="py-12 px-4 text-center border-t border-b border-white/5 bg-[#171311] w-full">
 
           <p className="font-serif italic text-amber-200/80 text-sm tracking-wider">
 
@@ -808,9 +811,9 @@ export default function Limitededition_Page() {
       {/* FEATURED PREMIER DROP */}
       {featured && featuredItem && (
 
-        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
+        <section className="py-16 sm:py-24 px-4 sm:px-8 w-full">
 
-          <div className="bg-[#1C1816] rounded-2xl border border-white/10 p-5 sm:p-8 lg:p-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center shadow-2xl">
+          <div className="bg-[#1C1816] rounded-2xl border border-white/10 p-5 sm:p-8 lg:p-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center shadow-2xl w-full">
 
             <div>
 
@@ -886,7 +889,7 @@ export default function Limitededition_Page() {
       {/* SECONDARY VAULTS */}
       {secondaryVaults && (
 
-        <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
+        <section className="py-16 sm:py-20 px-4 sm:px-8 w-full">
 
           <div className="text-center max-w-xl mx-auto mb-10 sm:mb-16">
 
@@ -904,7 +907,7 @@ export default function Limitededition_Page() {
 
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
 
             {(secondaryVaults.items || []).map(
               (item) => (
@@ -975,9 +978,9 @@ export default function Limitededition_Page() {
       {/* GUARANTEES */}
       {guarantees && (
 
-        <section className="py-16 sm:py-20 bg-[#171311] px-4 sm:px-6 lg:px-12 border-t border-b border-white/5">
+        <section className="py-16 sm:py-20 bg-[#171311] px-4 sm:px-8 border-t border-b border-white/5 w-full">
 
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
 
             {(guarantees.items || []).map(
               (item) => (
@@ -1017,16 +1020,53 @@ export default function Limitededition_Page() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-[#FAF8F5] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-
-        <div className="max-w-7xl mx-auto text-center text-xs text-gray-500">
-
-          <p>
-            © 2026 WEFTIN Atelier. Limited Edition Vault Connected Successfully.
-          </p>
-
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 mt-10 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
+          <div className="md:col-span-2">
+            <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">WEFTIN</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-4">
+              A digital high-fashion atelier marrying heritage luxury craftsmanship with modern silhouettes. Stitched with unparalleled dedication to structural flow.
+            </p>
+            <p className="text-[11px] text-gray-600"><strong>Concierge:</strong> concierge@weftin.com</p>
+            <p className="text-[11px] text-gray-600"><strong>Direct Line:</strong> 1-800-WEFT-LUXE</p>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Collections</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/shop" className="hover:text-black">Sarees</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Lehengas</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Dresses</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Kurtis</Link></li>
+              <li><Link to="/shop" className="hover:text-black">Co-Ord Sets</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Concierge Care</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/support" className="hover:text-black">Help Center</Link></li>
+              <li><Link to="/orders" className="hover:text-black">Order Tracking</Link></li>
+              <li><Link to="/support" className="hover:text-black">Returns & Adjustments</Link></li>
+              <li><Link to="/support" className="hover:text-black">Shipping Policy</Link></li>
+              <li><Link to="/support" className="hover:text-black">Fabric Quality Guide</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-xs uppercase tracking-[0.2em] font-bold text-gray-900 mb-4">Account</h4>
+            <ul className="space-y-2 text-xs text-gray-600">
+              <li><Link to="/profile" className="hover:text-black">Sign In</Link></li>
+              <li><Link to="/profile" className="hover:text-black">Register Membership</Link></li>
+              <li><Link to="/dashboard" className="hover:text-black">Order History</Link></li>
+              <li><Link to="/measurements" className="hover:text-black">My Bespoke Fit</Link></li>
+            </ul>
+          </div>
         </div>
-
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
+          <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
+          <div className="flex gap-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-black">Privacy Policy</a>
+            <a href="#" className="hover:text-black">Terms of Service</a>
+          </div>
+        </div>
       </footer>
 
     </div>
