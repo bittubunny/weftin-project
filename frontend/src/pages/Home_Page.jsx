@@ -522,18 +522,18 @@ export default function Home_Page() {
       )}
 
       {/* ======================================================
-          TOP ANNOUNCEMENT BAR
+          TOP ANNOUNCEMENT BAR (Compact)
       ====================================================== */}
 
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] py-1.5 px-4 text-center tracking-[0.15em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
       {/* ======================================================
-          DESKTOP NAVIGATION
+          DESKTOP NAVIGATION (Compact Padding)
       ====================================================== */}
 
-      <header className="hidden md:block sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+      <header className="hidden md:block sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-2.5">
 
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 
@@ -541,9 +541,9 @@ export default function Home_Page() {
 
           <form
             onSubmit={handleSearch}
-            className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200"
+            className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200"
           >
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
 
             <input
               type="text"
@@ -562,7 +562,7 @@ export default function Home_Page() {
             to="/"
             className="text-center"
           >
-            <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">
+            <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-gray-900">
               WEFTIN
             </h1>
           </Link>
@@ -611,10 +611,10 @@ export default function Home_Page() {
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs"
+                  className="w-6 h-6 rounded-full object-cover border border-amber-600 shadow-xs"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300">
+                <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]">
                   {userInitial}
                 </div>
               )}
@@ -630,7 +630,7 @@ export default function Home_Page() {
               className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
               aria-label="Open Navigation Drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -656,7 +656,7 @@ export default function Home_Page() {
 
         {/* DESKTOP NAV */}
 
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
 
           <Link
             to="/"
@@ -703,10 +703,10 @@ export default function Home_Page() {
       </header>
 
       {/* ======================================================
-          MOBILE HEADER
+          MOBILE HEADER (Compact)
       ====================================================== */}
 
-      <header className="md:hidden sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-gray-200 px-4 py-4">
+      <header className="md:hidden sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-gray-200 px-4 py-2.5">
 
         <div className="flex items-center justify-between gap-3">
 
@@ -714,22 +714,22 @@ export default function Home_Page() {
             to="/"
             className="flex items-center gap-2 min-w-0"
           >
-            <div className="bg-black text-[#E5D5BC] w-8 h-8 rounded flex items-center justify-center font-serif font-bold shrink-0">
+            <div className="bg-black text-[#E5D5BC] w-7 h-7 rounded flex items-center justify-center font-serif font-bold text-xs shrink-0">
               W
             </div>
 
             <div className="min-w-0">
-              <h1 className="font-serif text-base tracking-[0.2em] font-bold text-gray-900">
+              <h1 className="font-serif text-sm tracking-[0.2em] font-bold text-gray-900">
                 WEFTIN
               </h1>
 
-              <span className="text-[8px] uppercase tracking-[0.15em] text-gray-400 block">
+              <span className="text-[7px] uppercase tracking-[0.15em] text-gray-400 block">
                 ATELIER TAILORS
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
 
             {/* WISHLIST */}
 
@@ -738,7 +738,7 @@ export default function Home_Page() {
               className="text-gray-700 hover:text-black"
               aria-label="Wishlist"
             >
-              <Heart className="w-5 h-5" />
+              <Heart className="w-4.5 h-4.5" />
             </Link>
 
             {/* CART */}
@@ -748,7 +748,7 @@ export default function Home_Page() {
               className="relative text-gray-700 hover:text-black"
               aria-label="Shopping bag"
             >
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="w-4.5 h-4.5" />
 
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-amber-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
@@ -766,7 +766,7 @@ export default function Home_Page() {
               className="relative text-gray-700 hover:text-black"
               aria-label="Notifications"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-4.5 h-4.5" />
 
               {unreadCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-rose-700 text-white text-[8px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center font-bold">
@@ -787,10 +787,10 @@ export default function Home_Page() {
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="w-7 h-7 rounded-full object-cover border border-amber-600"
+                  className="w-6 h-6 rounded-full object-cover border border-amber-600"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]">
                   {userInitial}
                 </div>
               )}
@@ -805,7 +805,7 @@ export default function Home_Page() {
               className="p-1 text-gray-700 hover:text-black cursor-pointer"
               aria-label="Open navigation"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
