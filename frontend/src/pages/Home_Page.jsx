@@ -24,7 +24,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "https://weftin-project.onr
 export default function Home_Page() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("Sarees");
+  const [activeTab, setActiveTab] = useState("All");
   const [cartCount, setCartCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -429,6 +429,7 @@ export default function Home_Page() {
   */
 
   const categories = [
+    "All",
     "Sarees",
     "Lehengas",
     "Dresses",
@@ -439,7 +440,7 @@ export default function Home_Page() {
   ];
 
   const filteredFeatured =
-    activeTab === "Sarees"
+    activeTab === "All"
       ? featuredProducts
       : featuredProducts.filter(
           (product) =>
@@ -1193,15 +1194,15 @@ export default function Home_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS */}
+        {/* PRODUCTS (Horizontal scroll on mobile/tablet, 4-col grid on desktop) */}
 
         {filteredFeatured.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 scrollbar-none">
 
             {filteredFeatured.map((prod) => (
               <div
                 key={prod.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col min-w-[280px] sm:min-w-0 flex-shrink-0"
               >
 
                 <div className="relative h-96 overflow-hidden bg-gray-100">
