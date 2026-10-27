@@ -205,15 +205,15 @@ export default function Collections_Page() {
       )}
 
       {/* TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] sm:text-xs py-2 px-4 text-center tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
+      <div className="bg-[#1C1816] text-[#E5D5BC] text-[10px] py-1.5 px-4 text-center tracking-[0.15em] uppercase font-medium">
         LIMITED FESTIVE EDIT — 20% OFF SELECTED COUTURE PIECES
       </div>
 
       {/* UNIFIED NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 border border-gray-200">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
+          <form onSubmit={handleSearch} className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 w-60 border border-gray-200">
+            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
             <input 
               type="text" 
               value={searchText}
@@ -225,7 +225,7 @@ export default function Collections_Page() {
 
           <div className="text-center">
             <Link to="/">
-              <h1 className="font-serif text-2xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
+              <h1 className="font-serif text-xl tracking-[0.25em] font-bold text-gray-900">WEFTIN</h1>
             </Link>
           </div>
 
@@ -247,9 +247,9 @@ export default function Collections_Page() {
 
             <Link to="/profile" className="flex items-center gap-2 text-gray-800 hover:text-black">
               {userAvatar ? (
-                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full object-cover border border-amber-600 shadow-xs" />
+                <img src={userAvatar} alt={userName} className="w-6 h-6 rounded-full object-cover border border-amber-600 shadow-xs" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-xs">
+                <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-serif font-bold border border-amber-300 text-[10px]">
                   {userInitial}
                 </div>
               )}
@@ -261,7 +261,7 @@ export default function Collections_Page() {
               className="p-1 text-gray-800 hover:text-black cursor-pointer flex items-center gap-1.5 border-l pl-4 border-gray-200"
               aria-label="Open navigation drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
               <span className="text-[10px] uppercase tracking-wider font-semibold hidden lg:inline">Menu</span>
             </button>
 
@@ -277,7 +277,7 @@ export default function Collections_Page() {
         </div>
 
         {/* Sub Nav Links */}
-        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-4 pt-3 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
+        <nav className="hidden md:flex justify-center items-center gap-6 lg:gap-8 mt-2 pt-2 border-t border-gray-200/60 text-[10px] lg:text-xs tracking-[0.15em] uppercase text-gray-700 font-medium">
           <Link to="/" className="hover:text-black transition-colors">Home</Link>
           <Link to="/shop" className="hover:text-black transition-colors">Shop</Link>
           <Link to="/collections" className="text-black font-semibold border-b border-black pb-0.5">Collections</Link>
@@ -392,12 +392,12 @@ export default function Collections_Page() {
       </aside>
 
       {/* SECTION 1: FEATURED COLLECTIONS */}
-      <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto">
-        <div className="text-center max-w-xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-2">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto">
+        <div className="text-center max-w-xl mx-auto mb-6">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             HERITAGE SILHOUETTES
           </span>
-          <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-2">
+          <h2 className="text-3xl lg:text-4xl font-serif font-light text-gray-900 mb-1">
             Featured Collections
           </h2>
           <p className="text-gray-600 text-xs">
@@ -406,12 +406,12 @@ export default function Collections_Page() {
         </div>
 
         {/* CATEGORY TABS */}
-        <div className="flex flex-wrap justify-center gap-3 mb-16">
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`px-5 py-2 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border cursor-pointer ${
+              className={`px-4 py-1.5 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border cursor-pointer ${
                 activeTab === cat
                   ? "bg-[#5C1D24] text-white border-[#5C1D24] shadow-md"
                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-900"
@@ -422,13 +422,13 @@ export default function Collections_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS GRID */}
+        {/* PRODUCTS (Horizontal Scroll Container) */}
         {filteredFeatured.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
             {filteredFeatured.map((prod, index) => (
               <div
                 key={prod.id || index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
                 <div className="relative h-96 overflow-hidden bg-gray-100">
                   <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] tracking-widest px-3 py-1 uppercase">
@@ -443,7 +443,7 @@ export default function Collections_Page() {
 
                 <div className="p-5 flex flex-col flex-grow justify-between">
                   <div>
-                    <h3 className="font-serif text-base text-gray-900 mb-1">{prod.name}</h3>
+                    <h3 className="font-serif text-base text-gray-900 mb-1 truncate">{prod.name}</h3>
                     <p className="text-sm font-bold text-gray-900">{prod.price}</p>
                   </div>
 
@@ -466,7 +466,7 @@ export default function Collections_Page() {
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl py-16 text-center">
+          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
             <p className="font-serif text-xl text-gray-900">No {activeTab} available</p>
             <p className="text-xs text-gray-500 mt-2">Please check another collection.</p>
           </div>
@@ -474,9 +474,9 @@ export default function Collections_Page() {
       </section>
 
       {/* SECTION 2: BEST SELLERS */}
-      <section className="py-16 sm:py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-16 border border-amber-900/10">
-        <div className="text-center max-w-xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-2">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
+        <div className="text-center max-w-xl mx-auto mb-8">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
             THE ATELIER FAVORITES
           </span>
           <h2 className="text-3xl font-serif font-light text-gray-900 mb-1">
@@ -488,13 +488,13 @@ export default function Collections_Page() {
         </div>
 
         {bestSellers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
             {bestSellers.map((item, index) => (
               <div
                 key={item.id || index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col justify-between"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
-                <div className="relative h-80 bg-gray-100 overflow-hidden">
+                <div className="relative h-96 bg-gray-100 overflow-hidden">
                   <span className="absolute top-3 left-3 z-10 bg-[#D4AF37] text-black text-[9px] uppercase px-2.5 py-1 font-bold">
                     {item.tag || "BEST SELLER"}
                   </span>
@@ -505,32 +505,40 @@ export default function Collections_Page() {
                   />
                 </div>
 
-                <div className="p-4 flex flex-col flex-grow justify-between">
+                <div className="p-5 flex flex-col flex-grow justify-between">
                   <div>
-                    <h3 className="font-serif text-sm font-medium mb-1">{item.name}</h3>
-                    <p className="text-xs font-bold text-gray-900 mb-4">{item.price}</p>
+                    <h3 className="font-serif text-base text-gray-900 mb-1 truncate">{item.name}</h3>
+                    <p className="text-sm font-bold text-gray-900">{item.price}</p>
                   </div>
 
-                  <button
-                    onClick={() => addProductToCart(item)}
-                    className="w-full py-2.5 bg-black text-white text-[11px] uppercase tracking-wider hover:bg-gray-900 cursor-pointer rounded"
-                  >
-                    Add to Bag
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => setQuickViewProduct(item)}
+                      className="text-[11px] uppercase tracking-wider py-2 border border-gray-300 text-gray-800 hover:bg-gray-50 cursor-pointer rounded"
+                    >
+                      Quick View
+                    </button>
+                    <button
+                      onClick={() => addProductToCart(item)}
+                      className="text-[11px] uppercase tracking-wider py-2 bg-gray-900 text-white hover:bg-black cursor-pointer rounded"
+                    >
+                      Add to Bag
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-sm text-gray-500">
+          <div className="text-center py-10 text-sm text-gray-500">
             No best sellers available right now.
           </div>
         )}
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-16 pb-12 px-6 lg:px-12 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-gray-300/60">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300 mt-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           <div className="md:col-span-2">
             <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">weftin</h3>
             <p className="text-xs text-gray-600 leading-relaxed mb-4">
@@ -569,7 +577,7 @@ export default function Collections_Page() {
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-8 text-[11px] text-gray-500">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
           <p>© 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-black">Privacy Policy</a>
