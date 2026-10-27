@@ -1097,7 +1097,7 @@ export default function Home_Page() {
           SECTION 1: HERO EDITORIAL
       ====================================================== */}
 
-      <section className="relative h-[70vh] sm:h-[80vh] flex items-center px-6 lg:px-20 overflow-hidden bg-gray-900">
+      <section className="relative h-[65vh] sm:h-[75vh] flex items-center px-6 lg:px-20 overflow-hidden bg-gray-900">
 
         <div className="absolute inset-0">
 
@@ -1154,10 +1154,10 @@ export default function Home_Page() {
 
       <section
         id="collections"
-        className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto"
+        className="py-10 px-6 lg:px-12 max-w-7xl mx-auto"
       >
 
-        <div className="text-center max-w-xl mx-auto mb-8">
+        <div className="text-center max-w-xl mx-auto mb-6">
 
           <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             HERITAGE SILHOUETTES
@@ -1175,7 +1175,7 @@ export default function Home_Page() {
 
         {/* CATEGORY TABS */}
 
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
 
           {categories.map((cat) => (
             <button
@@ -1183,7 +1183,7 @@ export default function Home_Page() {
               onClick={() =>
                 setActiveTab(cat)
               }
-              className={`px-5 py-2 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border cursor-pointer ${
+              className={`px-4 py-1.5 text-xs uppercase tracking-wider transition-all duration-300 rounded-full border cursor-pointer ${
                 activeTab === cat
                   ? "bg-[#5C1D24] text-white border-[#5C1D24] shadow-md"
                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-900"
@@ -1194,10 +1194,10 @@ export default function Home_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS (Single-Row Horizontal Scroll Container) */}
+        {/* PRODUCTS (Single-Row Horizontal Scroll Container with handle hidden) */}
 
         {filteredFeatured.length > 0 ? (
-          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
 
             {filteredFeatured.map((prod) => (
               <div
@@ -1205,7 +1205,7 @@ export default function Home_Page() {
                 className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
-                <div className="relative h-96 overflow-hidden bg-gray-100">
+                <div className="relative h-80 sm:h-96 overflow-hidden bg-gray-100">
 
                   <span className="absolute top-3 left-3 z-10 bg-black/80 text-white text-[9px] tracking-widest px-3 py-1 uppercase">
                     {prod.tag || "FEATURED"}
@@ -1218,7 +1218,7 @@ export default function Home_Page() {
                   />
                 </div>
 
-                <div className="p-5 flex flex-col flex-grow justify-between">
+                <div className="p-4 sm:p-5 flex flex-col flex-grow justify-between">
 
                   <div>
                     <h3 className="font-serif text-base text-gray-900 mb-1">
@@ -1274,12 +1274,12 @@ export default function Home_Page() {
 
       <section
         id="custom"
-        className="py-12 sm:py-16 bg-[#110E0D] text-[#FAF8F5] px-6 lg:px-12 my-8"
+        className="py-10 sm:py-14 bg-[#110E0D] text-[#FAF8F5] px-6 lg:px-12 my-6"
       >
 
         <div className="max-w-7xl mx-auto">
 
-          <div className="text-center max-w-xl mx-auto mb-10">
+          <div className="text-center max-w-xl mx-auto mb-8">
 
             <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-1">
               INTERACTIVE SIGNATURE SHOWCASE
@@ -1295,9 +1295,9 @@ export default function Home_Page() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#1C1816] p-6 sm:p-8 lg:p-12 rounded-2xl border border-white/10 shadow-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center bg-[#1C1816] p-6 sm:p-8 lg:p-10 rounded-2xl border border-white/10 shadow-2xl">
 
-            <div className="relative h-[420px] sm:h-[480px] rounded-xl overflow-hidden group">
+            <div className="relative h-[380px] sm:h-[440px] rounded-xl overflow-hidden group">
 
               <span className="absolute top-4 left-4 z-10 bg-emerald-600 text-white text-[9px] tracking-widest px-3 py-1 uppercase font-semibold">
                 IN STOCK & HAND-FINISHED
@@ -1320,7 +1320,7 @@ export default function Home_Page() {
                 Heritage Golden Brocade Drape
               </h3>
 
-              <div className="flex items-baseline gap-4 mb-6">
+              <div className="flex items-baseline gap-4 mb-5">
 
                 <span className="text-3xl font-bold text-amber-300">
                   ₹15,499
@@ -1331,7 +1331,7 @@ export default function Home_Page() {
                 </span>
               </div>
 
-              <p className="text-gray-300 text-xs leading-relaxed mb-6">
+              <p className="text-gray-300 text-xs leading-relaxed mb-5">
                 Experience Weftin's signature bespoke
                 draping. Select your customized sizing length
                 and color shade below.
@@ -1339,7 +1339,7 @@ export default function Home_Page() {
 
               {/* SIZE */}
 
-              <div className="mb-6">
+              <div className="mb-5">
 
                 <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
                   1. Tailoring Sizing:
@@ -1376,7 +1376,7 @@ export default function Home_Page() {
 
               {/* COLOR */}
 
-              <div className="mb-8">
+              <div className="mb-6">
 
                 <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
                   2. Silk Saree Shade:
@@ -1440,7 +1440,7 @@ export default function Home_Page() {
                     }
                   )
                 }
-                className="w-full bg-[#D4AF37] hover:bg-[#c29e2f] text-black py-4 rounded font-bold uppercase text-xs tracking-[0.2em] shadow-lg cursor-pointer"
+                className="w-full bg-[#D4AF37] hover:bg-[#c29e2f] text-black py-3.5 rounded font-bold uppercase text-xs tracking-[0.2em] shadow-lg cursor-pointer"
               >
                 Add Customized Drop to Bag
               </button>
@@ -1454,9 +1454,9 @@ export default function Home_Page() {
           SECTION 4: BEST SELLERS
       ====================================================== */}
 
-      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-8 border border-amber-900/10">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
 
-        <div className="text-center max-w-xl mx-auto mb-10">
+        <div className="text-center max-w-xl mx-auto mb-8">
 
           <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-semibold block mb-1">
             THE ATELIER FAVORITES
@@ -1472,12 +1472,12 @@ export default function Home_Page() {
         </div>
 
         {bestSellers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
 
             {bestSellers.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-80 bg-gray-100 overflow-hidden">
@@ -1541,9 +1541,9 @@ export default function Home_Page() {
           SECTION 5: TRENDING NOW
       ====================================================== */}
 
-      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto my-8">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto my-6">
 
-        <div className="text-center max-w-xl mx-auto mb-10">
+        <div className="text-center max-w-xl mx-auto mb-8">
 
           <span className="text-xs uppercase tracking-[0.25em] text-rose-800 font-semibold block mb-1">
             STYLE COORDINATES
@@ -1559,12 +1559,12 @@ export default function Home_Page() {
         </div>
 
         {trendingNow.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
 
             {trendingNow.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col min-w-[280px] sm:min-w-[300px] lg:min-w-[calc(25%-18px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-80 bg-gray-100 overflow-hidden">
@@ -1615,9 +1615,9 @@ export default function Home_Page() {
           SECTION 6: INSTAGRAM JOURNAL
       ====================================================== */}
 
-      <section className="py-10 sm:py-16 px-6 lg:px-12 max-w-7xl mx-auto my-8">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto my-6">
 
-        <div className="text-center max-w-xl mx-auto mb-10">
+        <div className="text-center max-w-xl mx-auto mb-8">
 
           <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-semibold block mb-1">
             VISUAL JOURNAL
@@ -1638,7 +1638,7 @@ export default function Home_Page() {
             (imgUrl, index) => (
               <div
                 key={index}
-                className="relative h-56 sm:h-64 rounded-xl overflow-hidden group cursor-pointer"
+                className="relative h-48 sm:h-56 rounded-xl overflow-hidden group cursor-pointer"
                 onClick={() =>
                   showToast(
                     "Opening Instagram gallery..."
@@ -1660,7 +1660,7 @@ export default function Home_Page() {
           FOOTER
       ====================================================== */}
 
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300 mt-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           
           <div className="md:col-span-2">
