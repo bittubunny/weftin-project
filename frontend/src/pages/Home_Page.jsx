@@ -533,9 +533,9 @@ export default function Home_Page() {
           DESKTOP NAVIGATION (Compact Padding)
       ====================================================== */}
 
-      <header className="hidden md:block sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-2.5">
+      <header className="hidden md:block sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-2.5">
 
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="w-full flex items-center justify-between">
 
           {/* SEARCH */}
 
@@ -1154,7 +1154,7 @@ export default function Home_Page() {
 
       <section
         id="collections"
-        className="py-10 px-6 lg:px-12 max-w-7xl mx-auto"
+        className="py-10 px-4 sm:px-8 w-full"
       >
 
         <div className="text-center max-w-xl mx-auto mb-6">
@@ -1194,7 +1194,7 @@ export default function Home_Page() {
           ))}
         </div>
 
-        {/* PRODUCTS (Single-Row Horizontal Scroll Container with fixed uniform card dimensions) */}
+        {/* PRODUCTS (Single-Row Horizontal Scroll Container) */}
 
         {filteredFeatured.length > 0 ? (
           <div className="flex flex-nowrap overflow-x-auto gap-6 pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar">
@@ -1202,7 +1202,7 @@ export default function Home_Page() {
             {filteredFeatured.map((prod) => (
               <div
                 key={prod.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(20%-19px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-96 overflow-hidden bg-gray-100">
@@ -1256,7 +1256,7 @@ export default function Home_Page() {
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
+          <div className="bg-white border border-gray-200 rounded-xl py-12 text-center mx-4">
             <p className="font-serif text-xl text-gray-900">
               No {activeTab} available
             </p>
@@ -1274,10 +1274,10 @@ export default function Home_Page() {
 
       <section
         id="custom"
-        className="py-10 sm:py-14 bg-[#110E0D] text-[#FAF8F5] px-6 lg:px-12 my-6"
+        className="py-10 sm:py-14 bg-[#110E0D] text-[#FAF8F5] px-4 sm:px-8 my-6 w-full"
       >
 
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
 
           <div className="text-center max-w-xl mx-auto mb-8">
 
@@ -1454,7 +1454,7 @@ export default function Home_Page() {
           SECTION 4: BEST SELLERS
       ====================================================== */}
 
-      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
+      <section className="py-10 px-4 sm:px-8 w-full bg-[#FAF2EC] rounded-2xl my-6 border border-amber-900/10">
 
         <div className="text-center max-w-xl mx-auto mb-8">
 
@@ -1477,7 +1477,7 @@ export default function Home_Page() {
             {bestSellers.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(20%-19px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-96 bg-gray-100 overflow-hidden">
@@ -1541,7 +1541,7 @@ export default function Home_Page() {
           SECTION 5: TRENDING NOW
       ====================================================== */}
 
-      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto my-6">
+      <section className="py-10 px-4 sm:px-8 w-full my-6">
 
         <div className="text-center max-w-xl mx-auto mb-8">
 
@@ -1564,7 +1564,7 @@ export default function Home_Page() {
             {trendingNow.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(25%-18px)] flex-shrink-0 snap-start"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border flex flex-col w-[280px] sm:w-[300px] lg:w-[calc(20%-19px)] flex-shrink-0 snap-start"
               >
 
                 <div className="relative h-96 bg-gray-100 overflow-hidden">
@@ -1628,7 +1628,7 @@ export default function Home_Page() {
           SECTION 6: INSTAGRAM JOURNAL
       ====================================================== */}
 
-      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto my-6">
+      <section className="py-10 px-4 sm:px-8 w-full my-6">
 
         <div className="text-center max-w-xl mx-auto mb-8">
 
@@ -1673,8 +1673,8 @@ export default function Home_Page() {
           FOOTER
       ====================================================== */}
 
-      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-6 lg:px-12 border-t border-gray-300 mt-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
+      <footer className="bg-[#F3EDE2] text-gray-800 pt-12 pb-10 px-4 sm:px-8 border-t border-gray-300 mt-10 w-full">
+        <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-10 pb-10 border-b border-gray-300/60">
           
           <div className="md:col-span-2">
             <h3 className="font-serif text-xl tracking-[0.2em] font-bold mb-4">
@@ -1772,7 +1772,7 @@ export default function Home_Page() {
 
         </div>
 
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center pt-6 text-[11px] text-gray-500">
           <p>
             © 2026 WEFTIN Atelier. All Rights Reserved. Crafted with pristine elegance.
           </p>
